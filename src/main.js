@@ -705,6 +705,16 @@ function applyPreset(index){
     ...Object.keys(state).filter(x=>x.startsWith('otherSpace')||x.startsWith('acid'))]){
     if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
   }
+  // Loading a regular preset must reveal it again instead of secretly leaving
+  // an older solo atlas covering the entire canvas. Blended overlays stay sticky.
+  if(!Object.hasOwn(preset,'acidEnabled')&&state.acidSolo){
+    keepLayers.acidEnabled=false;
+    keepLayers.acidSolo=false;
+  }
+  if(!Object.hasOwn(preset,'otherSpaceEnabled')&&state.otherSpaceSolo){
+    keepLayers.otherSpaceEnabled=false;
+    keepLayers.otherSpaceSolo=false;
+  }
   Object.assign(state,base,preset,keepLayers);
   // User's layer toggle settings are intentionally not reset by presets.
   delete state.name;delete state.detail;delete state.palette;
