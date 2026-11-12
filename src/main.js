@@ -18,6 +18,8 @@ import textureVoronoiFragment from './shaders/texture-voronoi.frag?raw';
 import textureVelvetFragment from './shaders/texture-velvet.frag?raw';
 import textureMaximalistFragment from './shaders/texture-maximalist.frag?raw';
 import otherSpaceFragment from './shaders/otherspace-atlas.frag?raw';
+import acidFragment from './shaders/otherspace-acid.frag?raw';
+import { ACID_MODES, ACID_PALETTES, ACID_DEFAULT, ACID_RANGES, ACID_CHECKS } from './otherspace-acid.js';
 import { OTHERSPACE_MODES, OTHERSPACE_PALETTES, OTHERSPACE_DEFAULT } from './otherspace-atlas.js';
 
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
@@ -59,6 +61,17 @@ const defaultState={
   cameraDrift:0.04,quality:mobile?1.5:2.0,gestureMode:'orbit',
   layerBg:true,layerMesh:true,layerSwarm:true,paused:false,seed:761235
 };
+// Prefix complete Acid Atlas source DNA: both atlases remain independent.
+const ACID_STATE_KEYS=Object.fromEntries(Object.keys(ACID_DEFAULT).map(
+  key=>[key,'acid'+key.charAt(0).toUpperCase()+key.slice(1)]
+));
+Object.assign(defaultState,Object.fromEntries(
+  Object.entries(ACID_DEFAULT).map(([key,val])=>[ACID_STATE_KEYS[key],val])
+));
+defaultState.acidEnabled=false;
+defaultState.acidSolo=false;
+defaultState.acidOpacity=.28;
+defaultState.acidDepth=mobile?24:ACID_DEFAULT.depth;
 const state=copy(defaultState);
 // Source uniform names stay intact: this map only adapts their controls into Hyperbolica.
 const OTHERSPACE_STATE_KEYS={
@@ -97,6 +110,7 @@ let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
 let pack2Ready=true,textureReady=[true,true,true];
 let pack2Validated=false,textureValidated=[false,false,false];
 let otherSpaceScene,otherSpaceMaterial,otherSpaceReady=true,otherSpaceValidated=false;
+let acidScene,acidMaterial,acidReady=true,acidValidated=false;
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -225,6 +239,12 @@ const sliderDefs={
     ['quality','RENDER PIXEL RATIO CAP',0.8,2.5,0.1]
   ]
 };
+// Every source-owned numeric control is kept, with advanced ones tucked away.
+const ACID_PRIMARY=new Set(['p','q','depth','density','shape','twist','width']);
+const acidSlide=(key)=>[ACID_STATE_KEYS[key],ACID_RANGES[key][0].toUpperCase(),...ACID_RANGES[key].slice(1,4)];
+sliderDefs.acid=[['acidOpacity','ACID ART MIX / OPACITY',0,1,.01],
+  ...Object.keys(ACID_RANGES).filter(key=>ACID_PRIMARY.has(key)).map(acidSlide)];
+sliderDefs.acidAdvanced=Object.keys(ACID_RANGES).filter(key=>!ACID_PRIMARY.has(key)).map(acidSlide);
 const sliderInputs={};
 
 function notify(message){
@@ -246,6 +266,8 @@ function fillSelections(){
   MESH_FAMILIES.forEach((name,i)=>chooseOption($('meshMode'),i,name));
   PRESETS.forEach((p,i)=>chooseOption($('presetSelect'),i,p.name));
   OTHERSPACE_MODES.forEach((p,i)=>chooseOption($('otherSpaceModeSelect'),i,p.name));
+  ACID_MODES.forEach((p,i)=>chooseOption($('acidModeSelect'),i,p.name));
+  $('acidMathNote').textContent=ACID_MODES[0].note;
   $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[0].note;
   const sources=[...new Set(paletteList.map(p=>p.source))];
   sources.sort((a,b)=>a.localeCompare(b));
@@ -276,6 +298,13 @@ function makeSliders(){
         state[key]=Number(slider.value);
         value.textContent=String(state[key]);
         if(key==='quality')resize();
+        if((key==='acidP'||key==='acidQ')&&state.acidMode===3){
+          validateAcidChainmail();
+          for(const name of ['acidP','acidQ']){
+            if(sliderInputs[name])sliderInputs[name].value=state[name];
+            if($('out-'+name))$('out-'+name).textContent=String(state[name]);
+          }
+        }
         if(key==='otherSpaceP'||key==='otherSpaceQ'){
           validateOtherSpaceTiling();
           for(const name of ['otherSpaceP','otherSpaceQ']){
@@ -333,6 +362,15 @@ function updateOtherSpaceColors(){
     otherSpaceMaterial.uniforms['c'+i].value.set(colors[index]);
   }
 }
+function updateAcidColors(){
+  if(!acidMaterial)return;
+  const colors=currentPaletteColors();
+  if(colors.length<1)return;
+  for(let i=0;i<5;i++){
+    const index=Math.round(i*(colors.length-1)/4);
+    acidMaterial.uniforms['c'+i].value.set(colors[index]);
+  }
+}
 function updatePaletteTexture(rebuildEditors=true){
   const next=makePaletteTexture(currentPaletteColors());
   if(fieldMaterial)fieldMaterial.uniforms.u_palette.value=next;
@@ -344,7 +382,7 @@ function updatePaletteTexture(rebuildEditors=true){
   if(pack2Material)pack2Material.uniforms.u_palette.value=next;
   for(const m of textureMaterials)if(m)m.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
-  updateOtherSpaceColors();
+  updateOtherSpaceColors();updateAcidColors();
   if(texture)texture.dispose();
   texture=next;
   if(rebuildEditors)renderPaletteEditors();
@@ -392,6 +430,12 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('acidModeSelect').value=String(state.acidMode);
+  $('acidProjectionSelect').value=String(state.acidProjection);
+  $('acidMathNote').textContent=ACID_MODES[state.acidMode]?.note||'Acid Atlas mathematics';
+  document.querySelectorAll('[data-acid-toggle]').forEach(el=>
+    el.classList.toggle('selected',Boolean(state[ACID_STATE_KEYS[el.dataset.acidToggle]]))
+  );
   $('otherSpaceModeSelect').value=String(state.otherSpaceMode);
   $('otherSpaceProjectionSelect').value=String(state.otherSpaceProjection);
   $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[state.otherSpaceMode]?.note||'Mathematical background';
