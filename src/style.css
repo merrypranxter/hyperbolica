@@ -37,3 +37,9 @@ dialog{width:min(92vw,600px);border:2px solid var(--cyan);background:#11081e;col
  #panel.collapsed ~ #toast{bottom:8px}
  #toast{top:67px;right:7px;max-width:80vw;font-size:10px}
 }
+
+/* Acid Atlas II: the source has 18 independent FX switches. Wrap them on iPhone;
+   never let a horizontal toggle row hide features beyond the viewport. */
+#acidToggles{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+#acidToggles .chip{flex:0 1 auto;max-width:100%;white-space:normal;text-align:center;font-size:10px;line-height:1.3;padding:8px 9px}
+@media(max-width:740px){#acidToggles{gap:5px}#acidToggles .chip{font-size:9px;padding:8px 7px}}

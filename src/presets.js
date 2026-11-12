@@ -1,4 +1,5 @@
 import { HYPER_WEAVE_PACK2_PRESETS as PACK2_ORIGINAL } from './engines/HyperWeavePack2.js';
+import { ACID_MODES, ACID_PALETTES, ACID_DEFAULT } from './otherspace-acid.js';
 // Map every original Pack II JS cartridge parameter into live Hyperbolica controls.
 const fromPack2 = key => {
   const p=PACK2_ORIGINAL[key];
@@ -11,6 +12,25 @@ const fromPack2 = key => {
     swarmSize:p.swarmDensity
   };
 };
+// The complete OTHERSPACE II recipe, not an approximation or a dead preset label.
+const fromAcid = index=>{
+  const m=ACID_MODES[index];
+  const source={...ACID_DEFAULT,...m.params,...m.fx,mode:index};
+  const mapped=Object.fromEntries(Object.entries(source).map(([key,value])=>[
+    'acid'+key.charAt(0).toUpperCase()+key.slice(1),value
+  ]));
+  const label=ACID_PALETTES[m.palette][0];
+  const slug=label.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  return {
+    ...mapped,
+    acidEnabled:true,acidSolo:true,acidOpacity:1,
+    otherSpaceEnabled:false,otherSpaceSolo:false,
+    renderMode:'field',layerBg:true,layerMesh:false,layerSwarm:false,
+    layerAstralSwarm:false,
+    palette:'otherspace-ii/'+String(m.palette+1).padStart(2,'0')+'-'+slug
+  };
+};
+
 export const FIELD_FAMILIES=[
   "ORIGINAL KIFS · Silica recursion",
   "GYROID FROTH · Triply periodic pores",
@@ -132,5 +152,15 @@ export const PRESETS=[
   {name:"53 · XENO VELVET SHIMMER",detail:"Real anisotropic diffuse/specular fiber lighting and neon crevice fuzz.",renderMode:"texture",textureFamily:1,layerBg:true,layerMesh:false,layerSwarm:false,fieldMode:11,meshMode:7,textureDensity:7.5,velvetSheen:84,velvetGlow:1.55,texturePaletteMix:.86,palette:"itsamoire/vampireDiscotheque"},
   {name:"54 · BIOLOOM PEARL FUR",detail:"Plush prismatic microfuzz meets living biomineral fields and pearlescent translucent opal.",renderMode:"texture-field",textureFamily:1,layerBg:true,layerMesh:true,layerSwarm:false,fieldMode:14,meshMode:3,textureDensity:11.5,velvetSheen:110,velvetGlow:2.2,textureBlend:.74,opalOpacity:.35,opalTransmission:1,material:4,palette:"frothrot/opal"},
   {name:"55 · MAXIMALIST SPECTRAL TECTONICS",detail:"Three nested domain-warped fBm fields evolve into psychedelic folded textures.",renderMode:"texture",textureFamily:2,layerBg:true,layerMesh:false,layerSwarm:false,fieldMode:15,meshMode:8,maxScale:6.5,maxDistortion:5.1,maxColorFreq:2.9,maxIterations:7,textureSpeed:1,texturePaletteMix:1,palette:"itsamoire/highlighter"},
-  {name:"56 · THE CATHEDRAL EATS ITS NOISE",detail:"Slow dense fBm motion ripples across the moving 4D architecture, with separate glyph swarm.",renderMode:"texture-cathedral",textureFamily:2,layerBg:true,layerMesh:false,layerSwarm:true,fieldMode:3,meshMode:5,maxScale:3.6,maxDistortion:6.75,maxColorFreq:1.6,maxIterations:6,textureBlend:.47,textureSpeed:.55,feedback:.4,rayQuality:0,palette:"itsamoire/opal"}
+  {name:"56 · THE CATHEDRAL EATS ITS NOISE",detail:"Slow dense fBm motion ripples across the moving 4D architecture, with separate glyph swarm.",renderMode:"texture-cathedral",textureFamily:2,layerBg:true,layerMesh:false,layerSwarm:true,fieldMode:3,meshMode:5,maxScale:3.6,maxDistortion:6.75,maxColorFreq:1.6,maxIterations:6,textureBlend:.47,textureSpeed:.55,feedback:.4,rayQuality:0,palette:"itsamoire/opal"},
+  {name:"57 · ACID ATLAS / MODULAR JELLYFISH",detail:ACID_MODES[0].note,...fromAcid(0)},
+  {name:"58 · ACID ATLAS / GUILLOCHÉ RIBBON",detail:ACID_MODES[1].note,...fromAcid(1)},
+  {name:"59 · ACID ATLAS / SCHOTTKY LIGHTNING",detail:ACID_MODES[2].note,...fromAcid(2)},
+  {name:"60 · ACID ATLAS / CHAINMAIL ORBIFOLD",detail:ACID_MODES[3].note,...fromAcid(3)},
+  {name:"61 · ACID ATLAS / BINARY BRICKWORK",detail:ACID_MODES[4].note,...fromAcid(4)},
+  {name:"62 · ACID ATLAS / BLASCHKE BLOOM",detail:ACID_MODES[5].note,...fromAcid(5)},
+  {name:"63 · ACID ATLAS / CONFOCAL MOIRÉ",detail:ACID_MODES[6].note,...fromAcid(6)},
+  {name:"64 · ACID ATLAS / DIPOLE WHIRLPOOL",detail:ACID_MODES[7].note,...fromAcid(7)},
+  {name:"65 · ACID ATLAS / GEODESIC TIMES TABLE",detail:ACID_MODES[8].note,...fromAcid(8)},
+  {name:"66 · ACID ATLAS / APOLLONIAN PROPER",detail:ACID_MODES[9].note,...fromAcid(9)}
 ];

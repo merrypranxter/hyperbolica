@@ -18,6 +18,8 @@ import textureVoronoiFragment from './shaders/texture-voronoi.frag?raw';
 import textureVelvetFragment from './shaders/texture-velvet.frag?raw';
 import textureMaximalistFragment from './shaders/texture-maximalist.frag?raw';
 import otherSpaceFragment from './shaders/otherspace-atlas.frag?raw';
+import acidFragment from './shaders/otherspace-acid.frag?raw';
+import { ACID_MODES, ACID_PALETTES, ACID_DEFAULT, ACID_RANGES, ACID_CHECKS } from './otherspace-acid.js';
 import { OTHERSPACE_MODES, OTHERSPACE_PALETTES, OTHERSPACE_DEFAULT } from './otherspace-atlas.js';
 
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
@@ -59,6 +61,17 @@ const defaultState={
   cameraDrift:0.04,quality:mobile?1.5:2.0,gestureMode:'orbit',
   layerBg:true,layerMesh:true,layerSwarm:true,paused:false,seed:761235
 };
+// Prefix complete Acid Atlas source DNA: both atlases remain independent.
+const ACID_STATE_KEYS=Object.fromEntries(Object.keys(ACID_DEFAULT).map(
+  key=>[key,'acid'+key.charAt(0).toUpperCase()+key.slice(1)]
+));
+Object.assign(defaultState,Object.fromEntries(
+  Object.entries(ACID_DEFAULT).map(([key,val])=>[ACID_STATE_KEYS[key],val])
+));
+defaultState.acidEnabled=false;
+defaultState.acidSolo=false;
+defaultState.acidOpacity=.28;
+defaultState.acidDepth=mobile?24:ACID_DEFAULT.depth;
 const state=copy(defaultState);
 // Source uniform names stay intact: this map only adapts their controls into Hyperbolica.
 const OTHERSPACE_STATE_KEYS={
@@ -97,6 +110,7 @@ let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
 let pack2Ready=true,textureReady=[true,true,true];
 let pack2Validated=false,textureValidated=[false,false,false];
 let otherSpaceScene,otherSpaceMaterial,otherSpaceReady=true,otherSpaceValidated=false;
+let acidScene,acidMaterial,acidReady=true,acidValidated=false;
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -225,6 +239,12 @@ const sliderDefs={
     ['quality','RENDER PIXEL RATIO CAP',0.8,2.5,0.1]
   ]
 };
+// Every source-owned numeric control is kept, with advanced ones tucked away.
+const ACID_PRIMARY=new Set(['p','q','depth','density','shape','twist','width']);
+const acidSlide=(key)=>[ACID_STATE_KEYS[key],ACID_RANGES[key][0].toUpperCase(),...ACID_RANGES[key].slice(1,4)];
+sliderDefs.acid=[['acidOpacity','ACID ART MIX / OPACITY',0,1,.01],
+  ...Object.keys(ACID_RANGES).filter(key=>ACID_PRIMARY.has(key)).map(acidSlide)];
+sliderDefs.acidAdvanced=Object.keys(ACID_RANGES).filter(key=>!ACID_PRIMARY.has(key)).map(acidSlide);
 const sliderInputs={};
 
 function notify(message){
@@ -246,6 +266,8 @@ function fillSelections(){
   MESH_FAMILIES.forEach((name,i)=>chooseOption($('meshMode'),i,name));
   PRESETS.forEach((p,i)=>chooseOption($('presetSelect'),i,p.name));
   OTHERSPACE_MODES.forEach((p,i)=>chooseOption($('otherSpaceModeSelect'),i,p.name));
+  ACID_MODES.forEach((p,i)=>chooseOption($('acidModeSelect'),i,p.name));
+  $('acidMathNote').textContent=ACID_MODES[0].note;
   $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[0].note;
   const sources=[...new Set(paletteList.map(p=>p.source))];
   sources.sort((a,b)=>a.localeCompare(b));
@@ -276,6 +298,13 @@ function makeSliders(){
         state[key]=Number(slider.value);
         value.textContent=String(state[key]);
         if(key==='quality')resize();
+        if((key==='acidP'||key==='acidQ')&&state.acidMode===3){
+          validateAcidChainmail();
+          for(const name of ['acidP','acidQ']){
+            if(sliderInputs[name])sliderInputs[name].value=state[name];
+            if($('out-'+name))$('out-'+name).textContent=String(state[name]);
+          }
+        }
         if(key==='otherSpaceP'||key==='otherSpaceQ'){
           validateOtherSpaceTiling();
           for(const name of ['otherSpaceP','otherSpaceQ']){
@@ -333,6 +362,15 @@ function updateOtherSpaceColors(){
     otherSpaceMaterial.uniforms['c'+i].value.set(colors[index]);
   }
 }
+function updateAcidColors(){
+  if(!acidMaterial)return;
+  const colors=currentPaletteColors();
+  if(colors.length<1)return;
+  for(let i=0;i<5;i++){
+    const index=Math.round(i*(colors.length-1)/4);
+    acidMaterial.uniforms['c'+i].value.set(colors[index]);
+  }
+}
 function updatePaletteTexture(rebuildEditors=true){
   const next=makePaletteTexture(currentPaletteColors());
   if(fieldMaterial)fieldMaterial.uniforms.u_palette.value=next;
@@ -344,7 +382,7 @@ function updatePaletteTexture(rebuildEditors=true){
   if(pack2Material)pack2Material.uniforms.u_palette.value=next;
   for(const m of textureMaterials)if(m)m.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
-  updateOtherSpaceColors();
+  updateOtherSpaceColors();updateAcidColors();
   if(texture)texture.dispose();
   texture=next;
   if(rebuildEditors)renderPaletteEditors();
@@ -392,6 +430,12 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('acidModeSelect').value=String(state.acidMode);
+  $('acidProjectionSelect').value=String(state.acidProjection);
+  $('acidMathNote').textContent=ACID_MODES[state.acidMode]?.note||'Acid Atlas mathematics';
+  document.querySelectorAll('[data-acid-toggle]').forEach(el=>
+    el.classList.toggle('selected',Boolean(state[ACID_STATE_KEYS[el.dataset.acidToggle]]))
+  );
   $('otherSpaceModeSelect').value=String(state.otherSpaceMode);
   $('otherSpaceProjectionSelect').value=String(state.otherSpaceProjection);
   $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[state.otherSpaceMode]?.note||'Mathematical background';
@@ -411,6 +455,7 @@ function syncControls(){
   if(swarm)swarm.visible=state.layerSwarm;
   setSpriteCount();
   setAstralCount();
+  updateAcidSliderLabels();
 }
 // Avoid compiling three additional heavyweight shader families on startup;
  // compile only the new mode actually selected so the existing Opal Garden stays snappy.
@@ -444,6 +489,145 @@ function ensureAddOn(mode,family=state.textureFamily){
   return ok;
 }
 // Optional atlas is truly opt-in: original Opal startup never compiles or draws it.
+// Separate opt-in shader validation: an unsupported source cannot blank existing art.
+function ensureAcid(){
+  if(acidValidated)return acidReady;
+  if(!renderer||!fieldCamera)return false;
+  const errors=[],previous=console.error;
+  console.error=(...args)=>{
+    const message=args.map(x=>String(x)).join(' ');
+    if(message.includes('Shader Error')||message.includes('THREE.WebGLProgram'))errors.push(message);
+    previous.apply(console,args);
+  };
+  try{renderer.compile(acidScene,fieldCamera);}
+  catch(e){errors.push(String(e));}
+  finally{console.error=previous;}
+  acidValidated=true;acidReady=errors.length===0;
+  if(!acidReady){
+    previous.call(console,'Optional OTHERSPACE II GPU shader unsupported:',errors.join('\n').slice(0,2200));
+    notify('ACID ATLAS SHADER FAILED · ORIGINAL ART STILL WORKS');
+  }
+  return acidReady;
+}
+function validateAcidChainmail(){
+  if(state.acidMode!==3)return;
+  if(1/state.acidP+1/state.acidQ<.5)return;
+  for(let q=state.acidQ;q<=8;q++){
+    if(1/state.acidP+1/q<.5){state.acidQ=q;return;}
+  }
+  state.acidP=7;state.acidQ=3;
+}
+function updateAcidSliderLabels(){
+  const labels=ACID_MODES[state.acidMode]?.labels||{};
+  for(const name of ['p','q','depth','density','shape','twist','phase']){
+    const key=ACID_STATE_KEYS[name],slider=sliderInputs[key];
+    if(!slider)continue;
+    const active=name==='phase'||Object.hasOwn(labels,name);
+    const root=slider.closest('.sliderField');
+    if(root){
+      root.style.opacity=active?'1':'.43';
+      root.querySelector('.head span').textContent=labels[name]||ACID_RANGES[name][0];
+    }
+    slider.disabled=!active;
+  }
+}
+function loadAcidStarter(index,applyColors=true){
+  index=Math.round(clamp(index,0,ACID_MODES.length-1));
+  if(!ensureAcid()){syncControls();return false;}
+  const starter=ACID_MODES[index];
+  const source={...ACID_DEFAULT,...starter.params,...starter.fx,mode:index};
+  for(const [uniform,key] of Object.entries(ACID_STATE_KEYS)){
+    if(Object.hasOwn(source,uniform))state[key]=source[uniform];
+  }
+  if(mobile)state.acidDepth=Math.min(24,state.acidDepth);
+  state.acidMode=index;
+  validateAcidChainmail();
+  state.acidEnabled=true;
+  state.layerBg=true;
+  state.otherSpaceSolo=false;
+  if(applyColors)applyAcidStarterPalette();
+  syncControls();clearTrails();
+  notify('OTHERSPACE II · '+starter.name.toUpperCase());
+  return true;
+}
+function applyAcidStarterPalette(){
+  const mode=ACID_MODES[state.acidMode];
+  const label=ACID_PALETTES[mode.palette]?.[0];
+  const match=paletteList.find(p=>p.source==='otherspace-ii'&&p.name==='OTHERSPACE II · '+label);
+  if(match)pickPalette(match.id);
+}
+function mutateAcid(){
+  if(!ensureAcid())return;
+  const rand=seededRng();
+  state.acidP=3+Math.floor(rand()*14);
+  state.acidQ=3+Math.floor(rand()*6);
+  for(const name of ['density','shape','twist','phase','width','relief','drift']){
+    const spec=ACID_RANGES[name];
+    const step=spec[3],val=spec[1]+rand()*(spec[2]-spec[1]);
+    state[ACID_STATE_KEYS[name]]=Number((Math.round(val/step)*step).toFixed(3));
+  }
+  state.acidDepth=mobile?12+Math.floor(rand()*13):28+Math.floor(rand()*21);
+  validateAcidChainmail();
+  state.acidEnabled=true;
+  state.otherSpaceSolo=false;
+  state.layerBg=true;
+  syncControls();clearTrails();
+  notify('ACID ATLAS STRUCTURE MUTATED · ORIGINAL MODE KEPT');
+}
+function acidRollFx(){
+  if(!ensureAcid())return;
+  const rand=seededRng();
+  for(const key of ['kaleidoOn','prismOn','halftoneOn','glitterOn',
+    'neonOn','embossOn','scanOn','spectrumOn','hardPalette']){
+    state[ACID_STATE_KEYS[key]]=rand()<.38;
+  }
+  state.acidKal=2+Math.floor(rand()*11);
+  state.acidPrism=.4+rand()*2;
+  state.acidDots=rand();
+  state.acidEnabled=true;
+  state.otherSpaceSolo=false;
+  state.layerBg=true;
+  syncControls();notify('ACID ATLAS FX DICE ROLLED');
+}
+function randomAcidPalette(){
+  if(!ensureAcid())return;
+  const rand=seededRng();
+  const hsl=(h,s,l)=>{
+    const a=s*Math.min(l,1-l);
+    const channel=n=>{
+      const k=(n+h*12)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));
+      return Math.round(c*255).toString(16).padStart(2,'0');
+    };
+    return '#'+channel(0)+channel(8)+channel(4);
+  };
+  const h0=rand(),step=.13+rand()*.2;
+  const colors=[hsl(h0,.9,.08+rand()*.06)];
+  for(let i=1;i<5;i++)colors.push(hsl((h0+.35+i*step)%1,1,.5+rand()*.12));
+  const original=paletteList.find(p=>p.source==='otherspace-ii'&&p.name==='OTHERSPACE II · ACID SHERBET');
+  if(original)pickPalette(original.id);
+  editedColors=colors;updatePaletteTexture();notify('FRESH FIVE-STOP ACID PALETTE GENERATED');
+}
+function installAcidToggles(){
+  const host=$('acidToggles');
+  host.replaceChildren();
+  for(const [key,[label]] of Object.entries(ACID_CHECKS)){
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='chip';
+    button.dataset.acidToggle=key;
+    button.textContent=label.toUpperCase();
+    button.setAttribute('aria-label','Acid Atlas '+label);
+    button.addEventListener('click',()=>{
+      if(!ensureAcid())return;
+      const stateKey=ACID_STATE_KEYS[key];
+      state[stateKey]=!state[stateKey];
+      state.acidEnabled=true;state.layerBg=true;state.otherSpaceSolo=false;
+      syncControls();
+    });
+    host.append(button);
+  }
+}
+
 function ensureOtherSpace(){
   if(otherSpaceValidated)return otherSpaceReady;
   if(!renderer||!fieldCamera)return false;
@@ -481,7 +665,7 @@ function loadOtherSpaceStarter(index){
   }
   if(mobile)state.otherSpaceDepth=Math.min(24,state.otherSpaceDepth);
   state.otherSpaceMode=index;validateOtherSpaceTiling();
-  state.otherSpaceEnabled=true;state.layerBg=true;
+  state.otherSpaceEnabled=true;state.layerBg=true;state.acidSolo=false;
   syncControls();clearTrails();notify('OTHERSPACE · '+recipe.name.toUpperCase());
 }
 function applyOtherSpaceSourceColors(){
@@ -514,12 +698,25 @@ function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
   if(!ensureAddOn(preset.renderMode||'field',preset.textureFamily??state.textureFamily))return;
+  if(preset.acidEnabled&&!ensureAcid())return;
   const base=copy(defaultState);
   const keepLayers={};
-  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm',...Object.keys(state).filter(x=>x.startsWith('otherSpace'))]){
+  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm',
+    ...Object.keys(state).filter(x=>x.startsWith('otherSpace')||x.startsWith('acid'))]){
     if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
   }
+  // Loading a regular preset must reveal it again instead of secretly leaving
+  // an older solo atlas covering the entire canvas. Blended overlays stay sticky.
+  if(!Object.hasOwn(preset,'acidEnabled')&&state.acidSolo){
+    keepLayers.acidEnabled=false;
+    keepLayers.acidSolo=false;
+  }
+  if(!Object.hasOwn(preset,'otherSpaceEnabled')&&state.otherSpaceSolo){
+    keepLayers.otherSpaceEnabled=false;
+    keepLayers.otherSpaceSolo=false;
+  }
   Object.assign(state,base,preset,keepLayers);
+  if(mobile&&state.acidEnabled)state.acidDepth=Math.min(24,state.acidDepth);
   // User's layer toggle settings are intentionally not reset by presets.
   delete state.name;delete state.detail;delete state.palette;
   state.paletteId=preset.palette;
@@ -688,6 +885,20 @@ function buildEffects(){
   otherSpaceMaterial.transparent=true;
   otherSpaceMaterial.extensions.derivatives=true;
   updateOtherSpaceColors();
+  const acidUniforms={
+    resolution:vec(),center:vec(),viewportOrigin:vec(),
+    time:{value:0},acidOpacity:{value:0},acidSolo:{value:0},
+    c0:{value:new THREE.Color('#000000')},c1:{value:new THREE.Color('#ffffff')},
+    c2:{value:new THREE.Color('#ffffff')},c3:{value:new THREE.Color('#ffffff')},
+    c4:{value:new THREE.Color('#ffffff')}
+  };
+  for(const [key,val] of Object.entries(ACID_DEFAULT)){
+    acidUniforms[key]={value:typeof val==='boolean'?Number(val):val};
+  }
+  [acidScene,acidMaterial]=pass(acidFragment,acidUniforms);
+  acidMaterial.transparent=true;
+  acidMaterial.extensions.derivatives=true;
+  updateAcidColors();
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
@@ -816,6 +1027,21 @@ function configureEffects(usingPost=true){
   for(const [uniform,property] of Object.entries(OTHERSPACE_STATE_KEYS)){
     o[uniform].value=Number(state[property]);
   }
+  const acid=acidMaterial.uniforms;
+  acid.resolution.value.set(effectW,effectH);
+  acid.viewportOrigin.value.set(0,0);
+  acid.center.value.set(
+    clamp(p.pointerX*.28+p.gestureX*.06,-.76,.76),
+    clamp(p.pointerY*.28+p.gestureY*.06,-.76,.76)
+  );
+  const acidCenterLength=acid.center.value.length();
+  if(acidCenterLength>.85)acid.center.value.multiplyScalar(.85/acidCenterLength);
+  acid.time.value=t;
+  acid.acidOpacity.value=state.acidOpacity;
+  acid.acidSolo.value=state.acidSolo?1:0;
+  for(const [uniform,key] of Object.entries(ACID_STATE_KEYS)){
+    acid[uniform].value=Number(state[key]);
+  }
   const f=feedbackMaterial.uniforms;
   f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
@@ -839,25 +1065,29 @@ function renderBaseScene(){
   const isAstral=mode.startsWith('astral');
   const isPack2=mode.startsWith('pack2');
   const isTexture=mode.startsWith('texture');
+  const soloAtlas=(state.otherSpaceEnabled&&state.otherSpaceSolo)||(state.acidEnabled&&state.acidSolo);
   if(state.layerBg){
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral'))){
+    if(!soloAtlas&&(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral'))){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='field'||mode==='hybrid'||mode.endsWith('-field'))){
+    if(!soloAtlas&&(mode==='field'||mode==='hybrid'||mode.endsWith('-field'))){
       fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
-    if(isTexture && !(state.otherSpaceEnabled&&state.otherSpaceSolo)){
+    if(!soloAtlas&&isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
+    if(!soloAtlas&&isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
+    if(isTexture && !soloAtlas){
       const family=Math.round(clamp(state.textureFamily,0,2));
       if(textureReady[family]&&textureScenes[family])renderer.render(textureScenes[family],fieldCamera);
     }
-    if(state.otherSpaceEnabled&&otherSpaceReady){
+    if(state.otherSpaceEnabled&&otherSpaceReady&&!(state.acidEnabled&&state.acidSolo)){
       renderer.render(otherSpaceScene,fieldCamera);
     }
+    if(state.acidEnabled&&acidReady&&!(state.otherSpaceEnabled&&state.otherSpaceSolo)){
+      renderer.render(acidScene,fieldCamera);
+    }
   }
-  if(isAstral&&!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&astralReady&&state.layerAstralSwarm&&astralPoints){
+  if(isAstral&&!soloAtlas&&astralReady&&state.layerAstralSwarm&&astralPoints){
     renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
@@ -1253,6 +1483,8 @@ function loadDNA(dna){
   state.quality=clamp(state.quality,.8,2.5);
   if(!paletteList.some(p=>p.id===state.paletteId))state.paletteId=defaultState.paletteId;
   editedColors=(Array.isArray(dna.editedColors)&&dna.editedColors.length===getPalette().colors.length&&dna.editedColors.every(c=>/^#[0-9a-fA-F]{6}$/.test(c)))?[...dna.editedColors]:null;
+  if(mobile&&state.acidEnabled)state.acidDepth=Math.min(24,state.acidDepth);
+  if(state.acidEnabled&&!ensureAcid()){state.acidEnabled=false;state.acidSolo=false;}
   pickPalette(state.paletteId,false);syncControls();resize();notify('ART DNA LOADED');
 }
 function availableFormat(){
@@ -1315,7 +1547,7 @@ function favoriteLoad(){
   }catch(e){notify('COULD NOT LOAD FAVORITE');}
 }
 function installUI(){
-  fillSelections();makeSliders();
+  fillSelections();makeSliders();installAcidToggles();
   const tabs=[...document.querySelectorAll('#tabs button')];
   tabs.forEach(b=>b.addEventListener('click',()=>{
     tabs.forEach(x=>x.classList.toggle('selected',x===b));
@@ -1387,6 +1619,33 @@ function installUI(){
   $('textureSolo').addEventListener('click',()=>switchNewEngine('texture'));
   $('textureField').addEventListener('click',()=>switchNewEngine('texture-field'));
   $('textureCathedral').addEventListener('click',()=>switchNewEngine('texture-cathedral'));
+  $('acidModeSelect').addEventListener('change',e=>loadAcidStarter(Number(e.target.value)));
+  $('acidProjectionSelect').addEventListener('change',e=>{
+    state.acidProjection=Number(e.target.value);
+    if(!state.acidEnabled)state.acidEnabled=ensureAcid();
+    state.otherSpaceSolo=false;
+    syncControls();
+  });
+  $('acidBlend').addEventListener('click',()=>{
+    if(!ensureAcid())return;
+    state.acidEnabled=true;state.acidSolo=false;state.otherSpaceSolo=false;state.layerBg=true;
+    if(state.acidOpacity<.06||state.acidOpacity>.98)state.acidOpacity=.28;
+    syncControls();notify('ACID MATHEMATICS BLENDED INTO ART');
+  });
+  $('acidSolo').addEventListener('click',()=>{
+    if(!ensureAcid())return;
+    state.acidEnabled=true;state.acidSolo=true;state.otherSpaceSolo=false;
+    state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;
+    syncControls();notify('SOLO OTHERSPACE II · TEN SOURCE MATHEMATICS');
+  });
+  $('acidOff').addEventListener('click',()=>{
+    state.acidEnabled=false;state.acidSolo=false;
+    syncControls();clearTrails();notify('ACID ATLAS DISABLED');
+  });
+  $('acidSourcePalette').addEventListener('click',()=>{applyAcidStarterPalette();notify('ORIGINAL ACID STARTER PALETTE');});
+  $('acidRandomPalette').addEventListener('click',randomAcidPalette);
+  $('acidMutate').addEventListener('click',mutateAcid);
+  $('acidFxDice').addEventListener('click',acidRollFx);
   $('otherSpaceModeSelect').addEventListener('change',e=>loadOtherSpaceStarter(Number(e.target.value)));
   $('otherSpaceProjectionSelect').addEventListener('change',e=>{
     state.otherSpaceProjection=Number(e.target.value);
@@ -1395,13 +1654,13 @@ function installUI(){
   });
   $('otherSpaceBlend').addEventListener('click',()=>{
     if(!ensureOtherSpace())return;
-    state.otherSpaceEnabled=true;state.otherSpaceSolo=false;state.layerBg=true;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=false;state.acidSolo=false;state.layerBg=true;
     if(state.otherSpaceOpacity<.06)state.otherSpaceOpacity=.24;
     syncControls();notify('OTHERSPACE MATHEMATICS OVERLAY ENABLED');
   });
   $('otherSpaceSolo').addEventListener('click',()=>{
     if(!ensureOtherSpace())return;
-    state.otherSpaceEnabled=true;state.otherSpaceSolo=true;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=true;state.acidSolo=false;
     state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;
     syncControls();notify('SOLO OTHERSPACE · ORIGINAL HYPERBOLIC MATHEMATICS');
   });
