@@ -40,3 +40,13 @@ PNG saves the current rendered frame. Browser video recording capabilities diffe
 ### Play and testing status
 
 Run `npm install && npm run dev` in the repo, then open the local address. `npm run build` produces a static website in `dist/`. **Source and static checks passed** (JS parse, UI binding references, shader structural checks, preset palette IDs); a real browser GPU compilation and iPhone Safari performance check are **still required**. Heavy cathedral mode should be tested at low Ray Depth first. A build in GitHub is not a live website and does not consume Netlify credits by itself.
+
+## Opal Cathedral Memory Garden — interactive glass fusion
+
+The default startup design is now **32 · OPAL CATHEDRAL MEMORY GARDEN**. It combines a moving 4D raymarched corridor, a subtle 3D gyroid optical field, a **two-sided translucent silica cage** with thin-film pearlescent lighting, and a GPU curl-feedback simulation. It adds three related distinct glass/cathedral presets (33–35); the original 0–31 presets are unchanged.
+
+New Opal controls in **Optics**: shell opacity, pearlescent transmission, optical thickness, and Fresnel edge glow. **Flow / Print** adds gesture-driven curl impulse strength. Dragging the art creates directional flow injection in the history buffer around the fingertip, while ordinary camera and field gestures still work. The hero opens in orbital drag mode, with Sculpt mode available in **Motion**.
+
+Press **ENTER OPAL CATHEDRAL MEMORY GARDEN** on the Designs tab to return to this scene from any other artwork. Its initial palette is the existing `itsamoire/opal`, but all 162 local palette IDs and per-stop editing remain available. **None of these modes uses a paid API or launches a Netlify deployment.**
+
+The translucent material is a physically inspired alpha/Fresnel/thin-film optical approximation, **not real glass transmission or ray-traced refraction**. GPU shader compilation, particularly WebGL Safari performance, must still be validated on a live device; JavaScript syntax and static code/controls tests alone do not certify it.
