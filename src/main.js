@@ -732,6 +732,20 @@ function buildEffects(){
   otherSpaceMaterial.transparent=true;
   otherSpaceMaterial.extensions.derivatives=true;
   updateOtherSpaceColors();
+  const acidUniforms={
+    resolution:vec(),center:vec(),viewportOrigin:vec(),
+    time:{value:0},acidOpacity:{value:0},acidSolo:{value:0},
+    c0:{value:new THREE.Color('#000000')},c1:{value:new THREE.Color('#ffffff')},
+    c2:{value:new THREE.Color('#ffffff')},c3:{value:new THREE.Color('#ffffff')},
+    c4:{value:new THREE.Color('#ffffff')}
+  };
+  for(const [key,val] of Object.entries(ACID_DEFAULT)){
+    acidUniforms[key]={value:typeof val==='boolean'?Number(val):val};
+  }
+  [acidScene,acidMaterial]=pass(acidFragment,acidUniforms);
+  acidMaterial.transparent=true;
+  acidMaterial.extensions.derivatives=true;
+  updateAcidColors();
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
@@ -859,6 +873,21 @@ function configureEffects(usingPost=true){
   o.atlasOpacity.value=state.otherSpaceSolo?1:state.otherSpaceOpacity;
   for(const [uniform,property] of Object.entries(OTHERSPACE_STATE_KEYS)){
     o[uniform].value=Number(state[property]);
+  }
+  const acid=acidMaterial.uniforms;
+  acid.resolution.value.set(effectW,effectH);
+  acid.viewportOrigin.value.set(0,0);
+  acid.center.value.set(
+    clamp(p.pointerX*.28+p.gestureX*.06,-.76,.76),
+    clamp(p.pointerY*.28+p.gestureY*.06,-.76,.76)
+  );
+  const acidCenterLength=acid.center.value.length();
+  if(acidCenterLength>.85)acid.center.value.multiplyScalar(.85/acidCenterLength);
+  acid.time.value=t;
+  acid.acidOpacity.value=state.acidOpacity;
+  acid.acidSolo.value=state.acidSolo?1:0;
+  for(const [uniform,key] of Object.entries(ACID_STATE_KEYS)){
+    acid[uniform].value=Number(state[key]);
   }
   const f=feedbackMaterial.uniforms;
   f.uResolution.value.set(effectW,effectH);
