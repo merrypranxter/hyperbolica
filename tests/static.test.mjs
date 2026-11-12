@@ -13,8 +13,8 @@ const shaders=[
   'src/shaders/glyph.vert','src/shaders/glyph.frag'
 ];
 
-test('all 103 real palettes and colors are present',()=>{
-  assert.equal(vault.palettes.length,103);
+test('all 162 real palettes and colors are present',()=>{
+  assert.equal(vault.palettes.length,162);
   assert.equal(names.size,vault.palettes.length);
   for(const p of vault.palettes){
     assert.ok(p.colors.length>=2,p.id);
