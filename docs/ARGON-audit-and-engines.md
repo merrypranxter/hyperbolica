@@ -42,7 +42,7 @@ Scores are editorial estimates from 1 to 5, not measured results. **O** = origin
 | 9 | **Nonreciprocal Tideglass** — two materials that refuse thermodynamic reciprocity | 5 | 5 | 5 | 3 | Asymmetric conserved couplings cause chasing domains and traveling phase boundaries. |
 | 10 | **Catastrophe Aquarium** — a glass organism cultivated by its own caustics | 5 | 5 | 5 | 2 | Fold/cusp caustic energy causes photoresponsive growth, closing a geometry–light loop. |
 
-The strongest four for this series are ranks 1–4. Only rank 1 is implemented in the first installment. Each subsequent substantial experiment begins after **NEXT**, as requested.
+The strongest four for this series are ranks 1–4. Rank 1 was implemented in the first installment. After the artist's **NEXT**, rank 2 is now implemented separately at `experiments/disclination-silk/`; its README distinguishes the reduced spring-chain model from the broader proposal below. Each subsequent substantial experiment begins after **NEXT**, as requested.
 
 ### 1. Spinodal Reliquary — selected first
 

@@ -1,6 +1,10 @@
 # HYPERBOLICA
 **A playable mathematical biomineral / photoelastic / quasicrystal / manifold / particle-swarm art laboratory.**
 
+## ARGON experiment 002 — Disclination Silk
+
+An evolving Q-tensor guides actual retained glass-fiber paths; spring extension generates stress that changes later alignment and optical response. Open `/experiments/disclination-silk/` after starting the local server. [Play, model and limits](experiments/disclination-silk/README.md). This standalone addition preserves all original engines and experiment 001; it is a reduced active-matter/spring-chain model rather than a full hydrodynamic or textile solver.
+
 ## ARGON experiment 001 — Spinodal Reliquary
 
 An independent playable material-state experiment is at [`experiments/spinodal-reliquary/index.html`](experiments/spinodal-reliquary/index.html). After `npm run dev`, open `/experiments/spinodal-reliquary/`. It implements conservative phase separation, nutrient-limited mineral deposition, reciprocal mobility/permeability feedback, and persistent deposition-driven relief/optics. Existing engines and designs are unchanged. [Play instructions, equations and validation limits](experiments/spinodal-reliquary/README.md) · [Source audit and ten ranked engine proposals](docs/ARGON-audit-and-engines.md).
