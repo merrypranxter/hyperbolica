@@ -7,6 +7,7 @@ precision highp float;
         uniform sampler2D uPalette;
         uniform float uPalettePhase;
         uniform float uPaletteInkMix;
+        uniform float uChromaLock;
         uniform float uHalftoneMix;
         uniform float     uHalftoneScale;
         uniform float     uAcidOverdrive;
@@ -88,10 +89,10 @@ precision highp float;
                 vec3 spotPrint = blackSubstrate;
 
                 // Screen-print each spot-neon plastisol ink plate using max/screen ink layering
-                vec3 inkCyan    = vec3(0.00, 0.96, 1.00) * dotC * (0.35 + 0.85 * cyanSpot);
-                vec3 inkMagenta = vec3(1.00, 0.00, 0.55) * dotM * (0.35 + 0.85 * magentaSpot);
-                vec3 inkLimeYel = vec3(0.72, 1.00, 0.00) * dotY * (0.35 + 0.85 * limeYelSpot);
-                vec3 inkViolet  = vec3(0.58, 0.00, 1.00) * dotV * 0.55;
+                vec3 inkCyan    = mix(vec3(0.00, 0.96, 1.00), texture2D(uPalette,vec2(fract(uPalettePhase+0.05),0.5)).rgb, uPaletteInkMix) * dotC * (0.35 + 0.85 * cyanSpot);
+                vec3 inkMagenta = mix(vec3(1.00, 0.00, 0.55), texture2D(uPalette,vec2(fract(uPalettePhase+0.30),0.5)).rgb, uPaletteInkMix) * dotM * (0.35 + 0.85 * magentaSpot);
+                vec3 inkLimeYel = mix(vec3(0.72, 1.00, 0.00), texture2D(uPalette,vec2(fract(uPalettePhase+0.55),0.5)).rgb, uPaletteInkMix) * dotY * (0.35 + 0.85 * limeYelSpot);
+                vec3 inkViolet  = mix(vec3(0.58, 0.00, 1.00), texture2D(uPalette,vec2(fract(uPalettePhase+0.82),0.5)).rgb, uPaletteInkMix) * dotV * 0.55;
 
                 // Combine spot plates while carving dark moiré interference fringes between dots
                 spotPrint = max(spotPrint, inkViolet);
@@ -119,7 +120,7 @@ precision highp float;
 
             // Anti-Whiteout Guard: If all 3 RGB channels rise together, subtract the white floor
             float commonWhite = min(overdriven.r, min(overdriven.g, overdriven.b));
-            overdriven -= max(commonWhite - 0.24, 0.0) * 0.90;
+            overdriven -= max(commonWhite - 0.24, 0.0) * 0.90 * uChromaLock;
 
             vec3 finalRGB = safeTanh(overdriven * (0.90 + 0.15 * uAcidOverdrive));
 
