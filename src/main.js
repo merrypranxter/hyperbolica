@@ -455,6 +455,7 @@ function syncControls(){
   if(swarm)swarm.visible=state.layerSwarm;
   setSpriteCount();
   setAstralCount();
+  updateAcidSliderLabels();
 }
 // Avoid compiling three additional heavyweight shader families on startup;
  // compile only the new mode actually selected so the existing Opal Garden stays snappy.
@@ -664,7 +665,7 @@ function loadOtherSpaceStarter(index){
   }
   if(mobile)state.otherSpaceDepth=Math.min(24,state.otherSpaceDepth);
   state.otherSpaceMode=index;validateOtherSpaceTiling();
-  state.otherSpaceEnabled=true;state.layerBg=true;
+  state.otherSpaceEnabled=true;state.layerBg=true;state.acidSolo=false;
   syncControls();clearTrails();notify('OTHERSPACE · '+recipe.name.toUpperCase());
 }
 function applyOtherSpaceSourceColors(){
@@ -697,9 +698,11 @@ function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
   if(!ensureAddOn(preset.renderMode||'field',preset.textureFamily??state.textureFamily))return;
+  if(preset.acidEnabled&&!ensureAcid())return;
   const base=copy(defaultState);
   const keepLayers={};
-  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm',...Object.keys(state).filter(x=>x.startsWith('otherSpace'))]){
+  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm',
+    ...Object.keys(state).filter(x=>x.startsWith('otherSpace')||x.startsWith('acid'))]){
     if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
   }
   Object.assign(state,base,preset,keepLayers);
@@ -1531,7 +1534,7 @@ function favoriteLoad(){
   }catch(e){notify('COULD NOT LOAD FAVORITE');}
 }
 function installUI(){
-  fillSelections();makeSliders();
+  fillSelections();makeSliders();installAcidToggles();
   const tabs=[...document.querySelectorAll('#tabs button')];
   tabs.forEach(b=>b.addEventListener('click',()=>{
     tabs.forEach(x=>x.classList.toggle('selected',x===b));
@@ -1603,6 +1606,33 @@ function installUI(){
   $('textureSolo').addEventListener('click',()=>switchNewEngine('texture'));
   $('textureField').addEventListener('click',()=>switchNewEngine('texture-field'));
   $('textureCathedral').addEventListener('click',()=>switchNewEngine('texture-cathedral'));
+  $('acidModeSelect').addEventListener('change',e=>loadAcidStarter(Number(e.target.value)));
+  $('acidProjectionSelect').addEventListener('change',e=>{
+    state.acidProjection=Number(e.target.value);
+    if(!state.acidEnabled)state.acidEnabled=ensureAcid();
+    state.otherSpaceSolo=false;
+    syncControls();
+  });
+  $('acidBlend').addEventListener('click',()=>{
+    if(!ensureAcid())return;
+    state.acidEnabled=true;state.acidSolo=false;state.otherSpaceSolo=false;state.layerBg=true;
+    if(state.acidOpacity<.06)state.acidOpacity=.28;
+    syncControls();notify('ACID MATHEMATICS BLENDED INTO ART');
+  });
+  $('acidSolo').addEventListener('click',()=>{
+    if(!ensureAcid())return;
+    state.acidEnabled=true;state.acidSolo=true;state.otherSpaceSolo=false;
+    state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;
+    syncControls();notify('SOLO OTHERSPACE II · TEN SOURCE MATHEMATICS');
+  });
+  $('acidOff').addEventListener('click',()=>{
+    state.acidEnabled=false;state.acidSolo=false;
+    syncControls();clearTrails();notify('ACID ATLAS DISABLED');
+  });
+  $('acidSourcePalette').addEventListener('click',()=>{applyAcidStarterPalette();notify('ORIGINAL ACID STARTER PALETTE');});
+  $('acidRandomPalette').addEventListener('click',randomAcidPalette);
+  $('acidMutate').addEventListener('click',mutateAcid);
+  $('acidFxDice').addEventListener('click',acidRollFx);
   $('otherSpaceModeSelect').addEventListener('change',e=>loadOtherSpaceStarter(Number(e.target.value)));
   $('otherSpaceProjectionSelect').addEventListener('change',e=>{
     state.otherSpaceProjection=Number(e.target.value);
@@ -1611,13 +1641,13 @@ function installUI(){
   });
   $('otherSpaceBlend').addEventListener('click',()=>{
     if(!ensureOtherSpace())return;
-    state.otherSpaceEnabled=true;state.otherSpaceSolo=false;state.layerBg=true;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=false;state.acidSolo=false;state.layerBg=true;
     if(state.otherSpaceOpacity<.06)state.otherSpaceOpacity=.24;
     syncControls();notify('OTHERSPACE MATHEMATICS OVERLAY ENABLED');
   });
   $('otherSpaceSolo').addEventListener('click',()=>{
     if(!ensureOtherSpace())return;
-    state.otherSpaceEnabled=true;state.otherSpaceSolo=true;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=true;state.acidSolo=false;
     state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;
     syncControls();notify('SOLO OTHERSPACE · ORIGINAL HYPERBOLIC MATHEMATICS');
   });
