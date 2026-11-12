@@ -347,6 +347,19 @@ function initRenderer(){
   swarm=new THREE.Mesh(makeSwarmGeometry(),swarmMaterial);swarm.frustumCulled=false;scene.add(swarm);
   setupInteraction();
   resize();
+  // Fail visibly instead of leaving the artist staring at a mysterious black canvas.
+  const shaderFailures=[];
+  const normalError=console.error;
+  console.error=(...args)=>{
+    const message=args.map(a=>String(a)).join(' ');
+    if(message.includes('THREE.WebGLProgram')||message.includes('Shader Error'))shaderFailures.push(message);
+    normalError.apply(console,args);
+  };
+  try{
+    renderer.compile(fieldScene,fieldCamera);
+    renderer.compile(scene,camera);
+  }finally{console.error=normalError;}
+  if(shaderFailures.length)throw new Error('GPU shader compilation failed: '+shaderFailures.join('\n').slice(0,3500));
   window.addEventListener('resize',resize);
   if(window.ResizeObserver)new ResizeObserver(resize).observe($('canvasMount'));
   statusEl.textContent='GPU READY · THREE.JS / GLSL · FIELD + 3D + SWARM';
