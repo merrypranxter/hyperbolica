@@ -912,25 +912,29 @@ function renderBaseScene(){
   const isAstral=mode.startsWith('astral');
   const isPack2=mode.startsWith('pack2');
   const isTexture=mode.startsWith('texture');
+  const soloAtlas=(state.otherSpaceEnabled&&state.otherSpaceSolo)||(state.acidEnabled&&state.acidSolo);
   if(state.layerBg){
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral'))){
+    if(!soloAtlas&&(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral'))){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='field'||mode==='hybrid'||mode.endsWith('-field'))){
+    if(!soloAtlas&&(mode==='field'||mode==='hybrid'||mode.endsWith('-field'))){
       fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
-    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
-    if(isTexture && !(state.otherSpaceEnabled&&state.otherSpaceSolo)){
+    if(!soloAtlas&&isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
+    if(!soloAtlas&&isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
+    if(isTexture && !soloAtlas){
       const family=Math.round(clamp(state.textureFamily,0,2));
       if(textureReady[family]&&textureScenes[family])renderer.render(textureScenes[family],fieldCamera);
     }
-    if(state.otherSpaceEnabled&&otherSpaceReady){
+    if(state.otherSpaceEnabled&&otherSpaceReady&&!(state.acidEnabled&&state.acidSolo)){
       renderer.render(otherSpaceScene,fieldCamera);
     }
+    if(state.acidEnabled&&acidReady&&!(state.otherSpaceEnabled&&state.otherSpaceSolo)){
+      renderer.render(acidScene,fieldCamera);
+    }
   }
-  if(isAstral&&!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&astralReady&&state.layerAstralSwarm&&astralPoints){
+  if(isAstral&&!soloAtlas&&astralReady&&state.layerAstralSwarm&&astralPoints){
     renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
