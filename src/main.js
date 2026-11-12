@@ -875,6 +875,10 @@ function installUI(){
   $('mutateStructure').addEventListener('click',()=>mutate(true));
   $('surprise').addEventListener('click',()=>{mutate(false);shufflePalette();});
   $('applyPreset').addEventListener('click',()=>applyPreset(Number($('presetSelect').value)));
+  $('loadOpalCathedral').addEventListener('click',()=>{
+    const index=PRESETS.findIndex(p=>p.name.includes('OPAL CATHEDRAL MEMORY GARDEN'));
+    if(index>=0)applyPreset(index);
+  });
   $('presetSelect').addEventListener('change',e=>{$('presetInfo').textContent=PRESETS[Number(e.target.value)].detail;});
   const wireLayer=(id,key)=>{
     $(id).addEventListener('click',()=>{state[key]=!state[key];syncControls();notify(key.toUpperCase()+': '+(state[key]?'ON':'OFF'));});
