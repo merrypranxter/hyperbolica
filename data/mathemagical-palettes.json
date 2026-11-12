@@ -27,7 +27,8 @@
       "path": "gemini-lab.js"
     },
     "added_impossibleloom": "merrypranxter/impossibleloom/src/palettes.js",
-    "added_color_systems_and_third_eye": "merrypranxter/austereograms_art_app/src/palette-bank.js"
+    "added_color_systems_and_third_eye": "merrypranxter/austereograms_art_app/src/palette-bank.js",
+    "astral-loom": "Artist-supplied Astral Loom four-engine synthesis HTML (five original 5-stop ink palettes)"
   },
   "palettes": [
     {
@@ -2306,6 +2307,66 @@
         "#00eeff",
         "#5714ff",
         "#ff00b0"
+      ]
+    },
+    {
+      "id": "astral-loom/lisa-frank-1989",
+      "name": "Astral Loom · Lisa Frank 1989",
+      "source": "astral_loom",
+      "colors": [
+        "#ff0085",
+        "#00f5ff",
+        "#b8ff00",
+        "#ffbf00",
+        "#9e00ff"
+      ]
+    },
+    {
+      "id": "astral-loom/ultraviolet-biolume",
+      "name": "Astral Loom · Ultraviolet Biolume",
+      "source": "astral_loom",
+      "colors": [
+        "#7300ff",
+        "#00ffd9",
+        "#26ff40",
+        "#ff00ad",
+        "#ff4700"
+      ]
+    },
+    {
+      "id": "astral-loom/cyber-ska-acid-lime",
+      "name": "Astral Loom · Cyber-Ska Acid Lime",
+      "source": "astral_loom",
+      "colors": [
+        "#a6ff00",
+        "#ffeb00",
+        "#ff0073",
+        "#00a6ff",
+        "#8c00f2"
+      ]
+    },
+    {
+      "id": "astral-loom/tokyo-vhs-chrome",
+      "name": "Astral Loom · Tokyo VHS Chrome",
+      "source": "astral_loom",
+      "colors": [
+        "#ff0d61",
+        "#00ebff",
+        "#ff5200",
+        "#b300ff",
+        "#ffd900"
+      ]
+    },
+    {
+      "id": "astral-loom/radioactive-diatom",
+      "name": "Astral Loom · Radioactive Diatom",
+      "source": "astral_loom",
+      "colors": [
+        "#00ff73",
+        "#00d1ff",
+        "#ff00bf",
+        "#ff9900",
+        "#6b00ff"
       ]
     }
   ]
