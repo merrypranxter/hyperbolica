@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from '../src/presets.js';
 import { HYPER_WEAVE_PACK2_PRESETS } from '../src/engines/HyperWeavePack2.js';
 import { OTHERSPACE_MODES, OTHERSPACE_PALETTES, OTHERSPACE_DEFAULT } from '../src/otherspace-atlas.js';
+import { ACID_MODES, ACID_PALETTES, ACID_DEFAULT, ACID_RANGES, ACID_CHECKS } from '../src/otherspace-acid.js';
 
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const vault=JSON.parse(read('data/mathemagical-palettes.json'));
@@ -20,8 +21,8 @@ const shaders=[
   'src/shaders/otherspace-atlas.frag'
 ];
 
-test('all 180 real palettes and colors are present',()=>{
-  assert.equal(vault.palettes.length,180);
+test('all 194 real palettes and colors are present',()=>{
+  assert.equal(vault.palettes.length,194);
   assert.equal(names.size,vault.palettes.length);
   for(const p of vault.palettes){
     assert.ok(p.colors.length>=2,p.id);
@@ -31,7 +32,7 @@ test('all 180 real palettes and colors are present',()=>{
 test('the math engines expose distinct families',()=>{
   assert.equal(FIELD_FAMILIES.length,16);
   assert.equal(MESH_FAMILIES.length,12);
-  assert.ok(PRESETS.length>=57);
+  assert.ok(PRESETS.length>=67);
 });
 test('presets only reference existing palettes and math families',()=>{
   for(const preset of PRESETS){
@@ -143,6 +144,57 @@ test('OTHERSPACE original ten-mode stand-alone math and palettes are preserved s
     assert.ok(shader.includes(symbol),symbol);
   }
 });
+test('OTHERSPACE II contains 10 original mathematical families, not relabeled prior art',()=>{
+  assert.equal(ACID_MODES.length,10);
+  assert.equal(ACID_PALETTES.length,14);
+  assert.equal(vault.palettes.filter(p=>p.source==='otherspace-ii').length,14);
+  assert.equal(ACID_DEFAULT.mode,0);
+  for(const mode of ACID_MODES){
+    assert.ok(mode.name&&mode.tag&&mode.note&&mode.params&&mode.fx&&mode.labels);
+    assert.ok(ACID_PALETTES[mode.palette]);
+  }
+  assert.ok(Object.keys(ACID_RANGES).length>=20);
+  assert.ok(Object.keys(ACID_CHECKS).length>=17);
+  assert.equal(PRESETS.filter(p=>p.acidEnabled).length,10);
+  for(const preset of PRESETS.filter(p=>p.acidEnabled)){
+    assert.ok(preset.acidSolo);
+    assert.ok(preset.palette.startsWith('otherspace-ii/'));
+    assert.ok(vault.palettes.some(p=>p.id===preset.palette));
+    assert.equal(preset.layerBg,true);
+    assert.equal(preset.layerMesh,false);
+  }
+  const original=read('legacy/otherspace-ii-hyperbolic-acid-atlas-original.html');
+  for(const exact of ['const MODES=','const PALETTES=','Modular Jellyfish','Blaschke Bloom',
+    'Geodesic Times Table','Apollonian Proper','function applyRecipe(']){
+    assert.ok(original.includes(exact),exact);
+  }
+  assert.ok(original.trimEnd().endsWith('</html>'));
+  const shader=read('src/shaders/otherspace-acid.frag');
+  for(const functionName of ['vec2 mobius(','float hd(','vec2 uhp(','vec3 field(','acidOpacity','acidSolo']){
+    assert.ok(shader.includes(functionName),functionName);
+  }
+  assert.ok(!shader.includes('#extension GL_OES_standard_derivatives'));
+});
+test('Acid Atlas GPU shader is opt-in and all normal designs are still playable',()=>{
+  assert.match(main,/defaultState\.acidEnabled=false/);
+  assert.match(main,/function ensureAcid\(/);
+  assert.match(main,/renderer\.compile\(acidScene,fieldCamera\)/);
+  assert.match(main,/renderer\.render\(acidScene,fieldCamera\)/);
+  assert.match(main,/updateAcidColors\(\)/);
+  assert.match(main,/function loadAcidStarter\(/);
+  assert.match(main,/ACID_MODES\.forEach/);
+  assert.match(main,/acidSolo/);
+  assert.match(html,/data-page="acid"/);
+  assert.match(html,/id="acidOff"/);
+  assert.match(html,/id="acidBlend"/);
+  assert.match(html,/id="acidSolo"/);
+  assert.match(html,/value="2">Upper half-plane/);
+  assert.match(html,/value="3">Band model/);
+  const hero=PRESETS.find(p=>p.name.includes('OPAL CATHEDRAL MEMORY GARDEN'));
+  assert.ok(hero);
+  assert.ok(!hero.acidEnabled);
+});
+
 test('OPTIONAL OTHERSPACE background is explicitly OFF in all normal startup art',()=>{
   assert.match(main,/otherSpaceEnabled:false/);
   assert.match(main,/function ensureOtherSpace/);
