@@ -857,7 +857,7 @@ function renderBaseScene(){
       renderer.render(otherSpaceScene,fieldCamera);
     }
   }
-  if(isAstral&&astralReady&&state.layerAstralSwarm&&astralPoints){
+  if(isAstral&&!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&astralReady&&state.layerAstralSwarm&&astralPoints){
     renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
