@@ -10,7 +10,8 @@ const html=read('index.html'),main=read('src/main.js');
 const shaders=[
   'src/shaders/screen.vert','src/shaders/field.frag',
   'src/shaders/manifold.vert','src/shaders/manifold.frag',
-  'src/shaders/glyph.vert','src/shaders/glyph.frag'
+  'src/shaders/glyph.vert','src/shaders/glyph.frag',
+  'src/shaders/cathedral.frag','src/shaders/curl-feedback.frag','src/shaders/halftone.frag'
 ];
 
 test('all 162 real palettes and colors are present',()=>{
@@ -24,7 +25,7 @@ test('all 162 real palettes and colors are present',()=>{
 test('the math engines expose distinct families',()=>{
   assert.equal(FIELD_FAMILIES.length,16);
   assert.equal(MESH_FAMILIES.length,12);
-  assert.ok(PRESETS.length>=24);
+  assert.ok(PRESETS.length>=32);
 });
 test('presets only reference existing palettes and math families',()=>{
   for(const preset of PRESETS){
@@ -51,6 +52,13 @@ test('shader sources are present and have balanced delimiters',()=>{
     assert.equal(source.includes('sinh('),false,path+' has unsupported GLSL 1.00 sinh()');
   }
 });
+test('the cathedral source was preserved as its own reference',()=>{
+  const source=read('legacy/hyperloom-nematic-cathedral-original.html');
+  assert.match(source,/4D NEMATIC CATHEDRAL/);
+  assert.match(source,/DUAL-FBO CURL FLOW/);
+  assert.match(source,/PASS 3 FRAGMENT SHADER/);
+});
+
 test('uploaded artist source is preserved as its own reference',()=>{
   const legacy=read('legacy/hyperbolic-photoelastic-original.html');
   assert.match(legacy,/HYPERBOLIC PHOTOELASTIC BIOMINERALIZATION/);
