@@ -40,13 +40,14 @@
         <button data-tab="palette">PALETTES</button>
         <button data-tab="motion">MOTION</button>
         <button data-tab="cathedral">CATHEDRAL</button>
+        <button data-tab="astral">ASTRAL LAB</button>
         <button data-tab="feedback">FLOW / PRINT</button>
         <button data-tab="export">EXPORT</button>
       </nav>
       <div id="tabBody">
         <section data-page="designs">
           <div class="section-title"><strong>MATHEMATICAL FAMILIES</strong><span>THE SHAPES CHANGE, NOT JUST COLORS</span></div>
-          <label>Artwork engine<select id="renderMode"><option value="field">Original Biomineral Fields</option><option value="cathedral">Flying 4D Cathedral</option><option value="hybrid">HYBRID · Cathedral + Mathematical Field</option></select></label>
+          <label>Artwork engine<select id="renderMode"><option value="field">Original Biomineral Fields</option><option value="cathedral">Flying 4D Cathedral</option><option value="hybrid">HYBRID · Cathedral + Mathematical Field</option><option value="astral">ASTRAL · Four-Engine Morph Lab</option><option value="astral-field">ASTRAL + Biomineral Fields</option><option value="astral-cathedral">ASTRAL + 4D Cathedral</option></select></label>
           <label>Curated starting designs<select id="presetSelect"></select></label>
           <div id="presetInfo" class="hint"></div>
           <div class="buttons"><button id="loadOpalCathedral" class="action hot wide">✧ ENTER OPAL CATHEDRAL MEMORY GARDEN ✧</button></div>
@@ -88,7 +89,7 @@
         </section>
         <section data-page="palette" hidden>
           <div class="section-title"><strong id="paletteCountLabel">MATHEMAGICAL PALETTES</strong><span>ORIGINAL COLOR STOPS</span></div>
-          <label>Filter by source<select id="paletteSource"><option value="all">All 162 palettes</option></select></label>
+          <label>Filter by source<select id="paletteSource"><option value="all">All palettes</option></select></label>
           <label>Palette<select id="paletteSelect"></select></label>
           <div id="paletteSwatches"></div>
           <div class="buttons">
@@ -121,7 +122,7 @@
           <label>Cathedral render mix<select id="renderModeCathedral">
             <option value="field">Original biomineral fields</option>
             <option value="cathedral">4D cathedral tunnel</option>
-            <option value="hybrid">Cathedral + field hybrid</option>
+            <option value="hybrid">Cathedral + field hybrid</option><option value="astral">ASTRAL · Four-Engine Morph Lab</option><option value="astral-field">ASTRAL + Biomineral Fields</option><option value="astral-cathedral">ASTRAL + 4D Cathedral</option>
           </select></label>
           <div id="cathedralSliders"></div>
           <div class="buttons">
@@ -130,6 +131,26 @@
             <button class="action" id="cathedralEverything">ALL LAYERS</button>
           </div>
           <p class="hint">For older iPhone GPUs, reduce Ray Depth, then lower Render Pixel Ratio in Motion. The app never needs a paid GPU server.</p>
+        </section>
+        <section data-page="astral" hidden>
+          <div class="section-title"><strong>ASTRAL LOOM · FOUR MATHEMATICAL ENGINES</strong><span>INDEPENDENT CONTINUOUS CROSS-MORPH</span></div>
+          <p class="hint">Original source-faithful mathematical fields: Calabi–Yau-inspired complex-sheet folds, animated Turing/Physarum-like bandpass growth, truncated eta/zeta harmonics with crop-circle gears, and Hopf–ferrofoam flux. These are shader models, not laboratory-accurate physical simulators.</p>
+          <label>Engine family<select id="astralEngineSelect">
+            <option value="0">E1 · Calabi–Yau / Weierstrass inspired</option>
+            <option value="1">E2 · Turing / Physarum-style organism</option>
+            <option value="2">E3 · Zeta / Cymatic crop circles</option>
+            <option value="3">E4 · Hopf / Ferrofluid foam</option>
+          </select></label>
+          <div class="buttons">
+            <button class="action hot" id="astralSolo">SOLO ASTRAL</button>
+            <button class="action" id="astralField">ASTRAL + FIELD</button>
+            <button class="action" id="astralCathedral">ASTRAL + CATHEDRAL</button>
+          </div>
+          <div class="section-title">ASTRAL FIELD GENOME</div>
+          <div id="astralSliders"></div>
+          <div class="section-title">AUXILIARY GPU STIPPLE SWARM</div>
+          <button id="astralSwarmToggle" class="chip selected">PHYLLOTAXIS / THOMAS SWARM ON</button>
+          <p class="hint">The 2D point-sprite swarm follows its own phyllotaxis/attractor trajectories and may be mixed with the existing 3D Hopf glyphs. Your selected MATHEMAGICAL palette colors both.</p>
         </section>
         <section data-page="feedback" hidden>
           <div class="section-title"><strong>OPTICAL MEMORY / PRINT ENGINE</strong><span>APPLIES TO ALL ART FAMILIES</span></div>
