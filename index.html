@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080311">
+  <title>HYPERBOLICA // Mathematical Art Laboratory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <div class="brand">
+        <div class="brand-mark">✳</div>
+        <div><strong>HYPERBOLICA</strong><small>BIOMINERAL / 4D / OPTICAL MUTATION ENGINE</small></div>
+      </div>
+      <div class="quick">
+        <button id="newDesign" class="action hot" title="New design (with confirmation)">NEW DESIGN</button>
+        <button id="mutate" class="action">MUTATE ⚄</button>
+        <button id="savePng" class="action">PNG ↓</button>
+        <button id="pause" class="action">PAUSE</button>
+        <button id="togglePanel" class="action neon">HIDE PANEL</button>
+      </div>
+    </header>
+    <main id="stage" aria-label="Interactive 3D mathematical art surface">
+      <div id="canvasMount"></div>
+      <div id="bottomHud">
+        <span id="status">INITIALIZING GPU…</span>
+        <span id="gestureHint">DRAG: ORBIT + WARP · PINCH: ZOOM</span>
+      </div>
+      <div id="fatal" hidden><strong>RENDERER ERROR</strong><pre id="errorText"></pre><button id="retry">RETRY</button></div>
+    </main>
+    <aside id="panel">
+      <nav id="tabs" aria-label="Art parameters">
+        <button data-tab="designs" class="selected">DESIGNS</button>
+        <button data-tab="structure">STRUCTURE</button>
+        <button data-tab="optics">OPTICS</button>
+        <button data-tab="palette">PALETTES</button>
+        <button data-tab="motion">MOTION</button>
+        <button data-tab="export">EXPORT</button>
+      </nav>
+      <div id="tabBody">
+        <section data-page="designs">
+          <div class="section-title"><strong>MATHEMATICAL FAMILIES</strong><span>THE SHAPES CHANGE, NOT JUST COLORS</span></div>
+          <label>Curated starting designs<select id="presetSelect"></select></label>
+          <div id="presetInfo" class="hint"></div>
+          <div class="buttons">
+            <button id="applyPreset" class="action hot">LOAD DESIGN</button>
+            <button id="mutateStructure" class="action">MUTATE STRUCTURE</button>
+          </div>
+          <div class="section-title">RENDER LAYERS</div>
+          <div class="toggleRow">
+            <button id="bgToggle" class="chip selected">FIELD</button>
+            <button id="meshToggle" class="chip selected">3D BODY</button>
+            <button id="swarmToggle" class="chip selected">SWARM</button>
+          </div>
+          <p class="hint">Every layer is independently switchable. Drag the canvas to rotate the 3D structure and physically disturb the visual field.</p>
+          <button id="surprise" class="action wide">MAKE SOMETHING WEIRD</button>
+        </section>
+        <section data-page="structure" hidden>
+          <div class="section-title">BACKGROUND MATHEMATICS</div>
+          <label>Field family<select id="fieldMode"></select></label>
+          <div class="section-title">DEFORMING 3D TOPOLOGY</div>
+          <label>Manifold family<select id="meshMode"></select></label>
+          <div id="structureSliders"></div>
+          <div class="buttons">
+            <button id="soloField" class="action">SOLO FIELD</button>
+            <button id="soloMesh" class="action">SOLO 3D</button>
+            <button id="allLayers" class="action">ALL LAYERS</button>
+          </div>
+        </section>
+        <section data-page="optics" hidden>
+          <div class="section-title">PHOTOELASTIC / PRISMATIC MATERIAL LAB</div>
+          <label>Surface substance<select id="materialMode">
+            <option value="0">Iridescent silica</option>
+            <option value="1">Velvet nacre</option>
+            <option value="2">Chromed opal</option>
+            <option value="3">Anisotropic satin</option>
+            <option value="4">Wet glass / pearl</option>
+          </select></label>
+          <div id="opticSliders"></div>
+        </section>
+        <section data-page="palette" hidden>
+          <div class="section-title"><strong>103 MATHEMAGICAL PALETTES</strong><span>ORIGINAL COLOR STOPS</span></div>
+          <label>Filter by source<select id="paletteSource"><option value="all">All 103 palettes</option></select></label>
+          <label>Palette<select id="paletteSelect"></select></label>
+          <div id="paletteSwatches"></div>
+          <div class="buttons">
+            <button id="shufflePalette" class="action hot">NEW PALETTE</button>
+            <button id="shuffleStops" class="action">SHUFFLE STOPS</button>
+            <button id="resetStops" class="action">RESTORE STOPS</button>
+          </div>
+          <div class="section-title">COLOR STOPS — TAP TO EDIT</div>
+          <div id="paletteStopEditors"></div>
+          <div id="paletteSliders"></div>
+          <p class="hint">The original palette stays intact in the vault. Edited stop orders live in this artwork's DNA.</p>
+        </section>
+        <section data-page="motion" hidden>
+          <div class="section-title">MATHEMATICAL TIME / GESTURE ENGINE</div>
+          <div id="motionSliders"></div>
+          <label>Gesture physics<select id="gestureMode">
+            <option value="orbit">Orbit + magnetic tug</option>
+            <option value="sculpt">Sculpt / disturb</option>
+            <option value="orbitOnly">Orbit camera only</option>
+          </select></label>
+          <div class="buttons">
+            <button id="resetView" class="action">RESET CAMERA</button>
+            <button id="freezeField" class="action">FREEZE TIME</button>
+          </div>
+          <p class="hint">Damped and velocity-aware. 3D orbit, moving complex-plane pole, and induced geometric torque are independent but coordinated.</p>
+        </section>
+        <section data-page="export" hidden>
+          <div class="section-title">ARTWORK / DNA / ANIMATION EXPORT</div>
+          <label>PNG resolution<select id="pngSize">
+            <option value="1">Canvas size</option>
+            <option value="2048">2048 × 2048 square</option>
+            <option value="3072">3072 × 3072 square</option>
+            <option value="portrait">1080 × 1920 portrait</option>
+            <option value="landscape">1920 × 1080 landscape</option>
+          </select></label>
+          <div class="buttons">
+            <button id="exportPng" class="action hot">SAVE PNG</button>
+            <button id="copyDNA" class="action">COPY ART DNA</button>
+            <button id="importDNA" class="action">IMPORT DNA</button>
+          </div>
+          <div class="section-title">VIDEO (BROWSER-NATIVE)</div>
+          <label>Duration<select id="duration"><option value="2">2 seconds</option><option value="3">3 seconds</option><option value="5" selected>5 seconds</option><option value="10">10 seconds</option><option value="30">30 seconds</option></select></label>
+          <div class="buttons"><button id="record" class="action">RECORD CLIP</button><button id="cancelRecord" class="action" disabled>CANCEL</button></div>
+          <p class="hint">Video format is chosen by the device's native recorder; MP4 is preferred where supported. GIF and guaranteed exact-loop frame rendering are future upgrades, not claims of this build.</p>
+          <div class="section-title">LOCAL FAVORITES</div>
+          <div class="buttons"><button id="saveFavorite" class="action">SAVE FAVORITE</button><button id="loadFavorite" class="action">LOAD FAVORITE</button></div>
+        </section>
+      </div>
+      <footer class="panelFoot"><span id="renderInfo">WebGL2 · no paid APIs</span><span id="fps">— fps</span></footer>
+    </aside>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="importDialog"><h2>IMPORT ART DNA</h2><textarea id="dnaInput" rows="8" placeholder="Paste Hyperbolica DNA JSON here"></textarea><div class="buttons"><button id="confirmImport" class="action hot">IMPORT</button><button id="closeImport" class="action">CANCEL</button></div></dialog>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
