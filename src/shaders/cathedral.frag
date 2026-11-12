@@ -4,6 +4,7 @@ precision highp float;
         uniform sampler2D uPalette;
         uniform float uPalettePhase;
         uniform float uRayQuality;
+        uniform float uChromaLock;
         uniform vec2 uResolution;
         uniform float uTime;
         uniform vec2  uMouse;
@@ -244,6 +245,7 @@ precision highp float;
             float volWeightAccum = 0.0;
 
             for (int i = 0; i < 56; i++) {
+                if(float(i)>=mix(22.0,56.0,clamp(uRayQuality/2.0,0.0,1.0)))break;
                 vec3 p = ro + rd * t;
                 float stepScale;
                 vec4 res = evaluate4DCathedral(p, stepScale);
@@ -353,7 +355,7 @@ precision highp float;
             vec3 toned = safeTanh(finalColor * 1.15);
             float minChannel = min(toned.r, min(toned.g, toned.b));
             // Strip any residual grey/white floor above 0.35 so colors remain deep dark & hyper-neon
-            toned -= max(minChannel - 0.28, 0.0) * 0.85;
+            toned -= max(minChannel - 0.28, 0.0) * 0.85 * uChromaLock;
 
             gl_FragColor = vec4(clamp(toned, 0.0, 1.0), 1.0);
         }
