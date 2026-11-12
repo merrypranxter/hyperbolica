@@ -7,6 +7,9 @@ import manifoldVertex from './shaders/manifold.vert?raw';
 import manifoldFragment from './shaders/manifold.frag?raw';
 import glyphVertex from './shaders/glyph.vert?raw';
 import glyphFragment from './shaders/glyph.frag?raw';
+import cathedralFragment from './shaders/cathedral.frag?raw';
+import feedbackFragment from './shaders/curl-feedback.frag?raw';
+import printFragment from './shaders/halftone.frag?raw';
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
 
 const $ = id => document.getElementById(id);
@@ -15,7 +18,11 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const copy=x=>JSON.parse(JSON.stringify(x));
 const paletteList=paletteLibrary.palettes;
 const defaultState={
-  fieldMode:0,meshMode:0,paletteId:'itsamoire/acid',
+  fieldMode:0,meshMode:0,paletteId:'itsamoire/acid',renderMode:'field',
+  hybridMix:0.55,rot4D:1.15,cathedralApollo:1.38,chladniFreq:6.50,
+  volumetricGlow:1.55,schlierenFreq:6.80,flySpeed:0.85,rayQuality:mobile?0:1,
+  feedback:0,curlStrength:1.0,halftoneMix:0,halftoneScale:110,
+  acidOverdrive:1.0,dispersion:0,paletteInkMix:1,chromaLock:0,
   symmetry:7,density:4.5,iterations:12,inversion:0.45,warp:1.0,morph:1.25,zoom:1.35,
   iridescence:5.5,saturation:2.4,moire:1.0,glitch:0.12,material:0,porosity:0.16,
   palettePhase:0,speed:0.72,swarmSize:1.1,swarmFlow:0.9,swarmCount:mobile?1800:5500,
@@ -33,6 +40,10 @@ const pointers=new Map();
 let lastPinch=0;
 let renderer,scene,camera,fieldScene,fieldCamera,fieldMesh,mesh,swarm;
 let fieldMaterial,meshMaterial,swarmMaterial,texture;
+let cathedralScene,feedbackScene,printScene;
+let cathedralMaterial,feedbackMaterial,printMaterial;
+let sceneRT=null,historyReadRT=null,historyWriteRT=null;
+let postW=0,postH=0;
 let editedColors=null,selectedPreset=0;
 let t=0,lastStamp=performance.now(),frames=0,lastFpsStamp=lastStamp,fps=0;
 let lastToastTimer=0,recorder=null,recordTimer=0,discardRecording=false;
@@ -56,6 +67,25 @@ const sliderDefs={
     ['porosity','3D SHELL OPENINGS',0,1.5,0.05]
   ],
   palette:[['palettePhase','PALETTE PHASE POSITION',0,1,0.01]],
+  cathedral:[
+    ['hybridMix','BIOMINERAL FIELD OVERLAY MIX',0,1,0.05],
+    ['rot4D','4D POLYCHORON ROTATION',0,3,0.05],
+    ['cathedralApollo','4D APOLLONIAN INVERSION',0.2,2.5,0.02],
+    ['chladniFreq','NODAL SILICA / CHLADNI DENSITY',1,16,0.25],
+    ['volumetricGlow','BIOLUMINESCENT PLASMA',0,3,0.05],
+    ['schlierenFreq','ACTIVE NEMATIC SCHLIEREN',1,15,0.2],
+    ['flySpeed','CATHEDRAL FORWARD / BACK FLIGHT',-2,3,0.05],
+    ['rayQuality','RAY STEPS · 0=FAST, 2=FULL',0,2,1]
+  ],
+  feedback:[
+    ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
+    ['curlStrength','ADVECTIVE FLOW / CURL',0,3,0.05],
+    ['halftoneMix','FOUR-ANGLE SCREEN PRINT',0,1,0.02],
+    ['halftoneScale','SCREEN-PRINT DOT FREQUENCY',30,220,2],
+    ['acidOverdrive','PRINT CHROMA DRIVE',0.5,3.5,0.05],
+    ['dispersion','PRISMATIC / VHS TEAR',0,2,0.02],
+    ['chromaLock','DARK NEON LOCK · 0=FAITHFUL',0,1,0.05]
+  ],
   motion:[
     ['speed','MATHEMATICAL TIME SPEED',0,3,0.05],
     ['swarmSize','SWARM PARTICLE SIZE',0,3,0.05],
@@ -192,6 +222,9 @@ function syncControls(){
   $('meshMode').value=String(state.meshMode);
   $('materialMode').value=String(state.material);
   $('gestureMode').value=state.gestureMode;
+  $('renderMode').value=state.renderMode;
+  $('renderModeCathedral').value=state.renderMode;
+  $('inkMode').value=String(state.paletteInkMix);
   for(const [key,slider] of Object.entries(sliderInputs)){
     slider.value=state[key];$('out-'+key).textContent=String(state[key]);
   }
@@ -614,6 +647,28 @@ function installUI(){
   $('meshMode').addEventListener('change',e=>{state.meshMode=Number(e.target.value);notify(MESH_FAMILIES[state.meshMode]);});
   $('materialMode').addEventListener('change',e=>state.material=Number(e.target.value));
   $('gestureMode').addEventListener('change',e=>state.gestureMode=e.target.value);
+  const chooseRenderMode=value=>{
+    state.renderMode=value;
+    $('renderMode').value=value;
+    $('renderModeCathedral').value=value;
+    clearTrails();
+    notify(value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
+  };
+  $('renderMode').addEventListener('change',e=>chooseRenderMode(e.target.value));
+  $('renderModeCathedral').addEventListener('change',e=>chooseRenderMode(e.target.value));
+  $('inkMode').addEventListener('change',e=>state.paletteInkMix=Number(e.target.value));
+  $('clearTrails').addEventListener('click',()=>{clearTrails();notify('CURL HISTORY CLEARED');});
+  $('trailOff').addEventListener('click',()=>{state.feedback=0;syncControls();clearTrails();notify('CURL TRAILS DISABLED');});
+  $('printOff').addEventListener('click',()=>{state.halftoneMix=0;state.dispersion=0;state.acidOverdrive=1;syncControls();notify('SCREEN PRINT + DISPERSION DISABLED');});
+  $('soloCathedral').addEventListener('click',()=>{
+    chooseRenderMode('cathedral');state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;syncControls();
+  });
+  $('cathedralSwarm').addEventListener('click',()=>{
+    chooseRenderMode('cathedral');state.layerBg=true;state.layerMesh=false;state.layerSwarm=true;syncControls();
+  });
+  $('cathedralEverything').addEventListener('click',()=>{
+    chooseRenderMode('hybrid');state.layerBg=true;state.layerMesh=true;state.layerSwarm=true;syncControls();
+  });
   $('paletteSource').addEventListener('change',refreshPaletteOptions);
   $('paletteSelect').addEventListener('change',e=>pickPalette(e.target.value,true,true));
   $('shufflePalette').addEventListener('click',shufflePalette);
@@ -654,6 +709,7 @@ function installUI(){
     if(e.code==='Space'){e.preventDefault();togglePause();}
     if(e.key.toLowerCase()==='h')$('togglePanel').click();
     if(e.key.toLowerCase()==='m')mutate(false);
+    if(e.key.toLowerCase()==='c'){clearTrails();notify('CURL TRAILS CLEARED');}
     if(e.key==='Escape'&&$('importDialog').open)$('importDialog').close();
   });
   $('presetInfo').textContent=PRESETS[0].detail;
