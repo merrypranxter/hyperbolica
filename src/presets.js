@@ -34,7 +34,7 @@ export const PRESETS=[
   {name:"00 · ORIGINAL PHOTOELASTIC RIOT",detail:"Closest descendant of the supplied original KIFS / gyroid / photoelastic shader.",fieldMode:0,meshMode:0,symmetry:7,density:4.5,iterations:12,inversion:.45,warp:1,iridescence:5.5,palette:"itsamoire/acid"},
   {name:"01 · HOLOGRAPHIC SILICA CATHEDRAL",detail:"Architectural hyperbolic folds over a crystalline body.",fieldMode:3,meshMode:10,symmetry:16,density:6.6,warp:1.1,iridescence:7,palette:"itsamoire/chromeCandy"},
   {name:"02 · SPIRIT QUASICRYSTAL",detail:"Independent phason-wave interference and a 4D torus.",fieldMode:5,meshMode:1,symmetry:11,density:5.0,warp:.35,palette:"itsamoire/pinkViolence"},
-  {name:"03 · CHLADNI GARDEN",detail:"Standing waves carved through a live resonating mathematical plate.",fieldMode:4,meshMode:9,symmetry:13,density:4.3,iridescence:8,palette:"react_diff_artist/opal"},
+  {name:"03 · CHLADNI GARDEN",detail:"Standing waves carved through a live resonating mathematical plate.",fieldMode:4,meshMode:9,symmetry:13,density:4.3,iridescence:8,palette:"reaction-diffusion/opal"},
   {name:"04 · RADIOACTIVE VESICLE SWARM",detail:"Radiolaria shell and active linked-trajectory particles.",fieldMode:2,meshMode:0,symmetry:12,density:7.7,swarmSize:1.7,palette:"avalanche/acid"},
   {name:"05 · KLEIN BOTTLE DREAM",detail:"Non-orientable surface immersion against recursive inversion.",fieldMode:7,meshMode:4,symmetry:9,warp:1.2,palette:"itsamoire/ultraviolet"},
   {name:"06 · GYROID PETRI DISH",detail:"Multiplex silica gyroids, fenestrations and moving 3D egg.",fieldMode:14,meshMode:3,symmetry:6,density:9.2,iridescence:6.3,palette:"frothrot/alien"},
