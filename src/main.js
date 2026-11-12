@@ -145,6 +145,7 @@ function makeSliders(){
         value.textContent=String(state[key]);
         if(key==='quality')resize();
         if(key==='swarmCount')setSpriteCount();
+    if(key==='feedback')clearTrails();
       });
     }
   }
@@ -238,8 +239,11 @@ function syncControls(){
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   const base=copy(defaultState);
-  const layers={layerBg:state.layerBg,layerMesh:state.layerMesh,layerSwarm:state.layerSwarm};
-  Object.assign(state,base,preset,layers);
+  const keepLayers={};
+  for(const key of ['layerBg','layerMesh','layerSwarm']){
+    if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
+  }
+  Object.assign(state,base,preset,keepLayers);
   // User's layer toggle settings are intentionally not reset by presets.
   delete state.name;delete state.detail;delete state.palette;
   state.paletteId=preset.palette;
@@ -259,6 +263,23 @@ function seededRng(){
 }
 function mutate(onlyStructure=false){
   const rand=seededRng();
+  if(!onlyStructure){
+    const modePick=rand();
+    state.renderMode=modePick<0.22?'cathedral':modePick<0.38?'hybrid':'field';
+    state.rot4D=Number((rand()*3).toFixed(2));
+    state.cathedralApollo=Number((.45+rand()*1.9).toFixed(2));
+    state.chladniFreq=Number((1.5+rand()*14).toFixed(2));
+    state.volumetricGlow=Number((.25+rand()*2.55).toFixed(2));
+    state.schlierenFreq=Number((1.2+rand()*13.2).toFixed(2));
+    state.flySpeed=Number((.15+rand()*1.8).toFixed(2));
+    state.hybridMix=Number((.3+rand()*.5).toFixed(2));
+    state.feedback=Number((rand()*.67).toFixed(2));
+    state.halftoneMix=Number((rand()*.8).toFixed(2));
+    state.halftoneScale=30+Math.floor(rand()*95)*2;
+    state.dispersion=Number((rand()*.45).toFixed(2));
+    state.acidOverdrive=Number((1+rand()*1.65).toFixed(2));
+    clearTrails();
+  }
   state.fieldMode=Math.floor(rand()*FIELD_FAMILIES.length);
   state.meshMode=Math.floor(rand()*MESH_FAMILIES.length);
   state.symmetry=3+Math.floor(rand()*22);
@@ -356,11 +377,13 @@ function clearTrails(){
   renderer.setRenderTarget(existingTarget);
   renderer.setClearColor(priorColor,priorAlpha);
 }
-function configureEffects(){
+function configureEffects(usingPost=true){
   if(!cathedralMaterial)return;
   const p=cameraMotion;
   const c=cathedralMaterial.uniforms;
-  c.uResolution.value.set(postW||renderer.domElement.width,postH||renderer.domElement.height);
+  const effectW=usingPost?postW:renderer.domElement.width;
+  const effectH=usingPost?postH:renderer.domElement.height;
+  c.uResolution.value.set(effectW,effectH);
   c.uTime.value=t;c.uMouse.value.set(p.pointerX,p.pointerY);
   c.uZoom.value=5.1/p.radius;
   c.uSymmetry.value=state.symmetry;c.u4DRotation.value=state.rot4D;
@@ -369,12 +392,12 @@ function configureEffects(){
   c.uFlySpeed.value=state.flySpeed;c.uPalettePhase.value=state.palettePhase;
   c.uRayQuality.value=state.rayQuality;c.uChromaLock.value=state.chromaLock;
   const f=feedbackMaterial.uniforms;
-  f.uResolution.value.set(postW||renderer.domElement.width,postH||renderer.domElement.height);
+  f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
   f.uFeedback.value=state.feedback;f.uCurlStrength.value=state.curlStrength;
   f.uSchlierenFreq.value=state.schlierenFreq;
   const h=printMaterial.uniforms;
-  h.uResolution.value.set(postW||renderer.domElement.width,postH||renderer.domElement.height);
+  h.uResolution.value.set(effectW,effectH);
   h.uTime.value=t;h.uHalftoneMix.value=state.halftoneMix;
   h.uHalftoneScale.value=state.halftoneScale;
   h.uAcidOverdrive.value=state.acidOverdrive;
@@ -607,8 +630,7 @@ function render(){
   useUniforms();
   const needsPost=state.feedback>0.005||state.halftoneMix>0.005||state.dispersion>0.005||Math.abs(state.acidOverdrive-1)>0.005;
   if(!needsPost){
-    postW=postW||0;
-    configureEffects();
+    configureEffects(false);
     renderer.setRenderTarget(null);
     renderBaseScene();
     return;
