@@ -11,7 +11,7 @@ For development: `npm install && npm run dev`, then open the printed local addre
 - Parametric 3D manifold geometries with live displacement
 - GPU instanced orbit glyphs, plus solo/mixed render layers
 - Damped pointer/touch drag: camera orbit, interactive field warp and mathematical phase torque
-- **180 source-faithful MATHEMAGICAL! palettes** stored locally
+- **194 source-faithful MATHEMAGICAL! palettes** stored locally
 - Seeded mutations, selective mutations, variation gallery, adjustable palettes, PNG captures
 - Mobile quality controls, touch-friendly pinned/tabbed HUD, context-loss status
 
@@ -61,7 +61,7 @@ Alongside the pre-existing Opal Cathedral Memory Garden on main, the artist's co
 - **Separate GPU point swarm**, up to 12,000 source-derived phyllotaxis/Thomas trajectories, with independent toggle/strength/count. Coexists with the existing 14k-capable 3D Hopf swarm.
 - **Five additional original Astral Loom color banks**, transferred from its original five RGB stop lists. MATHEMAGICAL palette count is now **180**, and the original palette dropdown and color-stop editor still control every engine and swarm.
 - **Signature startup artwork preserved from main**: Preset 32, *Opal Cathedral Memory Garden*, retains its 4D cathedral, pearlescent shell transmission controls, and directional gesture-driven curl advection. Astral is an additional choice and can also be blended with the cathedral through the new render modes.
-- **Other new starter designs**: 8 Astral source-inspired modes and *Opal Ferrofoam Cathedral*, bringing the shared bank to **57 curated presets**, including the later Pack II and Texture Lab additions.
+- **Other new starter designs**: 8 Astral source-inspired modes and *Opal Ferrofoam Cathedral*, bringing the shared bank to **67 curated presets**, including the later Pack II and Texture Lab additions.
 - **Mobile controls**: lower initial ray depth and optional cheaper Astral normal evaluation; capped framebuffer resolution, independently adjustable sprite counts and quality.
 - **Source safety**: original artist sources are preserved as HTML under `legacy/`. Running `npm test` checks the palette library, all preset IDs, UI element links, original references and basic shader structure. `npm run build` compiles the Vite app; a real browser GPU and mobile Safari trial is still necessary before declaring the render pipeline production-tested.
 
@@ -80,7 +80,7 @@ No Netlify deployment was initiated.
 
 **Texture Lab** adds three separate algorithms rather than generic filters: moving Voronoi cell boundaries with interference / CRT sync tears, tangent-based anisotropic alien velvet microfuzz with crevice glow, and double/third-level recursive fBm domain warping. The original shader functions remain distinct and animated.
 
-Both tabs support solo, blend-over-original-biomineral-field, and blend-over-flying-cathedral configurations. All new graphics sample the shared palette texture and respect selected edited color stops; source colors remain available via texture-palette-mix control. The original Pack II's *six-stop spectral ring* becomes the **168th palette**. There are **57 curated designs**, including six original-cartridge Pack II states and six purpose-built texture starting points. Original Opal Cathedral Memory Garden remains the startup design.
+Both tabs support solo, blend-over-original-biomineral-field, and blend-over-flying-cathedral configurations. All new graphics sample the shared palette texture and respect selected edited color stops; source colors remain available via texture-palette-mix control. The original Pack II's *six-stop spectral ring* becomes the **168th palette**. There are **67 curated designs**, including six original-cartridge Pack II states and six purpose-built texture starting points. Original Opal Cathedral Memory Garden remains the startup design.
 
 **Compatibility:** Pack II and each Texture Lab shader are lazy-compiled on first selection; if a device cannot compile one, the base Opal/Cathedral/Astral app stays available. On older iPhones, lower Pack II normal quality and texture fractal octaves before increasing detail. All engines are procedural optics-inspired approximations, not physical caustic ray-tracers, actual hyperbolic 3D manifolds, PDE chemical simulations or fabricated scientific claims. Static source/JS/control checks have passed; real browser WebGL validation and exports still need a device test.
 
@@ -90,3 +90,14 @@ No Netlify deployment was performed.
 ## OPTIONAL OTHERSPACE HYPERBOLIC BACKGROUND ATLAS
 
 The artist-supplied self-contained OTHERSPACE source is preserved unchanged in `legacy/otherspace-hyperbolic-starter-atlas-original.html` and independently earmarked for a **later, simpler standalone project** (`docs/OTHERSPACE-future-standalone.md`). Its ten real hyperbolic mathematical families (including geodesic tilings, Busemann horocycles, hyperbolic Voronoi, nodal curves, spiral waves and inversion foam) are exposed as an **optional alpha-overlaid background** behind 3D structure or over moving fields with a dedicated OTHERSPACE tab. The standalone source is still playable independently. Its twelve original five-stop palettes are now usable by all app engines (**180 total**). Source-specific recipe controls include Poincaré vs Klein projection, p/q group orders, reflection budget, color/line/detail/halo layer isolation, motion, lighting/emboss, and gentle blend opacity. Normal startup Opal Cathedral is unchanged and the overlay defaults OFF. Heavy GPU shader is compiled only on first activation; a compilation failure leaves the other engines available. This is a source-level integration until tested in a real browser. No Netlify deployment.
+
+
+## November 12 — Claude's OTHERSPACE II: Hyperbolic Acid Atlas
+
+**10 additional, authentic code-path mathematical modes**, sourced from Claude's artist-provided 48-KB self-contained HTML. Both original OTHERSPACE atlases are preserved unchanged and earmarked for separate standalone art projects; see `docs/OTHERSPACE-II-future-standalone.md`.
+
+- Modular / Ford-circle folding, geodesic Fermi guilloché, Schottky geodesic reflections, 3-family chainmail orbifolds, horocyclic binary brickwork, iterated finite Blaschke products, confocal hyperbolic curves, loxodromic double-pole spirals, geodesic times-table string art and source Apollonian inversion geometry.
+- New **ACID ATLAS II** tab lets all ten engines be blended, soloed or disabled, with the original **four projections** (Poincaré, Klein, upper half-plane, band), original source mode recipes, variable controls, separate FX switches, source palette restoration, mathematical mutation and an acid HSL randomizer.
+- All **14 original Acid Atlas palettes** are added to the shared vault: **194 current palettes**. The ten new original source recipes appear as global presets **57–66**: **67 total curated presets**. The original Opal Cathedral startup preset and 57 previous designs remain unchanged.
+- Source original: `legacy/otherspace-ii-hyperbolic-acid-atlas-original.html`. Extracted source data: `src/otherspace-acid.js`. Adapted original shader: `src/shaders/otherspace-acid.frag`. GPU compilation is lazy, defaults OFF, and an unsupported shader has a fallback. Both the old OTHERSPACE and new Acid Atlas can be controlled independently.
+- No Netlify deployment triggered. Actual live-browser shader compilation, mobile compatibility, and video export quality still need testing; source static checks alone cannot verify those.
