@@ -25,6 +25,7 @@ const defaultState={
   acidOverdrive:1.0,dispersion:0,paletteInkMix:1,chromaLock:0,
   symmetry:7,density:4.5,iterations:12,inversion:0.45,warp:1.0,morph:1.25,zoom:1.35,
   iridescence:5.5,saturation:2.4,moire:1.0,glitch:0.12,material:0,porosity:0.16,
+  opalOpacity:1,opalTransmission:0.48,opalThickness:0.65,opalGlow:0.55,dragCurl:1.25,
   palettePhase:0,speed:0.72,swarmSize:1.1,swarmFlow:0.9,swarmCount:mobile?1800:5500,
   cameraDrift:0.04,quality:mobile?1.5:2.0,gestureMode:'orbit',
   layerBg:true,layerMesh:true,layerSwarm:true,paused:false,seed:761235
@@ -34,7 +35,8 @@ const cameraMotion={
   theta:0.3,phi:0.22,targetTheta:0.3,targetPhi:0.22,
   radius:5.1,targetRadius:5.1,
   pointerX:0,pointerY:0,targetX:0,targetY:0,
-  touch:0,targetTouch:0
+  touch:0,targetTouch:0,
+  gestureX:0,gestureY:0,targetGestureX:0,targetGestureY:0,gesturePower:0,targetGesturePower:0
 };
 const pointers=new Map();
 let lastPinch=0;
@@ -64,7 +66,11 @@ const sliderDefs={
     ['saturation','CHROMATIC OVERDRIVE',0.2,3.8,0.05],
     ['moire','SCREEN / MOIRÉ MIX',0,4,0.05],
     ['glitch','VHS / CHROMATIC TEAR',0,1.5,0.01],
-    ['porosity','3D SHELL OPENINGS',0,1.5,0.05]
+    ['porosity','3D SHELL OPENINGS',0,1.5,0.05],
+    ['opalOpacity','OPAL SHELL TRANSPARENCY',0.12,1,0.02],
+    ['opalTransmission','PEARLESCENT TRANSMISSION',0,1.5,0.05],
+    ['opalThickness','THIN-FILM LAYER THICKNESS',0,2.5,0.05],
+    ['opalGlow','WET FRESNEL / EDGE GLOW',0,2.5,0.05]
   ],
   palette:[['palettePhase','PALETTE PHASE POSITION',0,1,0.01]],
   cathedral:[
@@ -80,6 +86,7 @@ const sliderDefs={
   feedback:[
     ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
     ['curlStrength','ADVECTIVE FLOW / CURL',0,3,0.05],
+    ['dragCurl','DRAG-DRIVEN CURL IMPULSE',0,3,0.05],
     ['halftoneMix','FOUR-ANGLE SCREEN PRINT',0,1,0.02],
     ['halftoneScale','SCREEN-PRINT DOT FREQUENCY',30,220,2],
     ['acidOverdrive','PRINT CHROMA DRIVE',0.5,3.5,0.05],
@@ -331,7 +338,8 @@ function buildEffects(){
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
-    uFeedback:{value:0},uSchlierenFreq:{value:6.8},uCurlStrength:{value:1}
+    uFeedback:{value:0},uSchlierenFreq:{value:6.8},uCurlStrength:{value:1},
+    uGestureVelocity:{value:new THREE.Vector2()},uGesturePower:{value:0}
   });
   [printScene,printMaterial]=pass(printFragment,{
     uAccumulatedTex:{value:null},uResolution:vec(),uTime:{value:0},
@@ -395,6 +403,8 @@ function configureEffects(usingPost=true){
   f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
   f.uFeedback.value=state.feedback;f.uCurlStrength.value=state.curlStrength;
+  f.uGestureVelocity.value.set(p.gestureX,p.gestureY);
+  f.uGesturePower.value=p.gesturePower*state.dragCurl;
   f.uSchlierenFreq.value=state.schlierenFreq;
   const h=printMaterial.uniforms;
   h.uResolution.value.set(effectW,effectH);
@@ -502,13 +512,14 @@ function initRenderer(){
   camera=new THREE.PerspectiveCamera(52,1,.1,100);
   meshMaterial=new THREE.ShaderMaterial({
     vertexShader:manifoldVertex,fragmentShader:manifoldFragment,
-    side:THREE.DoubleSide,extensions:{derivatives:true},
+    side:THREE.DoubleSide,transparent:true,depthWrite:false,extensions:{derivatives:true},
     uniforms:{
       u_palette:{value:texture},u_pointer:{value:new THREE.Vector2()},
       u_time:{value:0},u_mode:{value:0},u_symmetry:{value:7},
       u_morph:{value:1},u_density:{value:4},u_touch:{value:0},u_seed:{value:1},
       u_iridescence:{value:5},u_saturation:{value:2},
-      u_material:{value:0},u_porosity:{value:0},u_moire:{value:0},u_phase:{value:0}
+      u_material:{value:0},u_porosity:{value:0},u_moire:{value:0},u_phase:{value:0},
+      u_opacity:{value:1},u_transmission:{value:0.48},u_opalThickness:{value:0.65},u_opalGlow:{value:0.55}
     }
   });
   mesh=new THREE.Mesh(makeGeometry(mobile?96:164,mobile?48:82),meshMaterial);
@@ -536,6 +547,11 @@ function initRenderer(){
   try{
     renderer.compile(fieldScene,fieldCamera);
     renderer.compile(scene,camera);
+    // Compile every material now; don't let the first Cathedral switch
+    // produce an unexplained purple/black canvas on iPhone Safari.
+    renderer.compile(cathedralScene,fieldCamera);
+    renderer.compile(feedbackScene,fieldCamera);
+    renderer.compile(printScene,fieldCamera);
   }finally{console.error=normalError;}
   if(shaderFailures.length)throw new Error('GPU shader compilation failed: '+shaderFailures.join('\n').slice(0,3500));
   window.addEventListener('resize',resize);
@@ -570,6 +586,14 @@ function setupInteraction(){
     if(!old)return;
     const dx=e.clientX-old.x,dy=e.clientY-old.y;
     pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(state.gestureMode!=='orbitOnly' && pointers.size===1){
+      const bounds=canvas.getBoundingClientRect();
+      const vx=clamp(dx/Math.max(1,bounds.width)*18,-1.5,1.5);
+      const vy=clamp(-dy/Math.max(1,bounds.height)*18,-1.5,1.5);
+      cameraMotion.targetGestureX=vx;
+      cameraMotion.targetGestureY=vy;
+      cameraMotion.targetGesturePower=clamp(Math.hypot(vx,vy)*1.3,0,1.5);
+    }
     if(pointers.size===2){
       const arr=[...pointers.values()];
       const dist=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y);
@@ -621,6 +645,8 @@ function useUniforms(){
   f.u_glitch.value=state.glitch;
   const m=meshMaterial.uniforms;
   m.u_mode.value=state.meshMode;m.u_material.value=state.material;m.u_porosity.value=state.porosity;
+  m.u_opacity.value=state.opalOpacity;m.u_transmission.value=state.opalTransmission;
+  m.u_opalThickness.value=state.opalThickness;m.u_opalGlow.value=state.opalGlow;
   const g=swarmMaterial.uniforms;
   g.u_swarmSize.value=state.swarmSize;g.u_swarmFlow.value=state.swarmFlow;
   mesh.visible=state.layerMesh;swarm.visible=state.layerSwarm;
@@ -666,6 +692,16 @@ function animate(now){
   cameraMotion.radius+=(cameraMotion.targetRadius-cameraMotion.radius)*k;
   cameraMotion.pointerX+=(cameraMotion.targetX-cameraMotion.pointerX)*k;
   cameraMotion.pointerY+=(cameraMotion.targetY-cameraMotion.pointerY)*k;
+  // Damp drag injection independently from camera inertia so optical-history
+  // curl follows the hand and rolls to a gentle stop after release.
+  const gk=1-Math.exp(-dt*16);
+  cameraMotion.gestureX+=(cameraMotion.targetGestureX-cameraMotion.gestureX)*gk;
+  cameraMotion.gestureY+=(cameraMotion.targetGestureY-cameraMotion.gestureY)*gk;
+  cameraMotion.gesturePower+=(cameraMotion.targetGesturePower-cameraMotion.gesturePower)*gk;
+  const releaseDamping=Math.exp(-dt*10);
+  cameraMotion.targetGestureX*=releaseDamping;
+  cameraMotion.targetGestureY*=releaseDamping;
+  cameraMotion.targetGesturePower*=releaseDamping;
   cameraMotion.touch+=(cameraMotion.targetTouch-cameraMotion.touch)*(1-Math.exp(-dt*8));
   const ph=cameraMotion.phi;
   camera.position.set(
@@ -844,6 +880,10 @@ function installUI(){
   $('mutateStructure').addEventListener('click',()=>mutate(true));
   $('surprise').addEventListener('click',()=>{mutate(false);shufflePalette();});
   $('applyPreset').addEventListener('click',()=>applyPreset(Number($('presetSelect').value)));
+  $('loadOpalCathedral').addEventListener('click',()=>{
+    const index=PRESETS.findIndex(p=>p.name.includes('OPAL CATHEDRAL MEMORY GARDEN'));
+    if(index>=0)applyPreset(index);
+  });
   $('presetSelect').addEventListener('change',e=>{$('presetInfo').textContent=PRESETS[Number(e.target.value)].detail;});
   const wireLayer=(id,key)=>{
     $(id).addEventListener('click',()=>{state[key]=!state[key];syncControls();notify(key.toUpperCase()+': '+(state[key]?'ON':'OFF'));});
@@ -882,7 +922,9 @@ function installUI(){
 }
 function start(){
   try{
-    installUI();initRenderer();applyPreset(0);
+    installUI();initRenderer();
+    const heroIndex=PRESETS.findIndex(p=>p.name.includes('OPAL CATHEDRAL MEMORY GARDEN'));
+    applyPreset(heroIndex>=0?heroIndex:0);
     requestAnimationFrame(animate);
   }catch(e){console.error('Hyperbolica startup failure',e);setFatal(e);}
 }

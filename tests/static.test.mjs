@@ -25,7 +25,7 @@ test('all 162 real palettes and colors are present',()=>{
 test('the math engines expose distinct families',()=>{
   assert.equal(FIELD_FAMILIES.length,16);
   assert.equal(MESH_FAMILIES.length,12);
-  assert.ok(PRESETS.length>=32);
+  assert.ok(PRESETS.length>=36);
 });
 test('presets only reference existing palettes and math families',()=>{
   for(const preset of PRESETS){
@@ -51,6 +51,20 @@ test('shader sources are present and have balanced delimiters',()=>{
     }
     assert.equal(source.includes('sinh('),false,path+' has unsupported GLSL 1.00 sinh()');
   }
+});
+test('opal cathedral is a real transparent fusion with drag-advected memory',()=>{
+  const hero=PRESETS.find(p=>p.name.includes('OPAL CATHEDRAL MEMORY GARDEN'));
+  assert.ok(hero);
+  assert.equal(hero.renderMode,'hybrid');
+  assert.equal(hero.material,4);
+  assert.ok(hero.opalOpacity>0&&hero.opalOpacity<1);
+  assert.ok(hero.feedback>0.1);
+  assert.ok(hero.dragCurl>0);
+  assert.match(read('src/shaders/manifold.frag'),/u_opacity/);
+  assert.match(read('src/shaders/manifold.frag'),/u_transmission/);
+  assert.match(read('src/shaders/curl-feedback.frag'),/uGestureVelocity/);
+  assert.match(main,/transparent:true,depthWrite:false/);
+  assert.match(html,/id="loadOpalCathedral"/);
 });
 test('the cathedral source was preserved as its own reference',()=>{
   const source=read('legacy/hyperloom-nematic-cathedral-original.html');
