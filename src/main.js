@@ -53,6 +53,7 @@ let fieldMaterial,meshMaterial,swarmMaterial,texture;
 let cathedralScene,feedbackScene,printScene;
 let cathedralMaterial,feedbackMaterial,printMaterial;
 let astralScene,astralMaterial,astralSwarmScene,astralPoints,astralSwarmMaterial;
+let astralReady=true;
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -277,6 +278,7 @@ function syncControls(){
 }
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
+  if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
   const base=copy(defaultState);
   const keepLayers={};
   for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm']){
@@ -305,6 +307,7 @@ function mutate(onlyStructure=false){
   if(!onlyStructure){
     const modePick=rand();
     state.renderMode=modePick<0.16?'cathedral':modePick<0.3?'hybrid':modePick<0.52?'astral':modePick<0.68?'astral-field':modePick<0.8?'astral-cathedral':'field';
+    if(!astralReady && state.renderMode.startsWith('astral'))state.renderMode='field';
     state.astralMorph=Number((rand()*3).toFixed(2));
     state.astralOctaves=2+Math.floor(rand()*(mobile?5:9));
     state.astralTwist=Number((rand()*5).toFixed(2));
@@ -662,20 +665,30 @@ function initRenderer(){
     normalError.apply(console,args);
   };
   try{
+    // Existing production pipeline is essential: preserve its normal fatal diagnostics.
     renderer.compile(fieldScene,fieldCamera);
     renderer.compile(scene,camera);
-    // Compile every material now; don't let the first Cathedral switch
-    // produce an unexplained purple/black canvas on iPhone Safari.
     renderer.compile(cathedralScene,fieldCamera);
-    renderer.compile(astralScene,fieldCamera);
-    renderer.compile(astralSwarmScene,fieldCamera);
     renderer.compile(feedbackScene,fieldCamera);
     renderer.compile(printScene,fieldCamera);
+    if(shaderFailures.length)throw new Error('GPU base shader compilation failed: '+shaderFailures.join('\n').slice(0,3500));
+    // Optional expensive Astral shaders must never make the Opal Garden itself go black.
+    try{
+      renderer.compile(astralScene,fieldCamera);
+      renderer.compile(astralSwarmScene,fieldCamera);
+    }catch(optionalError){
+      astralReady=false;
+      normalError.call(console,'Optional Astral GPU shader unavailable:',optionalError);
+    }
+    if(shaderFailures.length){
+      astralReady=false;
+      normalError.call(console,'Astral GLSL unsupported on current graphics device:',shaderFailures.join('\n').slice(0,2500));
+      shaderFailures.length=0;
+    }
   }finally{console.error=normalError;}
-  if(shaderFailures.length)throw new Error('GPU shader compilation failed: '+shaderFailures.join('\n').slice(0,3500));
   window.addEventListener('resize',resize);
   if(window.ResizeObserver)new ResizeObserver(resize).observe($('canvasMount'));
-  statusEl.textContent='GPU READY · THREE.JS / GLSL · FIELD + 3D + SWARM';
+  statusEl.textContent=astralReady?'GPU READY · FIELD / CATHEDRAL / ASTRAL / 3D':'GPU READY · ASTRAL DISABLED ON THIS GPU';
   $('renderInfo').textContent='WebGL '+(renderer.capabilities.isWebGL2?'2':'1')+' · '+paletteList.length+' local palettes · no paid APIs';
 }
 function resize(){
@@ -968,6 +981,7 @@ function installUI(){
   $('materialMode').addEventListener('change',e=>state.material=Number(e.target.value));
   $('gestureMode').addEventListener('change',e=>state.gestureMode=e.target.value);
   const chooseRenderMode=value=>{
+    if(!astralReady && value.startsWith('astral')){notify('ASTRAL GLSL NOT SUPPORTED ON THIS GPU');return;}
     state.renderMode=value;
     $('renderMode').value=value;
     $('renderModeCathedral').value=value;
