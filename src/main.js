@@ -17,6 +17,8 @@ import pack2Fragment from './shaders/hyperweave-pack2.frag?raw';
 import textureVoronoiFragment from './shaders/texture-voronoi.frag?raw';
 import textureVelvetFragment from './shaders/texture-velvet.frag?raw';
 import textureMaximalistFragment from './shaders/texture-maximalist.frag?raw';
+import otherSpaceFragment from './shaders/otherspace-atlas.frag?raw';
+import { OTHERSPACE_MODES, OTHERSPACE_PALETTES, OTHERSPACE_DEFAULT } from './otherspace-atlas.js';
 
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
 
@@ -37,6 +39,15 @@ const defaultState={
   textureFamily:0,textureDensity:5,textureMoire:50,textureGlitch:0.8,textureSpeed:1,
   textureColorPhase:0,velvetSheen:32,velvetGlow:1.2,maxScale:3,maxDistortion:2.5,
   maxColorFreq:1.5,maxIterations:mobile?4:6,textureBlend:0.8,texturePaletteMix:1,
+  otherSpaceEnabled:false,otherSpaceSolo:false,otherSpaceMode:0,otherSpaceOpacity:0.25,
+  otherSpaceProjection:0,otherSpaceZoom:1.03,otherSpaceRotation:0,otherSpaceDrift:.30,
+  otherSpaceP:7,otherSpaceQ:3,otherSpaceDepth:mobile?20:36,
+  otherSpaceDensity:5,otherSpaceShape:1.5,otherSpaceTwist:1,otherSpacePhase:0,
+  otherSpaceWidth:1,otherSpaceRelief:1,otherSpaceExposure:2,
+  otherSpaceSaturation:1.1,otherSpaceColorPhase:0,otherSpaceColorScale:1,
+  otherSpaceGrain:.12,otherSpaceGlow:.6,otherSpaceSpeed:.65,
+  otherSpaceFill:true,otherSpaceLine:true,otherSpaceDetail:true,otherSpaceHalo:true,
+  otherSpaceEmboss:true,otherSpaceMotion:true,
   hybridMix:0.55,rot4D:1.15,cathedralApollo:1.38,chladniFreq:6.50,
   volumetricGlow:1.55,schlierenFreq:6.80,flySpeed:0.85,rayQuality:mobile?0:1,
   feedback:0,curlStrength:1.0,halftoneMix:0,halftoneScale:110,
@@ -67,6 +78,7 @@ let astralReady=true;
 let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
 let pack2Ready=true,textureReady=[true,true,true];
 let pack2Validated=false,textureValidated=[false,false,false];
+let otherSpaceScene,otherSpaceMaterial,otherSpaceReady=true,otherSpaceValidated=false;
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -152,6 +164,30 @@ const sliderDefs={
     ['textureBlend','TEXTURE LAYER OPACITY',0,1,0.05],
     ['texturePaletteMix','USE 168 PALETTE BANK · 0=SOURCE',0,1,0.05]
   ],
+  otherSpace:[
+    ['otherSpaceOpacity','BACKGROUND / MATHEMATICAL OVERLAY MIX',0,1,0.01],
+    ['otherSpaceP','POLYGON ORDER / WAVE SOURCES p',3,16,1],
+    ['otherSpaceQ','VERTEX ORDER / SOURCES q',3,8,1],
+    ['otherSpaceDepth','REFLECTION / INVERSION BUDGET',6,48,1],
+    ['otherSpaceDensity','HYPERBOLIC PATTERN FREQUENCY',0.8,14,0.05],
+    ['otherSpaceShape','MOTIF MODULATION / DEFORMATION',0,4,0.01],
+    ['otherSpaceTwist','MÖBIUS TWIST / PHASON COUPLING',0,6,0.01]
+  ],
+  otherSpaceAdvanced:[
+    ['otherSpaceZoom','DISK SCALE / ZOOM',0.4,2.8,0.01],
+    ['otherSpaceRotation','DISK ROTATION',-3.142,3.142,0.01],
+    ['otherSpaceDrift','MÖBIUS CENTER DRIFT',0,1,0.01],
+    ['otherSpacePhase','PATTERN PHASE',0,1,0.005],
+    ['otherSpaceWidth','CONTOUR THICKNESS',0.2,3,0.01],
+    ['otherSpaceRelief','PSEUDO-EMBOSS RELIEF',0,2.5,0.01],
+    ['otherSpaceGlow','FINE EDGES / HALO',0,1.5,0.01],
+    ['otherSpaceSpeed','MATH TIME / MOTION SPEED',0,2,0.01],
+    ['otherSpaceExposure','SURFACE EXPOSURE',0.2,4,0.01],
+    ['otherSpaceSaturation','COLOR SATURATION',0,2,0.01],
+    ['otherSpaceColorPhase','PALETTE OFFSET',0,1,0.005],
+    ['otherSpaceColorScale','PALETTE FREQUENCY',0.15,4,0.01],
+    ['otherSpaceGrain','RISO TEXTURE / INK GRAIN',0,1,0.01]
+  ],
   feedback:[
     ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
     ['curlStrength','ADVECTIVE FLOW / CURL',0,3,0.05],
@@ -191,6 +227,8 @@ function fillSelections(){
   FIELD_FAMILIES.forEach((name,i)=>chooseOption($('fieldMode'),i,name));
   MESH_FAMILIES.forEach((name,i)=>chooseOption($('meshMode'),i,name));
   PRESETS.forEach((p,i)=>chooseOption($('presetSelect'),i,p.name));
+  OTHERSPACE_MODES.forEach((p,i)=>chooseOption($('otherSpaceModeSelect'),i,p.name));
+  $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[0].note;
   const sources=[...new Set(paletteList.map(p=>p.source))];
   sources.sort((a,b)=>a.localeCompare(b));
   for(const source of sources)chooseOption($('paletteSource'),source,source.replaceAll('_',' ').toUpperCase());
