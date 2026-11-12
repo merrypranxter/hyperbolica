@@ -250,7 +250,7 @@ function applyPreset(index){
   selectedPreset=index;
   $('presetSelect').value=String(index);
   $('presetInfo').textContent=preset.detail;
-  editedColors=null;pickPalette(state.paletteId);syncControls();
+  editedColors=null;pickPalette(state.paletteId);syncControls();clearTrails();
   notify('LOADED — '+preset.name);
 }
 function seededRng(){
