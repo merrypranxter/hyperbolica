@@ -44,6 +44,7 @@
         <button data-tab="pack2">HYPERWEAVE II</button>
         <button data-tab="textures">TEXTURE LAB</button>
         <button data-tab="otherspace">OTHERSPACE</button>
+        <button data-tab="acid">ACID ATLAS II</button>
         <button data-tab="feedback">FLOW / PRINT</button>
         <button data-tab="export">EXPORT</button>
       </nav>
@@ -218,6 +219,34 @@
           </div>
           <details><summary class="section-title">FINE GEOMETRY / OPTICS CONTROLS</summary><div id="otherSpaceAdvancedSliders"></div></details>
           <p class="hint">The shared palette vault—including the 12 original OTHERSPACE color schemes—works through the global palette editor. The source's Möbius geometry, ten distinct equations, and real time-dependent field motion are retained. The independent original also has recipes and a gallery for later.</p>
+        </section>
+        <section data-page="acid" hidden>
+          <div class="section-title"><strong>OTHERSPACE II · HYPERBOLIC ACID ATLAS</strong><span>10 NEW MATHEMATICS · 14 SOURCE PALETTES</span></div>
+          <p class="hint">The wild fluorescent sibling of the original OTHERSPACE. Real distinct mathematical structures: modular/Ford circles, geodesic guilloché, Schottky reflections, orbifolds, Böröczky brickwork, Blaschke products, confocal interference, dipole loxodromes, geodesic string art, and Apollonian inversions. Opt-in, lazy-loaded; every existing engine stays untouched.</p>
+          <label>Source starter<select id="acidModeSelect"></select></label>
+          <p id="acidMathNote" class="hint">Choose a hyperbolic mathematical engine.</p>
+          <div class="buttons">
+            <button id="acidBlend" class="action hot">BLEND INTO ART</button>
+            <button id="acidSolo" class="action">SOLO ACID ATLAS</button>
+            <button id="acidOff" class="action">TURN OFF</button>
+          </div>
+          <div class="buttons">
+            <button id="acidSourcePalette" class="action">STARTER PALETTE</button>
+            <button id="acidRandomPalette" class="action">RANDOM ACID PALETTE</button>
+            <button id="acidMutate" class="action">MUTATE GEOMETRY</button>
+            <button id="acidFxDice" class="action">FX DICE</button>
+          </div>
+          <label>Hyperbolic projection<select id="acidProjectionSelect">
+            <option value="0">Poincaré disk · conformal</option>
+            <option value="1">Klein disk · straight geodesics</option>
+            <option value="2">Upper half-plane · infinite horizon</option>
+            <option value="3">Band model · infinite ribbon</option>
+          </select></label>
+          <div id="acidSliders"></div>
+          <div class="section-title">SOURCE FX RACK / INDEPENDENT LAYERS</div>
+          <div id="acidToggles" class="toggleRow"></div>
+          <details><summary class="section-title">FINE GEOMETRY / COLOR / MOTION</summary><div id="acidAdvancedSliders"></div></details>
+          <p class="hint">The original standalone HTML—with all ten engines, its recipe import/export, gallery, mobile panel, and voice button—is preserved unmodified for a separate future app. Palette edits here use the shared 194-palette vault. The acid shader is compiled only if you activate it.</p>
         </section>
         <section data-page="feedback" hidden>
           <div class="section-title"><strong>OPTICAL MEMORY / PRINT ENGINE</strong><span>APPLIES TO ALL ART FAMILIES</span></div>
