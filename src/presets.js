@@ -71,7 +71,7 @@ export const PRESETS=[
    iridescence:8.1,saturation:2.15,moire:.33,glitch:0,
    rot4D:1.3,cathedralApollo:1.33,chladniFreq:9.25,volumetricGlow:1.35,schlierenFreq:7.8,
    flySpeed:.42,feedback:.75,curlStrength:1.18,dragCurl:2.15,halftoneMix:0,acidOverdrive:1,dispersion:0,
-   swarmSize:.48,swarmFlow:.68,speed:.75,gestureMode:"sculpt",palette:"itsamoire/opal"},
+   swarmSize:.48,swarmFlow:.68,speed:.75,gestureMode:"orbit",palette:"itsamoire/opal"},
   {name:"33 · STAINED-GLASS SILICA ORGAN",
    detail:"A stronger cathedral with prismatic gyroid growth, transparent resonant egg and gently drifting color memory.",
    renderMode:"hybrid",hybridMix:.09,layerBg:true,layerMesh:true,layerSwarm:true,
