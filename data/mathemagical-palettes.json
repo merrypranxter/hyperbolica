@@ -28,7 +28,8 @@
     },
     "added_impossibleloom": "merrypranxter/impossibleloom/src/palettes.js",
     "added_color_systems_and_third_eye": "merrypranxter/austereograms_art_app/src/palette-bank.js",
-    "astral-loom": "Artist-supplied Astral Loom four-engine synthesis HTML (five original 5-stop ink palettes)"
+    "astral-loom": "Artist-supplied Astral Loom four-engine synthesis HTML (five original 5-stop ink palettes)",
+    "otherspace": "Artist-provided original OTHERSPACE hyperbolic starter atlas; 12 preserved five-stop palettes"
   },
   "palettes": [
     {
@@ -2380,6 +2381,150 @@
         "#ffe000",
         "#ff4000",
         "#9900ff"
+      ]
+    },
+    {
+      "id": "otherspace/01-midnight-citrus",
+      "name": "OTHERSPACE · MIDNIGHT CITRUS",
+      "source": "otherspace",
+      "colors": [
+        "#081a36",
+        "#00a8a8",
+        "#deff6c",
+        "#ff8d38",
+        "#fff0c9"
+      ]
+    },
+    {
+      "id": "otherspace/02-porcelain-cobalt",
+      "name": "OTHERSPACE · PORCELAIN / COBALT",
+      "source": "otherspace",
+      "colors": [
+        "#f0e7d5",
+        "#92b7bb",
+        "#163a8b",
+        "#08214a",
+        "#ffffff"
+      ]
+    },
+    {
+      "id": "otherspace/03-oxide-tapestry",
+      "name": "OTHERSPACE · OXIDE TAPESTRY",
+      "source": "otherspace",
+      "colors": [
+        "#24121d",
+        "#a33930",
+        "#df8f43",
+        "#f5d1a3",
+        "#348b86"
+      ]
+    },
+    {
+      "id": "otherspace/04-graphite-vermilion",
+      "name": "OTHERSPACE · GRAPHITE / VERMILION",
+      "source": "otherspace",
+      "colors": [
+        "#080d13",
+        "#283844",
+        "#a2b3b7",
+        "#f0e8d5",
+        "#f44834"
+      ]
+    },
+    {
+      "id": "otherspace/05-candied-stained-glass",
+      "name": "OTHERSPACE · CANDIED STAINED GLASS",
+      "source": "otherspace",
+      "colors": [
+        "#20113b",
+        "#ab42e8",
+        "#ff679b",
+        "#ffbd57",
+        "#6bdbba"
+      ]
+    },
+    {
+      "id": "otherspace/06-abyssal-opal",
+      "name": "OTHERSPACE · ABYSSAL OPAL",
+      "source": "otherspace",
+      "colors": [
+        "#030e22",
+        "#1c4b75",
+        "#25cbb8",
+        "#c2f3e9",
+        "#b59acb"
+      ]
+    },
+    {
+      "id": "otherspace/07-gilded-ink",
+      "name": "OTHERSPACE · GILDED INK",
+      "source": "otherspace",
+      "colors": [
+        "#100d22",
+        "#463161",
+        "#a46b42",
+        "#f0c65b",
+        "#fff2c6"
+      ]
+    },
+    {
+      "id": "otherspace/08-risograph-misregister",
+      "name": "OTHERSPACE · RISOGRAPH MISREGISTER",
+      "source": "otherspace",
+      "colors": [
+        "#f4e9cc",
+        "#ff694f",
+        "#134eb1",
+        "#ef46ae",
+        "#1dbb9d"
+      ]
+    },
+    {
+      "id": "otherspace/09-coral-after-dark",
+      "name": "OTHERSPACE · CORAL AFTER DARK",
+      "source": "otherspace",
+      "colors": [
+        "#071a21",
+        "#175e55",
+        "#a5c95a",
+        "#ff7a61",
+        "#ffc0a1"
+      ]
+    },
+    {
+      "id": "otherspace/10-pearl-copper",
+      "name": "OTHERSPACE · PEARL / COPPER",
+      "source": "otherspace",
+      "colors": [
+        "#140f19",
+        "#603548",
+        "#c68066",
+        "#ecc9a4",
+        "#fff3de"
+      ]
+    },
+    {
+      "id": "otherspace/11-phosphor-terminal",
+      "name": "OTHERSPACE · PHOSPHOR TERMINAL",
+      "source": "otherspace",
+      "colors": [
+        "#020b0b",
+        "#073e33",
+        "#0d8e61",
+        "#a9ed95",
+        "#e7ffd6"
+      ]
+    },
+    {
+      "id": "otherspace/12-black-bone",
+      "name": "OTHERSPACE · BLACK / BONE",
+      "source": "otherspace",
+      "colors": [
+        "#030303",
+        "#252525",
+        "#71716b",
+        "#d5d3c4",
+        "#fffced"
       ]
     }
   ]
