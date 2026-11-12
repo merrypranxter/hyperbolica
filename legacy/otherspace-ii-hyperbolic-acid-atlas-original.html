@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OTHERSPACE II — Hyperbolic Acid Atlas</title>
+<style>
+:root{--ink:#fff7ff;--muted:#c9b6e6;--panel:#140624f2;--edge:#5b2a8f;--a:#ff2fd0;--b:#c6ff00;--c:#00f0ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#07020f;color:var(--ink);font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+button,input,select,textarea{font:inherit}
+button,select{color:var(--ink);background:#26103f;border:2px solid var(--edge);border-radius:3px;padding:7px 9px;cursor:pointer;box-shadow:3px 3px 0 #000}
+button:hover{border-color:var(--b);color:var(--b)}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #000}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+button.on{background:var(--b);color:#12021f;border-color:#fff}
+button.small{padding:4px 7px;font-size:10px}
+#canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+#canvas:active{cursor:grabbing}
+header{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;z-index:3}
+header>*{pointer-events:auto}
+.brand{background:var(--panel);border:2px solid var(--a);box-shadow:5px 5px 0 var(--c);padding:8px 13px;transform:rotate(-1.2deg)}
+.brand strong{font-size:17px;letter-spacing:3px;background:linear-gradient(90deg,var(--a),#ffd000,var(--b),var(--c),#a66bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand span{display:block;font-size:9px;color:var(--muted);letter-spacing:1px}
+.actions{display:flex;gap:5px;align-items:start;flex-wrap:wrap;justify-content:flex-end}
+aside{position:fixed;top:84px;bottom:12px;left:10px;width:326px;border:2px solid var(--edge);background:var(--panel);backdrop-filter:blur(12px);border-radius:4px;z-index:2;overflow:auto;padding:14px;scrollbar-width:thin;scrollbar-color:var(--a) #140624;box-shadow:6px 6px 0 #000}
+h2{font-size:11px;letter-spacing:1.5px;margin:0;color:var(--b)}
+h3{font-size:10px;letter-spacing:1px;text-transform:uppercase;margin:0 0 10px;color:var(--c)}
+p{margin:8px 0}
+.section{padding:14px 0;border-bottom:2px dashed var(--edge)}
+.section:first-child{padding-top:0}.section:last-child{border:0}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.control{display:block;margin:10px 0}
+.control .row{display:flex;justify-content:space-between;gap:8px;font-size:10px}
+.control output{color:var(--b)}
+input[type=range]{width:100%;height:18px;accent-color:var(--a);margin:4px 0 0}
+select{width:100%;padding:7px}
+label.check{display:flex;align-items:center;gap:6px;font-size:10px;padding:5px 0}
+input[type=checkbox]{accent-color:var(--b);width:15px;height:15px}
+.swatches{display:flex;gap:6px;margin-top:9px}
+.swatches input{padding:0;width:100%;height:30px;border:2px solid #000;background:none;cursor:pointer}
+.hint{color:var(--muted);font-size:10px}
+.modebutton{text-align:left;font-size:10px;padding:8px}
+.modebutton span{display:block;font-size:8px;opacity:.7;margin-top:3px}
+.modebutton.active{border-color:var(--b);box-shadow:inset 4px 0 var(--a),3px 3px 0 #000}
+#status{position:fixed;bottom:12px;right:14px;max-width:calc(100% - 370px);text-align:right;pointer-events:none;font-size:10px;color:#f3e6ff;text-shadow:0 1px 5px #000,0 0 2px #000;z-index:1}
+#status b{font-size:20px;font-weight:400;display:block;color:#fff}
+body.hidden aside{display:none}body.hidden #status{max-width:90%}
+#toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 18px;background:#140624;border:2px solid var(--b);box-shadow:4px 4px 0 var(--a);z-index:20;display:none;max-width:90vw}
+dialog{background:#12051f;color:var(--ink);border:2px solid var(--a);border-radius:4px;max-width:960px;width:92vw;max-height:88vh;padding:16px;box-shadow:8px 8px 0 var(--c)}
+dialog::backdrop{background:#000b;backdrop-filter:blur(6px)}
+dialog .dh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+dialog h2{font-size:14px}
+#galleryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.card{padding:0;overflow:hidden;text-align:left}
+.card img{display:block;width:100%;aspect-ratio:1.3;object-fit:cover;background:#080b13}
+.card div{padding:8px;font-size:10px}.card small{display:block;color:var(--muted);font-size:8px;margin-top:3px}
+textarea{width:100%;height:44vh;background:#070210;color:#c8ffe9;padding:12px;border:2px solid var(--edge);font-size:11px;white-space:pre;tab-size:2}
+#pngImg{display:block;max-width:100%;max-height:56vh;margin:0 auto 10px;border:2px solid var(--edge)}
+#error{position:fixed;inset:22% 8%;padding:24px;background:#190a1f;border:2px solid #ff3b6b;display:none;z-index:50;overflow:auto;white-space:pre-wrap}
+kbd{border:1px solid #7a4fb0;padding:0 3px;border-radius:3px}
+details summary{cursor:pointer;color:var(--c);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+#seed{width:95px;background:#1e0c33;color:var(--ink);border:2px solid var(--edge);padding:5px;border-radius:3px}
+.seedrow{display:flex;gap:6px;align-items:center;justify-content:space-between}
+@media(max-width:740px){
+ header{top:6px;left:6px;right:6px}
+ .brand{padding:5px 8px}.brand strong{font-size:12px;letter-spacing:1px}.brand span{display:none}
+ .actions{max-width:68%}.actions button{font-size:9px;padding:6px 7px}.actions .desktop{display:none}
+ aside{top:auto;left:0;right:0;bottom:0;width:100%;height:46vh;border-radius:14px 14px 0 0;border-width:2px 0 0;padding:12px;box-shadow:none}
+ #status{right:8px;left:8px;max-width:none;font-size:8px;bottom:calc(46vh + 6px)}#status b{font-size:13px}
+ body.hidden #status{bottom:10px}
+ #galleryGrid{grid-template-columns:repeat(2,1fr)}dialog{padding:12px}
+}
+</style></head><body>
+<canvas id="canvas" aria-label="Interactive hyperbolic generative artwork"></canvas>
+<header><div class="brand"><strong>OTHERSPACE II</strong><span>HYPERBOLIC ACID ATLAS / 10 NEW ENGINES</span></div>
+<div class="actions"><button id="gallery">Atlas</button><button id="mutateTop">Mutate</button><button id="pause">Pause</button><button id="snapshot">PNG</button><button id="inspect" class="desktop">GLSL</button><button id="fullscreen" class="desktop">Full screen</button><button id="voice" class="on">Voice on</button><button id="hide">Hide</button></div></header>
+<aside id="panel" aria-label="Art controls">
+<div class="section"><h2>PICK A UNIVERSE</h2><p class="hint">Ten new hyperbolic engines. Each starter resets geometry, palette and finish.</p><div id="modeButtons" class="twocol"></div>
+<div class="twocol" style="margin-top:10px"><button id="mutate">Mutate [M]</button><button id="reset">Reset starter</button><button id="acidPal">Random acid palette</button><button id="fxRoll">Roll the FX dice</button></div>
+<div class="seedrow" style="margin-top:10px"><label for="seed">Mutation seed</label><input id="seed" type="number" min="1" max="4294967295" step="1" value="271828"></div>
+<div class="twocol"><label class="check"><input type="checkbox" id="lockPalette">Lock palette</label><label class="check"><input type="checkbox" id="lockGeometry">Lock geometry</label></div></div>
+<div class="section"><h3>01 / Projection & navigation</h3><select id="projection" aria-label="Projection"><option value="0">Poincaré disk — conformal</option><option value="1">Klein disk — straight geodesics</option><option value="2">Upper half-plane — horizon at bottom</option><option value="3">Band model — infinite ribbon</option></select><div id="navigationControls"></div><div class="twocol"><button id="center" class="small">Center / zero rotation</button><button id="step" class="small">Step 1/30 s</button></div><p class="hint">Drag to move the Möbius center. Wheel or pinch to zoom. Double-tap to recenter.</p></div>
+<div class="section"><h3>02 / Engine parameters</h3><div id="engineControls"></div><p id="mathNote" class="hint"></p></div>
+<div class="section"><h3>03 / Color laboratory</h3><select id="palette" aria-label="Color scheme"></select><div class="swatches" id="swatches"></div><div id="colorControls"></div><div class="twocol" id="colorChecks"></div></div>
+<div class="section"><h3>04 / Layers & surface</h3><div id="layerControls" class="twocol"></div><div id="surfaceControls"></div></div>
+<details class="section" open><summary>05 / FX rack & motion</summary><div id="effectControls" class="twocol" style="margin-top:8px"></div><div id="finishControls"></div><label class="control"><span class="row">Render quality</span><select id="quality"><option value="0.5">Draft — 0.5×</option><option value="0.8">Balanced — 0.8×</option><option value="1">Native — 1×</option><option value="1.5">Fine — 1.5×</option></select></label></details>
+<div class="section"><h3>06 / Take it with you</h3><div class="twocol"><button id="recipeBtn">Recipe JSON</button><button id="source">Inspect GLSL</button><button id="saveLocal">Bookmark locally</button><button id="loadLocal">Recall bookmark</button></div><p class="hint">Recipes hold every slider, toggle, color, viewpoint and the clock. Same recipe shape as OTHERSPACE v1 (app id <b>otherspace-2</b>). No libraries, no network.</p><p class="hint"><kbd>1</kbd>–<kbd>9</kbd>,<kbd>0</kbd> engines · <kbd>G</kbd> atlas · <kbd>M</kbd> mutate · <kbd>H</kbd> panel · <kbd>Space</kbd> pause</p></div>
+</aside>
+<div id="status"><b id="artTitle"></b><span id="artSubtitle"></span><br><span id="telemetry">Initializing…</span></div><div id="toast" role="status"></div><div id="error" role="alert"></div>
+<dialog id="galleryDialog"><div class="dh"><h2>CHOOSE A DIFFERENT UNIVERSE</h2><button data-close="galleryDialog">Close</button></div><div id="galleryGrid"></div></dialog>
+<dialog id="codeDialog"><div class="dh"><h2>THE ACTUAL FRAGMENT SHADER</h2><button data-close="codeDialog">Close</button></div><textarea id="shaderText" readonly spellcheck="false" aria-label="Fragment shader source"></textarea><p class="hint">WebGL 1 / GLSL ES 1.00. One shader, ten engines switched by the <b>mode</b> uniform.</p><button id="copyShader">Copy GLSL</button></dialog>
+<dialog id="recipeDialog"><div class="dh"><h2>RECIPE</h2><button data-close="recipeDialog">Close</button></div><textarea id="recipeText" spellcheck="false" aria-label="Recipe JSON"></textarea><p class="hint">Copy this to save the look. Paste a recipe here and press Load to restore one.</p><button id="copyRecipe">Copy recipe</button> <button id="loadRecipe">Load from text</button></dialog>
+<dialog id="pngDialog"><div class="dh"><h2>PNG SNAPSHOT</h2><button data-close="pngDialog">Close</button></div><img id="pngImg" alt="Rendered snapshot"><p class="hint">Long-press or right-click the image to save it. The link below works when this file runs outside a sandbox.</p><a id="pngLink" download="otherspace2.png" style="color:var(--b)">Download PNG</a></dialog>
+<script id="vertex" type="x-shader/x-vertex">attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}</script>
+<script id="fragment" type="x-shader/x-fragment">
+#extension GL_OES_standard_derivatives : enable
+precision highp float;
+uniform vec2 resolution,center,viewportOrigin;
+uniform float time,mode,projection,zoom,rotation,drift,p,q,depth,density,shape,twist,phase,width,relief,exposure,saturation,colorPhase,colorScale,grain,glow,speed,kal,prism,dots;
+uniform float fillOn,lineOn,detailOn,haloOn,hardPalette,reversePalette,animatePalette,spectrumOn,invertOn,scanOn,embossOn,vignetteOn,edgeOn,motionOn,kaleidoOn,prismOn,halftoneOn,glitterOn,neonOn;
+uniform vec3 c0,c1,c2,c3,c4;
+#define PI 3.141592653589793
+#define TAU 6.283185307179586
+float hash(vec2 a){return fract(sin(dot(a,vec2(127.1,311.7)))*43758.5453123);}
+mat2 rot(float a){return mat2(cos(a),-sin(a),sin(a),cos(a));}
+vec2 mul(vec2 a,vec2 b){return vec2(a.x*b.x-a.y*b.y,a.x*b.y+a.y*b.x);}
+vec2 divc(vec2 a,vec2 b){return vec2(dot(a,b),a.y*b.x-a.x*b.y)/max(dot(b,b),1e-9);}
+vec2 mobius(vec2 z,vec2 a){return divc(z-a,vec2(1.,0.)-mul(vec2(a.x,-a.y),z));}
+float ash(float x){return sign(x)*log(abs(x)+sqrt(x*x+1.));}
+float ach(float x){x=max(x,1.);return log(x+sqrt(max(x*x-1.,0.)));}
+float hd(vec2 z,vec2 a){return ach(1.+2.*dot(z-a,z-a)/max((1.-dot(z,z))*(1.-dot(a,a)),1e-7));}
+float stripe(float f,float w){float aa=max(fwidth(f),.001);return 1.-smoothstep(w,w+aa,abs(f));}
+float bands(float f,float w){return stripe(sin(f),w);}
+// disk -> upper half-plane (Cayley): w = i(1+z)/(1-z)
+vec2 uhp(vec2 z){return divc(vec2(-z.y,1.+z.x),vec2(1.-z.x,-z.y));}
+vec3 pal(float t){
+ t=t*colorScale+colorPhase;if(animatePalette>.5)t+=time*.05;t=fract(t);if(reversePalette>.5)t=1.-t;float s=t;
+ if(hardPalette>.5)t=floor(t*5.)/5.;t*=5.;vec3 c;
+ if(t<1.)c=mix(c0,c1,t);else if(t<2.)c=mix(c1,c2,t-1.);else if(t<3.)c=mix(c2,c3,t-2.);else if(t<4.)c=mix(c3,c4,t-3.);else c=mix(c4,c0,t-4.);
+ if(spectrumOn>.5)c=mix(c,.5+.5*cos(TAU*(s+vec3(0.,.33,.67))),.55);
+ return c;}
+vec3 ink(float t){if(prismOn>.5){float d=.04*prism;return vec3(pal(t+d).r,pal(t).g,pal(t-d).b);}return pal(t);}
+
+vec3 field(vec2 z,float t){
+ float r=length(z),rho=log((1.+r)/max(1.-r,1e-4));
+ float val=0.,line=0.,detail=0.,w=.035*width;
+
+ if(mode<.5){
+  // 0 MODULAR: fold the half-plane by PSL(2,Z) (z->z+1, z->-1/z). Ford circles = images of Im z > h.
+  vec2 h=uhp(z);h.x+=t*.06;float n=0.;
+  for(int i=0;i<48;i++){if(float(i)>=depth)break;h.x-=floor(h.x+.5);float d=dot(h,h);if(d<1.){h=vec2(-h.x,h.y)/d;n+=1.;}else break;}
+  float wall=min(abs(ash((.5-abs(h.x))/h.y)),abs(ash((dot(h,h)-1.)/(2.*h.y))));
+  float hh=.9+shape*.45,ford=smoothstep(0.,.04,h.y-hh),lf=log(h.y/hh);
+  val=mod(n,2.)*.17+n*.031+ford*.31+.12*log(h.y);
+  line=max(stripe(wall,w),stripe(lf,w));
+  detail=mix(bands(log(h.y)*density*3.+twist*h.x,.12*width)*.6,bands(TAU*h.x*p+twist*lf*3.,.25*width),ford);
+ }
+ else if(mode<1.5){
+  // 1 BAND FRIEZE: Fermi coordinates (u along a geodesic, d = signed distance from it). Two guilloche wave families.
+  vec2 qq=divc(vec2(1.+z.x,z.y),vec2(1.-z.x,-z.y));
+  float u=log(max(length(qq),1e-6)),v=atan(qq.y,qq.x),d=ash(tan(clamp(v,-1.55,1.55)));
+  float cu=u*density*.35+t*.25;
+  float f1=d*p*.45-shape*sin(cu+twist*d*.5),f2=d*q*.45+shape*sin(cu-twist*d*.5);
+  val=.13*floor(f1)+.21*floor(f2)+.08*sin(cu*2.);
+  line=max(bands(f1*PI,.1*width),bands(f2*PI,.1*width));
+  detail=pow(abs(cos(f1*PI)*cos(f2*PI)),6.)*(.5+.5*cos(cu*4.));
+ }
+ else if(mode<2.5){
+  // 2 SCHOTTKY: reflect in p geodesic mirrors. shape=4 -> ideal p-gon tiling; smaller -> Cantor-dust limit set.
+  float al=(PI/p)*mix(.5,1.,clamp(shape*.25,0.,1.)),R=tan(al),s=1./cos(al),n=0.,sec=TAU/p;vec2 c;
+  for(int i=0;i<48;i++){if(float(i)>=depth)break;float k=floor(atan(z.y,z.x)/sec+.5)*sec;c=s*vec2(cos(k),sin(k));vec2 v=z-c;float d=dot(v,v);if(d<R*R){z=c+v*(R*R/d);n+=1.;}else break;}
+  float k2=floor(atan(z.y,z.x)/sec+.5)*sec;c=s*vec2(cos(k2),sin(k2));
+  float wall=abs(ash((dot(z-c,z-c)-R*R)/(R*max(1.-dot(z,z),1e-4))));
+  val=n*.11+mod(n,2.)*.2+wall*.06;
+  line=stripe(wall,w);
+  detail=bands(wall*density*2.-t*.6+twist*atan(z.y,z.x),.15*width)*exp(-wall*.35);
+ }
+ else if(mode<3.5){
+  // 3 CHAINMAIL ORBIFOLD: fold into the (2,p,q) triangle, then ring families around all three corner points.
+  float A=PI/p,B=PI/q,cc=cos(B)/sqrt(max(cos(B)*cos(B)-sin(A)*sin(A),1e-4)),rr=sqrt(max(cc*cc-1.,0.)),n=0.;
+  for(int i=0;i<48;i++){if(float(i)>=depth)break;float a=atan(z.y,z.x);a=mod(a+A,2.*A)-A;if(a<0.)n+=1.;z=length(z)*vec2(cos(a),abs(sin(a)));vec2 v=z-vec2(cc,0.);float d=dot(v,v);if(d<rr*rr){z=vec2(cc,0.)+v*(rr*rr/max(d,1e-8));n+=1.;}else break;}
+  float vr=cc*cos(A)-sqrt(max(cc*cc*cos(A)*cos(A)-1.,0.));
+  float f0=hd(z,vec2(0.))*density,f1=hd(z,vr*vec2(cos(A),sin(A)))*density,f2=hd(z,vec2(cc-rr,0.))*density*(1.+shape*.5);
+  val=.1*floor(f0/PI)+.17*floor(f1/PI)+.23*floor(f2/PI)+mod(n,2.)*.05;
+  line=max(bands(f0-t*.4,.1*width),bands(f1+t*.4,.1*width));
+  detail=bands(f2+twist*sin(f0-f1),.1*width);
+ }
+ else if(mode<4.5){
+  // 4 BINARY TILING (Boroczky): bricks [k 2^n,(k+1) 2^n] x [2^n,2^(n+1)] in the half-plane. Not vertex-transitive, still all congruent.
+  vec2 h=uhp(z)*density*.4;h.x+=t*.25;
+  float ly=log2(h.y),k=floor(ly),xi=h.x/exp2(k)+twist*.08*sin(k*1.7+t*.3),cx=floor(xi),u=fract(xi),v=fract(ly);
+  float du=min(u,1.-u),dv=min(v,1.-v),m=length(vec2(u-.5,v-.5));
+  val=fract(cx*.381966+k*.27)+m*.2;
+  line=max(stripe(min(du,dv*.69),w),stripe(abs(fract(u*(q-2.)+.5)-.5),.02*width)*step(v,.5));
+  detail=bands(m*TAU*p*.5+shape*sin(TAU*u)*sin(PI*v)-t*.5,.22*width);
+ }
+ else if(mode<5.5){
+  // 5 BLASCHKE BLOOM: iterate a finite Blaschke product (a self-map of the disk) and domain-colour the result.
+  vec2 b=z;float iters=clamp(q-2.,1.,4.),rad=min(.15+.17*shape,.86);
+  for(int it=0;it<4;it++){if(float(it)>=iters)break;vec2 pr=vec2(1.,0.);
+   for(int k=0;k<16;k++){if(float(k)>=p)break;float fk=float(k),an=fk*2.3999632+phase*TAU+t*.08*(1.-2.*mod(float(it),2.));pr=mul(pr,mobius(b,rad*sqrt((fk+.35)/p)*vec2(cos(an),sin(an))));}
+   b=rot(twist*.3)*pr;float bl=length(b);if(bl>.9995)b*=.9995/bl;}
+  float ar=atan(b.y,b.x),hr=-log(max(length(b),1e-6));
+  val=hr*.11+.2*sin(ar*2.)+.1*sin(ar*3.+hr);
+  line=max(bands(ar*4.,.1*width),bands(hr*density,.1*width));
+  detail=pow(.5+.5*sin(ar*8.)*sin(hr*density*2.),8.);
+ }
+ else if(mode<6.5){
+  // 6 CONFOCAL MOIRE: hyperbolic ellipses (d1+d2) and hyperbolas (d1-d2) about two foci.
+  vec2 zz=rot(t*.07+twist*.3)*z;float f=clamp(.12+.19*shape,0.,.86);
+  float d1=hd(zz,vec2(-f,0.)),d2=hd(zz,vec2(f,0.)),s=(d1+d2)*density*.5,h=(d1-d2)*p*.6;
+  val=.12*floor(s/PI)+.19*floor(h/PI)+.3*step(0.,sin(s)*sin(h));
+  line=max(bands(s,.1*width),bands(h,.1*width));
+  detail=bands(d1*density*2.-t,.3*width)*bands(d2*density*2.+t,.3*width);
+ }
+ else if(mode<7.5){
+  // 7 DIPOLE: loxodromic coordinates log((z-a)/(z-b)). Integer p,q keep the spirals seamless around both poles.
+  float f=clamp(.1+.19*shape,.05,.86);vec2 qq=divc(z-vec2(-f,0.),z-vec2(f,0.));
+  vec2 L=vec2(log(max(length(qq),1e-6)),atan(qq.y,qq.x));
+  float g1=p*L.y+twist*L.x*2.-t*.6,g2=q*L.y-density*L.x*1.5+t*.4;
+  val=L.x*.15+.33*step(0.,sin(g1)*sin(g2))+.1*sin(g1);
+  line=max(bands(g1,.1*width),bands(g2,.1*width));
+  detail=pow(max(0.,sin(g1)*sin(g2)),4.);
+ }
+ else if(mode<8.5){
+  // 8 TIMES TABLE: geodesics joining boundary point theta to m*theta. Exact distance to each via (z-a)/(z-b).
+  float N=p*4.,m=(q-1.)+shape*.25+t*.02,dmin=50.,cnt=0.,gl=0.;
+  for(int i=0;i<64;i++){float fi=float(i);if(fi>=N)break;
+   float th=TAU*fi/N+phase*TAU,th2=th*m;vec2 a=vec2(cos(th),sin(th)),b=vec2(cos(th2),sin(th2));
+   if(dot(a-b,a-b)<4e-4)continue;
+   vec2 ab=a+b;float l=length(ab);vec2 c=l>.05?ab/l:vec2(-a.y,a.x);
+   vec2 u=normalize(divc(c-a,c-b)),nn=vec2(-u.y,u.x);if(dot(divc(a,b),nn)<0.)nn=-nn;
+   vec2 wz=divc(z-a,z-b);float sd=dot(wz,u)/max(dot(wz,nn),1e-5),d=abs(ash(sd));
+   dmin=min(dmin,d);cnt+=step(0.,sd);gl+=exp(-d*density);}
+  val=cnt*.045+dmin*.2;
+  line=stripe(dmin,.03*width);
+  detail=clamp(bands(dmin*density*4.+twist*cnt,.2*width)*exp(-dmin*2.)+gl*.04,0.,1.);
+ }
+ else{
+  // 9 APOLLONIAN: exact gasket. Four mirror circles, each orthogonal to three of the four tangent generator circles.
+  float n=0.,sc=1.,r2o=dot(z,z);z=rot(twist*.2)*z;
+  for(int i=0;i<48;i++){if(float(i)>=depth)break;float d0=dot(z,z);
+   if(d0<.0717968){float k=.0717968/max(d0,1e-9);z*=k;sc*=k;n+=1.;continue;}
+   float th=PI/3.+floor((atan(z.y,z.x)-PI/3.)/(TAU/3.)+.5)*TAU/3.;vec2 c=2.*vec2(cos(th),sin(th)),v=z-c;float d=dot(v,v);
+   if(d<3.){float k=3./d;z=c+v*k;sc*=k;n+=1.;}else break;}
+  float dc=abs(length(z)-1.);
+  for(int j=0;j<3;j++){float th=float(j)*TAU/3.;dc=min(dc,abs(length(z-.5358984*vec2(cos(th),sin(th)))-.4641016));}
+  float de=dc/sc,hy=de*2./max(1.-r2o,1e-4);
+  val=.6*exp(-hy*.9)+.05*log(sc);
+  line=stripe(hy,.03*width);
+  detail=bands(log(max(de,1e-7))*density+shape*sin(n)-t*.5,.2*width)*exp(-hy*.5);
+ }
+ return vec3(val,clamp(line,0.,1.),clamp(detail,0.,1.));
+}
+
+void main(){
+ vec2 fc=gl_FragCoord.xy-viewportOrigin;float mn=min(resolution.x,resolution.y);
+ vec2 uv=(2.*fc-resolution)/mn;vec3 bg=c0*.12;float mask=1.,r0=length(uv);vec2 z;
+ if(projection<1.5){
+  z=uv/(.91*zoom);r0=length(z);mask=1.-smoothstep(1.-2./mn,1.,r0);
+  if(r0>=1.){gl_FragColor=vec4(bg,1.);return;}
+  if(projection>.5)z=z/(1.+sqrt(max(1.-dot(z,z),1e-6)));
+ }else if(projection<2.5){
+  vec2 h=vec2(uv.x,uv.y+resolution.y/mn)*1.3/zoom;
+  if(h.y<=1e-4){gl_FragColor=vec4(bg,1.);return;}
+  z=divc(h-vec2(0.,1.),h+vec2(0.,1.));r0=length(z);
+ }else{
+  vec2 b=uv*.7853982/(.9*zoom);
+  if(abs(b.y)>=.7853){gl_FragColor=vec4(bg,1.);return;}
+  mask=1.-smoothstep(.775,.7853,abs(b.y));
+  float x2=clamp(2.*b.x,-18.,18.),e=exp(x2),ch=.5*(e+1./e),sh=.5*(e-1./e);
+  z=vec2(sh,sin(2.*b.y))/(ch+cos(2.*b.y));r0=length(z);
+ }
+ float t=time*speed*motionOn;
+ vec2 cen=center+drift*.23*vec2(sin(t*.13),cos(t*.11)-1.);float cr=length(cen);if(cr>.87)cen*=.87/cr;
+ z=mobius(z,cen);z=rot(rotation+t*.025*drift)*z;
+ if(kaleidoOn>.5){float a=atan(z.y,z.x),s=PI/kal;a=abs(mod(a,2.*s)-s);z=length(z)*vec2(cos(a),sin(a));}
+ float r=length(z);if(r>.9995)z*=.9995/r;
+ vec3 f=field(z,t);float tt=f.x+phase;vec3 color=bg;
+ if(fillOn>.5)color=mix(c0*.14,ink(tt),.35+.65*(.5+.5*sin(f.x*TAU)));
+ if(lineOn>.5)color=mix(color,ink(tt+.32)*1.15,f.y*.95);
+ if(detailOn>.5)color=mix(color,ink(tt+.65),f.z*.75);
+ if(haloOn>.5)color+=ink(tt+.2)*pow(f.y,.45)*glow*.4;
+ if(embossOn>.5){float h=f.y*.7+f.z*.3+f.x*.2;vec3 n=normalize(vec3(-dFdx(h)*relief*60.,-dFdy(h)*relief*60.,1.));float li=.38+.68*max(dot(n,normalize(vec3(-.5,.7,1.))),0.);color*=li;color+=ink(tt+.5)*pow(max(dot(n,normalize(vec3(-.3,.4,1.))),0.),28.)*relief*.35;}
+ if(edgeOn>.5)color+=pal(.6)*bands(log((1.+r)/max(1.-r,1e-4))*8.,.04)*.2;
+ if(glitterOn>.5){float h=hash(floor(gl_FragCoord.xy/2.));color+=step(.982,h)*pow(max(0.,sin(time*3.+h*90.)),24.)*(f.y+f.z*.5)*vec3(1.,.92,1.)*1.6;}
+ if(halftoneOn>.5){vec2 g=rot(.52)*fc/mn*(40.+dots*140.);float lum=clamp(dot(color,vec3(.3,.6,.1)),0.,1.);color*=.22+1.05*(1.-smoothstep(-.04,.04,length(fract(g)-.5)-.66*sqrt(lum)));}
+ if(vignetteOn>.5)color*=1.-.42*pow(min(r0,1.),4.);
+ float lum=dot(color,vec3(.2126,.7152,.0722));color=mix(vec3(lum),color,saturation);color=max(color,0.);
+ color=vec3(1.)-exp(-color*exposure);
+ if(neonOn>.5){float m=min(color.r,min(color.g,color.b));color=(color-m*.7)/(1.-m*.7+1e-3);}
+ if(scanOn>.5)color*=.88+.12*sin(gl_FragCoord.y*PI);
+ color+=(hash(gl_FragCoord.xy+phase*111.)-.5)*grain*.14;color=clamp(color,0.,1.);
+ if(invertOn>.5)color=1.-color;
+ gl_FragColor=vec4(mix(bg,color,mask),1.);
+}
+</script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const PALETTES=[
+ ['ACID SHERBET',['#1a0033','#ff2fd0','#ffe600','#00ffc8','#7a2bff']],
+ ['STICKER BINDER 1991',['#12002b','#ff0a8c','#00e5ff','#b8ff00','#ffa800']],
+ ['BLACKLIGHT POSTER',['#05000f','#7b00ff','#ff00aa','#00ff66','#fff200']],
+ ['MANGO UFO',['#2b0a3d','#ff6b00','#ffd000','#ff2e88','#22e0ff']],
+ ['TOXIC LAGOON',['#001a1f','#00ffb3','#c6ff00','#ff3df2','#2a6bff']],
+ ['BUBBLEGUM PLASMA',['#ffe3f6','#ff4fd8','#8a5cff','#27e8ff','#fff275']],
+ ['DAYGLO RISO',['#fff6d6','#ff3b6b','#0057ff','#00d68f','#ff9d00']],
+ ['ULTRAVIOLET CITRUS',['#10002e','#5b1bff','#d400ff','#ff7a00','#eaff00']],
+ ['MERMAID CHROME',['#031033','#00b3ff','#7dffea','#ff7de9','#9a5bff']],
+ ['HOT LAVA DISCO',['#1f0010','#ff003c','#ff7b00','#ffe100','#ff00d4']],
+ ['ALIEN MELON',['#06210f','#39ff14','#ffef00','#ff4d9d','#00d0ff']],
+ ['CANDY RAVER',['#1b1035','#ff5fa2','#ffd166','#06d6a0','#4cc9f0']],
+ ['OIL SLICK',['#0a0612','#3d1cff','#00f0c0','#ffe14d','#ff2f6d']],
+ ['TANGERINE DREAMCAST',['#240046','#ff9e00','#ff5400','#00f5d4','#f15bb5']]
+];
+const MODES=[
+ {name:'Modular Jellyfish',tag:'PSL(2,ℤ) FOLD / FORD CIRCLES',palette:0,note:'The half-plane folded by z→z+1 and z→−1/z into the modular fundamental domain. Ford circles are the images of the horocycle Im z > h; spokes inside them are the cusp coordinate.',params:{p:6,q:3,depth:40,density:3.2,shape:.6,twist:1.4,width:1,relief:.9,drift:.4,exposure:2},fx:{embossOn:true,neonOn:true},labels:{p:'Spokes per Ford circle',depth:'Fold budget',density:'Horocycle band frequency',shape:'Ford circle size',twist:'Spoke swirl'}},
+ {name:'Guilloché Ribbon',tag:'FERMI COORDS / BANKNOTE WAVES',palette:3,note:'Coordinates (u,d): arc length along one geodesic and signed distance from it. Two sine-warped equidistant families interlace like banknote guilloché. Try the Band projection.',params:{p:7,q:5,depth:32,density:5,shape:1.2,twist:2,width:1,relief:.6,drift:.2,exposure:2.1},fx:{embossOn:false,hardPalette:true,prismOn:true},labels:{p:'Wave family A count',q:'Wave family B count',density:'Wavelength along the axis',shape:'Wave amplitude',twist:'Shear with distance'}},
+ {name:'Schottky Lightning',tag:'GEODESIC MIRRORS / LIMIT DUST',palette:2,note:'Reflections in p geodesic mirrors. At full mirror size they touch at the boundary and tile the disk by ideal p-gons; shrink them and the limit set breaks into Cantor dust.',params:{p:5,q:3,depth:40,density:6,shape:4,twist:0,width:1.1,relief:1.2,drift:.35,exposure:2.2},fx:{embossOn:true,haloOn:true,glitterOn:true},labels:{p:'Mirror count',depth:'Reflection budget',density:'Ripple frequency',shape:'Mirror size (4 = ideal polygon)',twist:'Ripple pinwheel'}},
+ {name:'Chainmail Orbifold',tag:'{p,q} FOLD / THREE RING FAMILIES',palette:8,note:'Folded into the (2,p,q) triangle, then hyperbolic circles are drawn around all three corner types: face centres, vertices and edge midpoints. Validity 1/p + 1/q < 1/2 is enforced.',params:{p:7,q:3,depth:40,density:9,shape:1,twist:1.2,width:1.2,relief:1.4,drift:.3,exposure:1.9},fx:{embossOn:true},labels:{p:'Polygon order p',q:'Vertex order q',depth:'Reflection budget',density:'Ring frequency',shape:'Edge-ring ratio',twist:'Edge-ring wobble'}},
+ {name:'Binary Brickwork',tag:'BÖRÖCZKY TILING / HOROCYCLE COURSES',palette:6,note:'Every brick is congruent, yet each sits on two half-width children: the binary tiling of the half-plane. Courses are horocycles. Try the half-plane projection.',params:{p:6,q:4,depth:32,density:3,shape:1.5,twist:1,width:1.3,relief:.5,drift:.2,exposure:2.2},fx:{embossOn:false,hardPalette:true,halftoneOn:true},labels:{p:'Motif ring count',q:'Slats per brick (+2)',density:'Brick scale',shape:'Motif deformation',twist:'Course wobble'}},
+ {name:'Blaschke Bloom',tag:'DISK SELF-MAP / DOMAIN COLOUR',palette:9,note:'A finite Blaschke product B(z)=∏(z−aₖ)/(1−āₖz) maps the disk onto itself p-to-1, with zeros on a golden-angle spiral. Iterating it and colouring by argument and log-modulus grows the bloom.',params:{p:9,q:3,depth:32,density:5,shape:3.4,twist:1,width:1,relief:1,drift:.25,exposure:2.2},fx:{embossOn:true,neonOn:true},labels:{p:'Zeros per product',q:'Iterations (+2)',density:'Modulus ring frequency',shape:'Zero spiral radius',twist:'Twist per iteration',phase:'Zero ring rotation'}},
+ {name:'Confocal Moiré',tag:'HYPERBOLIC ELLIPSES × HYPERBOLAS',palette:4,note:'Level sets of d₁+d₂ and d₁−d₂ for two foci: confocal ellipses and hyperbolas measured with hyperbolic distance. Ring families around each focus beat against each other.',params:{p:9,q:3,depth:32,density:7,shape:1.8,twist:.5,width:1.1,relief:.7,drift:.3,exposure:2.1},fx:{embossOn:true,hardPalette:true},labels:{p:'Hyperbola count',density:'Ellipse / ring frequency',shape:'Focus separation',twist:'Axis rotation'}},
+ {name:'Dipole Whirlpool',tag:'LOXODROMES / DOUBLE SPIRAL',palette:13,note:'Coordinates log((z−a)/(z−b)) around two poles. Straight grids there become double spirals here. Integer arm counts keep every spiral seamless.',params:{p:6,q:4,depth:32,density:3.5,shape:2.2,twist:1.6,width:1.1,relief:1,drift:.45,exposure:2.1},fx:{embossOn:true,prismOn:true},labels:{p:'Arm count A',q:'Arm count B',density:'Spiral B pitch',shape:'Pole separation',twist:'Spiral A pitch'}},
+ {name:'Geodesic Times Table',tag:'STRING ART / CARDIOID ENVELOPES',palette:7,note:'Boundary point θ joins point m·θ by a true geodesic. Distance to each geodesic is exact, via the map (z−a)/(z−b). The multiplier m drifts, so the envelopes breathe.',params:{p:12,q:3,depth:32,density:4,shape:0,twist:1,width:1,relief:.8,drift:.2,exposure:2.3},fx:{embossOn:false,haloOn:true,neonOn:true},labels:{p:'Strings (×4)',q:'Multiplier m (+1)',density:'Glow falloff / echo frequency',shape:'Fractional multiplier',twist:'Echo offset per cell',phase:'String rotation'}},
+ {name:'Apollonian Proper',tag:'EXACT GASKET / FOUR MIRRORS',palette:12,note:'An exact Apollonian gasket: four mirror circles, each orthogonal to three of four mutually tangent circles. Line weight is hyperbolic, so circles stay crisp out to the rim.',params:{p:7,q:3,depth:44,density:3,shape:1,twist:0,width:1.2,relief:1.3,drift:.3,exposure:2},fx:{embossOn:true,haloOn:true},labels:{depth:'Inversion budget',density:'Self-similar ring frequency',shape:'Ring jitter per generation',twist:'Gasket rotation'}}
+];
+const DEFAULT={mode:0,projection:0,zoom:1.03,rotation:0,drift:.3,p:7,q:3,depth:36,density:5,shape:1.5,twist:1,phase:0,width:1,relief:1,exposure:2,saturation:1.2,colorPhase:0,colorScale:1,grain:.1,glow:.6,speed:.65,kal:6,prism:1,dots:.4,
+ fillOn:true,lineOn:true,detailOn:true,haloOn:true,hardPalette:false,reversePalette:false,animatePalette:false,spectrumOn:false,invertOn:false,scanOn:false,embossOn:true,vignetteOn:true,edgeOn:false,motionOn:true,kaleidoOn:false,prismOn:false,halftoneOn:false,glitterOn:false,neonOn:false};
+const ranges={
+ zoom:['Zoom',.4,2.8,.01,'navigationControls'],rotation:['Rotation',-3.142,3.142,.01,'navigationControls'],drift:['Möbius drift',0,1,.01,'navigationControls'],
+ p:['p',3,16,1,'engineControls'],q:['q',3,8,1,'engineControls'],depth:['Iteration budget',6,48,1,'engineControls'],density:['Pattern frequency',.8,14,.05,'engineControls'],shape:['Shape',0,4,.01,'engineControls'],twist:['Twist',0,6,.01,'engineControls'],phase:['Pattern / color phase',0,1,.005,'engineControls'],
+ colorPhase:['Palette offset',0,1,.005,'colorControls'],colorScale:['Color frequency',.15,4,.01,'colorControls'],saturation:['Chroma',0,2,.01,'colorControls'],exposure:['Exposure',.2,4,.01,'colorControls'],
+ width:['Contour thickness',.2,3,.01,'surfaceControls'],relief:['Pseudo-relief',0,2.5,.01,'surfaceControls'],glow:['Edge halo intensity',0,1.5,.01,'surfaceControls'],
+ kal:['Kaleidoscope sectors',2,16,1,'finishControls'],prism:['Prism split amount',0,3,.01,'finishControls'],dots:['Halftone dot fineness',0,1,.01,'finishControls'],speed:['Animation speed',0,2,.01,'finishControls'],grain:['Print grain',0,1,.01,'finishControls']};
+const checks={fillOn:['Color field','layerControls'],lineOn:['Contours','layerControls'],detailOn:['Micro-ornament','layerControls'],haloOn:['Edge halo','layerControls'],
+ hardPalette:['Flat ink colors','colorChecks'],reversePalette:['Reverse order','colorChecks'],animatePalette:['Cycle over time','colorChecks'],spectrumOn:['Acid rainbow mix','colorChecks'],
+ motionOn:['Animate geometry','effectControls'],kaleidoOn:['Kaleidoscope','effectControls'],prismOn:['Prism split','effectControls'],halftoneOn:['Halftone dots','effectControls'],glitterOn:['Glitter','effectControls'],neonOn:['Neon lock (no white)','effectControls'],embossOn:['Emboss lighting','effectControls'],vignetteOn:['Vignette','effectControls'],scanOn:['CRT scanlines','effectControls'],invertOn:['Invert output','effectControls'],edgeOn:['Radial graticule','effectControls']};
+const FX_KEYS=['kaleidoOn','prismOn','halftoneOn','glitterOn','neonOn','embossOn','scanOn','spectrumOn','hardPalette'];
+let state={...DEFAULT},colors=PALETTES[0][1].slice(),paletteIndex=0,view=[0,0],clock=0,paused=false,last=0,quality=.8,seed=271828,dirty=true,gl,program,locations={},lost=false,raf=0,frameCount=0,fpsStart=performance.now(),voice=true;
+
+function say(text){if(!voice||!text)return;try{const s=window.speechSynthesis;if(!s)return;s.cancel();const u=new SpeechSynthesisUtterance(String(text).replace(/[\[\]\/—×]/g,' '));u.rate=1.15;u.pitch=1.25;s.speak(u);}catch(e){}}
+function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').style.display='none',2600);}
+function fail(msg){$('error').textContent=msg;$('error').style.display='block';}
+function validatePQ(){if(1/state.p+1/state.q>=.5){state.q=Math.min(8,Math.floor(1/(.5-1/state.p))+1);if(1/state.p+1/state.q>=.5)state.p=7;}}
+
+function controls(){
+ MODES.forEach((m,i)=>{const b=document.createElement('button');b.className='modebutton';b.dataset.mode=i;b.dataset.say=m.name;b.textContent=String(i+1).padStart(2,'0')+' / '+m.name;const s=document.createElement('span');s.textContent=m.tag;b.append(s);b.onclick=()=>loadMode(i);$('modeButtons').append(b);});
+ for(const [key,[label,min,max,step,target]] of Object.entries(ranges)){const el=document.createElement('label');el.className='control';el.innerHTML=`<span class="row"><span>${label}</span><output id="v_${key}"></output></span><input type="range" id="s_${key}" min="${min}" max="${max}" step="${step}">`;$(target).append(el);
+  $('s_'+key).oninput=e=>{state[key]=+e.target.value;if(state.mode===3&&(key==='p'||key==='q'))validatePQ();sync();dirty=true;};
+  $('s_'+key).onchange=e=>say(el.querySelector('.row span').textContent+' '+(+e.target.value));}
+ for(const [key,[label,target]] of Object.entries(checks)){const el=document.createElement('label');el.className='check';el.innerHTML=`<input type="checkbox" id="${key}">${label}`;$(target).append(el);$(key).onchange=e=>{state[key]=e.target.checked;dirty=true;say(label+(e.target.checked?' on':' off'));};}
+ ['lockPalette','lockGeometry'].forEach(id=>$(id).onchange=e=>say(e.target.parentNode.textContent+(e.target.checked?' on':' off')));
+ PALETTES.forEach((p,i)=>$('palette').add(new Option(p[0],i)));$('palette').add(new Option('CUSTOM / EDITED',-1));
+ $('palette').onchange=e=>{const i=+e.target.value;if(i>=0){paletteIndex=i;colors=PALETTES[i][1].slice();sync();dirty=true;say(PALETTES[i][0]);}};
+ for(let i=0;i<5;i++){const el=document.createElement('input');el.type='color';el.setAttribute('aria-label','Palette color '+(i+1));el.oninput=()=>{colors[i]=el.value;paletteIndex=-1;$('palette').value=-1;dirty=true;};el.onchange=()=>say('Color '+(i+1)+' changed');$('swatches').append(el);}
+ $('projection').onchange=e=>{state.projection=+e.target.value;dirty=true;say(e.target.selectedOptions[0].textContent);};
+ $('quality').value=quality;$('quality').onchange=e=>{quality=+e.target.value;resize();say(e.target.selectedOptions[0].textContent);};
+ $('seed').onchange=()=>{seed=Math.max(1,Math.min(4294967295,Math.floor(+$('seed').value)||1));$('seed').value=seed;};
+}
+function tuneEngineControls(){const labels=MODES[state.mode].labels;
+ for(const key of ['p','q','depth','density','shape','twist']){const input=$('s_'+key),label=input.closest('label'),active=key in labels;input.disabled=!active;label.style.opacity=active?'1':'.35';label.querySelector('.row span').textContent=labels[key]||'Not used by this engine';}
+ $('s_phase').closest('label').querySelector('.row span').textContent=labels.phase||ranges.phase[0];}
+function sync(){tuneEngineControls();
+ for(const key of Object.keys(ranges)){$('s_'+key).value=state[key];$('v_'+key).textContent=Number(state[key]).toFixed(ranges[key][3]>=1?0:2);}
+ for(const key of Object.keys(checks))$(key).checked=!!state[key];
+ $('projection').value=state.projection;$('palette').value=paletteIndex;[...$('swatches').children].forEach((el,i)=>el.value=colors[i]);
+ document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',+b.dataset.mode===state.mode));
+ $('artTitle').textContent=MODES[state.mode].name;$('artSubtitle').textContent=MODES[state.mode].tag;$('mathNote').textContent=MODES[state.mode].note;
+ $('pause').textContent=paused?'Play':'Pause';$('seed').value=seed;}
+function loadMode(i){if(i<0||i>=MODES.length)return;const m=MODES[i];state={...DEFAULT,...m.params,...m.fx,mode:i};paletteIndex=m.palette;colors=PALETTES[paletteIndex][1].slice();view=[0,0];clock=0;dirty=true;sync();}
+function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;}
+function mutate(){
+ if(!$('lockGeometry').checked){state.p=3+Math.floor(random()*14);state.q=3+Math.floor(random()*6);if(state.mode===3)validatePQ();
+  for(const key of ['density','shape','twist','phase','width','relief','drift']){const r=ranges[key];state[key]=Math.round((r[1]+random()*(r[2]-r[1]))/r[3])*r[3];}
+  state.depth=28+Math.floor(random()*21);}
+ if(!$('lockPalette').checked){paletteIndex=Math.floor(random()*PALETTES.length);colors=PALETTES[paletteIndex][1].slice();state.colorPhase=random();state.colorScale=.5+random()*1.8;}
+ state.exposure=1.5+random()*1.2;dirty=true;sync();}
+function hsl(h,s,l){const a=s*Math.min(l,1-l),f=n=>{const k=(n+h*12)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(c*255).toString(16).padStart(2,'0');};return '#'+f(0)+f(8)+f(4);}
+function acidPalette(){const h0=random(),step=.13+random()*.2;colors=[hsl(h0,.9,.08+random()*.06)];for(let i=1;i<5;i++)colors.push(hsl((h0+.35+i*step)%1,1,.5+random()*.12));paletteIndex=-1;dirty=true;sync();}
+function fxRoll(){for(const k of FX_KEYS)state[k]=random()<.38;state.kal=2+Math.floor(random()*11);state.prism=.4+random()*2;state.dots=random();dirty=true;sync();}
+
+function initGL(){const canvas=$('canvas');gl=canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:true});
+ if(!gl){fail('WebGL is not available. Enable hardware acceleration and reopen in a WebGL-capable browser.');return false;}
+ if(!gl.getExtension('OES_standard_derivatives')){fail('This renderer needs OES_standard_derivatives for anti-aliased contours.');return false;}
+ const shader=(type,src)=>{const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;};
+ try{program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,$('vertex').textContent));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,$('fragment').textContent));gl.linkProgram(program);
+  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
+  const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  locations={};for(const key of ['resolution','center','viewportOrigin','time',...Object.keys(DEFAULT),'c0','c1','c2','c3','c4'])locations[key]=gl.getUniformLocation(program,key);
+  lost=false;resize();return true;}catch(e){fail('Shader compilation failed:\n'+e.message);return false;}}
+// Art box in CSS px. y is measured from the bottom edge (GL convention).
+function box(){const hid=document.body.classList.contains('hidden'),mob=innerWidth<=740;
+ if(hid)return{x:0,y:0,w:innerWidth,h:innerHeight};
+ if(mob){const sh=Math.round(innerHeight*.46);return{x:0,y:sh,w:innerWidth,h:Math.max(1,innerHeight-sh)};}
+ return{x:350,y:0,w:Math.max(1,innerWidth-350),h:innerHeight};}
+function resize(){if(!gl||lost)return;const dpr=Math.min(devicePixelRatio||1,2);$('canvas').width=Math.max(1,Math.round(innerWidth*dpr*quality));$('canvas').height=Math.max(1,Math.round(innerHeight*dpr*quality));
+ $('panel').style.height=innerWidth<=740?Math.round(innerHeight*.46)+'px':'';dirty=true;}
+function colorRGB(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
+function draw(os=null,oc=null,ot=null,ov=null,full=false){if(!gl||lost)return;const s=os||state,cs=oc||colors,W=gl.canvas.width,H=gl.canvas.height;
+ gl.useProgram(program);gl.viewport(0,0,W,H);gl.clearColor(.03,.01,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);
+ let vx=0,vy=0,vw=W,vh=H;if(!full){const b=box(),sx=W/innerWidth,sy=H/innerHeight;vx=Math.round(b.x*sx);vy=Math.round(b.y*sy);vw=Math.round(b.w*sx);vh=Math.round(b.h*sy);gl.viewport(vx,vy,vw,vh);}
+ gl.uniform2f(locations.resolution,vw,vh);gl.uniform2f(locations.viewportOrigin,vx,vy);gl.uniform2fv(locations.center,ov||view);gl.uniform1f(locations.time,ot===null?clock:ot);
+ for(const [key,v] of Object.entries(s))gl.uniform1f(locations[key],typeof v==='boolean'?+v:v);
+ cs.forEach((c,i)=>gl.uniform3fv(locations['c'+i],colorRGB(c)));gl.drawArrays(gl.TRIANGLES,0,6);dirty=false;}
+function loop(now){const dt=last?Math.min((now-last)/1000,.1):0;last=now;if(!paused)clock+=dt;
+ if(dirty||(!paused&&(state.motionOn||state.animatePalette||state.glitterOn)))draw();
+ frameCount++;if(now-fpsStart>1000){$('telemetry').textContent=`${paused?'PAUSED':'LIVE'} / ${Math.round(frameCount*1000/(now-fpsStart))} fps / ${gl.canvas.width}×${gl.canvas.height} / ${['POINCARÉ','KLEIN','HALF-PLANE','BAND'][state.projection]} / t=${clock.toFixed(1)}`;fpsStart=now;frameCount=0;}
+ raf=requestAnimationFrame(loop);}
+function togglePause(){paused=!paused;sync();dirty=true;}
+function toggleHUD(){document.body.classList.toggle('hidden');$('hide').textContent=document.body.classList.contains('hidden')?'Show':'Hide';dirty=true;}
+function recipe(){return{app:'otherspace-2',version:1,state:{...state},colors:colors.slice(),paletteIndex,view:view.slice(),time:clock,paused,seed,quality};}
+function applyRecipe(r){if(!r||r.app!=='otherspace-2'||r.version!==1||!r.state)throw Error('Not an OTHERSPACE II recipe.');const ns={...DEFAULT};
+ for(const [key,v] of Object.entries(DEFAULT)){if(typeof v==='boolean'){if(typeof r.state[key]!=='boolean')throw Error('Invalid toggle: '+key);ns[key]=r.state[key];}
+  else{const n=r.state[key];if(!Number.isFinite(n))throw Error('Invalid number: '+key);if(ranges[key]){const[,lo,hi]=ranges[key];if(n<lo||n>hi)throw Error('Out of range: '+key);}ns[key]=n;}}
+ if(!Number.isInteger(ns.mode)||ns.mode<0||ns.mode>=MODES.length||![0,1,2,3].includes(ns.projection)||!Number.isInteger(ns.p)||!Number.isInteger(ns.q)||(ns.mode===3&&1/ns.p+1/ns.q>=.5))throw Error('Invalid engine or tiling orders.');
+ if(!Array.isArray(r.colors)||r.colors.length!==5||!r.colors.every(c=>/^#[0-9a-f]{6}$/i.test(c)))throw Error('Five valid hex colors required.');
+ if(!Array.isArray(r.view)||r.view.length!==2||!r.view.every(Number.isFinite)||Math.hypot(...r.view)>.88)throw Error('Invalid viewpoint.');
+ if(!Number.isFinite(r.time)||r.time<0||r.time>1e8)throw Error('Invalid animation time.');
+ state=ns;colors=r.colors.slice();paletteIndex=Number.isInteger(r.paletteIndex)&&r.paletteIndex>=0&&r.paletteIndex<PALETTES.length?r.paletteIndex:-1;view=r.view.slice();clock=r.time;paused=!!r.paused;seed=Number.isInteger(r.seed)?r.seed>>>0:271828;quality=[.5,.8,1,1.5].includes(r.quality)?r.quality:.8;$('quality').value=quality;sync();resize();}
+async function copyText(text,area){try{await navigator.clipboard.writeText(text);toast('Copied.');}catch(e){if(area){area.focus();area.select();}toast('Clipboard blocked here. Text is selected; copy it by hand.');}}
+function showCode(){$('shaderText').value=$('fragment').textContent.trim();$('codeDialog').showModal();}
+function showRecipe(){$('recipeText').value=JSON.stringify(recipe(),null,2);$('recipeDialog').showModal();}
+function snapshot(){if(lost)return;const c=gl.canvas,ow=c.width,oh=c.height,b=box();
+ const max=Math.min(4096,gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),...gl.getParameter(gl.MAX_VIEWPORT_DIMS));const scale=Math.min(2*Math.min(devicePixelRatio||1,2),max/Math.max(b.w,b.h));
+ c.width=Math.max(1,Math.round(b.w*scale));c.height=Math.max(1,Math.round(b.h*scale));draw(null,null,null,null,true);const url=c.toDataURL('image/png');
+ c.width=ow;c.height=oh;draw();$('pngImg').src=url;$('pngLink').href=url;$('pngLink').download=`otherspace2-${state.mode+1}-${Math.floor(clock)}.png`;$('pngDialog').showModal();}
+function gallery(){const c=gl.canvas,ow=c.width,oh=c.height;$('galleryGrid').replaceChildren();c.width=360;c.height=280;
+ MODES.forEach((m,i)=>{draw({...DEFAULT,...m.params,...m.fx,mode:i},PALETTES[m.palette][1],0,[0,0],true);const b=document.createElement('button');b.className='card';b.dataset.say=m.name;
+  const img=new Image();img.src=c.toDataURL('image/png');img.alt=m.name+' preview';b.append(img);const d=document.createElement('div');d.textContent=String(i+1).padStart(2,'0')+' / '+m.name;const sm=document.createElement('small');sm.textContent=m.tag;d.append(sm);b.append(d);
+  b.onclick=()=>{loadMode(i);$('galleryDialog').close();};$('galleryGrid').append(b);});
+ c.width=ow;c.height=oh;draw();$('galleryDialog').showModal();}
+function events(){
+ $('pause').onclick=togglePause;$('hide').onclick=toggleHUD;$('mutate').onclick=$('mutateTop').onclick=mutate;$('reset').onclick=()=>loadMode(state.mode);$('acidPal').onclick=acidPalette;$('fxRoll').onclick=fxRoll;
+ $('center').onclick=()=>{view=[0,0];state.rotation=0;dirty=true;sync();};$('step').onclick=()=>{paused=true;clock+=1/30;dirty=true;sync();};
+ $('gallery').onclick=gallery;$('snapshot').onclick=snapshot;$('inspect').onclick=$('source').onclick=showCode;$('recipeBtn').onclick=showRecipe;
+ $('copyShader').onclick=()=>copyText($('fragment').textContent.trim(),$('shaderText'));$('copyRecipe').onclick=()=>copyText($('recipeText').value,$('recipeText'));
+ $('loadRecipe').onclick=()=>{try{applyRecipe(JSON.parse($('recipeText').value));$('recipeDialog').close();toast('Recipe restored.');}catch(e){toast(e.message);}};
+ $('voice').onclick=()=>{voice=!voice;$('voice').classList.toggle('on',voice);$('voice').textContent=voice?'Voice on':'Voice off';if(!voice){try{speechSynthesis.cancel();}catch(e){}}else say('Voice on');};
+ document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+ $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch(e){toast('Full screen is not available here.');}};
+ $('saveLocal').onclick=()=>{try{localStorage.setItem('otherspace2-bookmark',JSON.stringify(recipe()));toast('Bookmarked in this browser.');}catch(e){toast('Local storage blocked; use Recipe JSON.');}};
+ $('loadLocal').onclick=()=>{try{const r=localStorage.getItem('otherspace2-bookmark');if(!r)throw Error('No local bookmark yet.');applyRecipe(JSON.parse(r));toast('Bookmark restored.');}catch(e){toast(e.message);}};
+ // Speak every clicked button (checkboxes, selects and sliders speak from their own change handlers).
+ document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.id!=='voice')say(b.dataset.say||b.textContent);});
+ window.addEventListener('resize',resize);
+ const c=$('canvas'),pts=new Map();let pinch=0,lastTap=0;
+ c.onpointerdown=e=>{pts.set(e.pointerId,[e.clientX,e.clientY]);try{c.setPointerCapture(e.pointerId);}catch(_){}
+  if(pts.size===2){const[a,b]=[...pts.values()];pinch=Math.hypot(a[0]-b[0],a[1]-b[1]);}
+  else{const now=performance.now();if(now-lastTap<300){view=[0,0];dirty=true;}lastTap=now;}};
+ c.onpointerup=c.onpointercancel=e=>{pts.delete(e.pointerId);pinch=0;};
+ c.onpointermove=e=>{const prev=pts.get(e.pointerId);if(!prev)return;pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size===2){const[a,b]=[...pts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pinch>0){state.zoom=Math.max(.4,Math.min(2.8,state.zoom*d/pinch));sync();dirty=true;}pinch=d;return;}
+  const bx=box(),sc=2/(Math.min(bx.w,bx.h)*.91*state.zoom);view[0]-=(e.clientX-prev[0])*sc*.7;view[1]+=(e.clientY-prev[1])*sc*.7;
+  const r=Math.hypot(...view);if(r>.85)view=view.map(x=>x*.85/r);dirty=true;};
+ c.addEventListener('wheel',e=>{e.preventDefault();state.zoom=Math.max(.4,Math.min(2.8,state.zoom*Math.exp(-e.deltaY*.001)));sync();dirty=true;},{passive:false});
+ window.addEventListener('keydown',e=>{if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)||e.ctrlKey||e.metaKey||e.altKey||document.querySelector('dialog[open]'))return;const k=e.key.toLowerCase();
+  if(k===' '){e.preventDefault();togglePause();}else if(k==='h')toggleHUD();else if(k==='m')mutate();else if(k==='g')gallery();else if(/^[0-9]$/.test(k))loadMode(k==='0'?9:+k-1);});
+ c.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;cancelAnimationFrame(raf);toast('GPU context lost. Waiting…');});
+ c.addEventListener('webglcontextrestored',()=>{if(initGL()){dirty=true;last=0;raf=requestAnimationFrame(loop);toast('GPU context restored.');}});
+}
+controls();events();loadMode(0);if(initGL())raf=requestAnimationFrame(loop);
+window.OTHERSPACE2={getRecipe:recipe,loadRecipe:applyRecipe,loadMode,render:draw,mutate,getModes:()=>MODES.map(m=>({name:m.name,tag:m.tag,note:m.note})),getPalettes:()=>PALETTES,setPaused:v=>{paused=!!v;sync();},setTime:t=>{if(Number.isFinite(t)&&t>=0){clock=t;dirty=true;}},getGL:()=>gl};
+</script></body></html>
