@@ -126,7 +126,6 @@ function currentPaletteColors(){
 }
 function makePaletteTexture(colors){
   const n=256,bytes=new Uint8Array(n*4);
-  const rgb=colors.map(hex=>new THREE.Color(hex));
   // Stop interpolation in gamma-coded RGB, preserving the original visible swatches.
   const decoded=colors.map(hex=>[
     parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)
@@ -143,14 +142,14 @@ function makePaletteTexture(colors){
   tex.generateMipmaps=false;tex.needsUpdate=true;
   return tex;
 }
-function updatePaletteTexture(){
+function updatePaletteTexture(rebuildEditors=true){
   const next=makePaletteTexture(currentPaletteColors());
   if(fieldMaterial)fieldMaterial.uniforms.u_palette.value=next;
   if(meshMaterial)meshMaterial.uniforms.u_palette.value=next;
   if(swarmMaterial)swarmMaterial.uniforms.u_palette.value=next;
   if(texture)texture.dispose();
   texture=next;
-  renderPaletteEditors();
+  if(rebuildEditors)renderPaletteEditors();
 }
 function renderPaletteEditors(){
   const colors=currentPaletteColors(),swatches=$('paletteSwatches'),editors=$('paletteStopEditors');
@@ -162,16 +161,17 @@ function renderPaletteEditors(){
     input.addEventListener('input',()=>{
       if(!editedColors)editedColors=[...getPalette().colors];
       editedColors[i]=input.value;
-      updatePaletteTexture();
+      updatePaletteTexture(false);
+      if(swatches.children[i])swatches.children[i].style.background=input.value;
     });
     label.append(input);editors.append(label);
   });
   $('paletteSelect').value=state.paletteId;
 }
-function pickPalette(id,clearEdits=true){
+function pickPalette(id,clearEdits=true,keepSource=false){
   if(!paletteList.some(p=>p.id===id))return;
   state.paletteId=id;if(clearEdits)editedColors=null;
-  $('paletteSource').value='all';
+  if(!keepSource)$('paletteSource').value='all';
   refreshPaletteOptions();updatePaletteTexture();
 }
 function shufflePalette(){
@@ -179,7 +179,7 @@ function shufflePalette(){
   if(!pool.length)return;
   let next=pool[Math.floor(Math.random()*pool.length)];
   if(pool.length>1&&next.id===state.paletteId)next=pool[(pool.indexOf(next)+1)%pool.length];
-  pickPalette(next.id);notify('PALETTE MUTATED — '+next.name);
+  pickPalette(next.id,true,true);notify('PALETTE MUTATED — '+next.name);
 }
 function shuffleStops(){
   editedColors=[...currentPaletteColors()];
@@ -202,7 +202,8 @@ function syncControls(){
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   const base=copy(defaultState);
-  Object.assign(state,base,preset);
+  const layers={layerBg:state.layerBg,layerMesh:state.layerMesh,layerSwarm:state.layerSwarm};
+  Object.assign(state,base,preset,layers);
   // User's layer toggle settings are intentionally not reset by presets.
   delete state.name;delete state.detail;delete state.palette;
   state.paletteId=preset.palette;
@@ -294,7 +295,6 @@ function setSpriteCount(){
   if(swarm&&swarm.geometry)swarm.geometry.instanceCount=clamp(Math.round(state.swarmCount),0,MAX_SPRITES);
 }
 function initRenderer(){
-  if(!THREE.WEBGL || false){} // Renderer capability is checked by the WebGLRenderer constructor.
   renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true,alpha:false});
   renderer.setClearColor(0x05010d,1);renderer.autoClear=false;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -601,7 +601,7 @@ function installUI(){
   $('materialMode').addEventListener('change',e=>state.material=Number(e.target.value));
   $('gestureMode').addEventListener('change',e=>state.gestureMode=e.target.value);
   $('paletteSource').addEventListener('change',refreshPaletteOptions);
-  $('paletteSelect').addEventListener('change',e=>pickPalette(e.target.value));
+  $('paletteSelect').addEventListener('change',e=>pickPalette(e.target.value,true,true));
   $('shufflePalette').addEventListener('click',shufflePalette);
   $('shuffleStops').addEventListener('click',shuffleStops);
   $('resetStops').addEventListener('click',()=>{editedColors=null;updatePaletteTexture();notify('ORIGINAL PALETTE RESTORED');});
