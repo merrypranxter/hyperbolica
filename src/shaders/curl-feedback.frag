@@ -8,6 +8,8 @@ precision highp float;
         uniform vec2      uMouse;
         uniform float     uFeedback;
         uniform float uCurlStrength;
+        uniform vec2 uDragVelocity;
+        uniform float uDragEnergy;
         uniform float     uSchlierenFreq;
 
         // 2D Simplex-style Value Noise for Curl Velocity Field
@@ -63,7 +65,11 @@ precision highp float;
             vec2 radialDrift = -centered * 0.0055;
             vec2 tangentDrift = vec2(-centered.y, centered.x) * 0.0038 * sin(dist * 8.0 - uTime);
 
-            vec2 totalOffset = (curlVel * 0.0045 * uCurlStrength + radialDrift + tangentDrift) * (0.6 + 0.6 * uFeedback);
+            vec2 toGesture=aspectP-vec2(uMouse.x*aspect*0.5,uMouse.y*0.5);
+            float nearGesture=exp(-dot(toGesture,toGesture)*8.0);
+            vec2 draggedFlow=uDragVelocity*0.019*nearGesture;
+            vec2 vortex=vec2(-toGesture.y,toGesture.x)*uDragEnergy*0.008/(0.25+length(toGesture));
+            vec2 totalOffset=(curlVel*0.0045*uCurlStrength+radialDrift+tangentDrift+draggedFlow+vortex)*(0.6+0.6*uFeedback);
 
             // Sample RGB channels from history buffer with slight chromatic phase separation
             float trailDisp = 0.0018 * uFeedback;
@@ -89,7 +95,9 @@ precision highp float;
             rotatedHistory = max(rotatedHistory - histMin * 0.55, vec3(0.0));
 
             vec3 decayedHistory = rotatedHistory * (0.90 * uFeedback);
-            vec3 blended = mix(currentRGB, max(currentRGB, decayedHistory), uFeedback * 0.85);
+            // Preserve a portion of true warped history rather than simply brightening the current frame.
+            vec3 ghost=mix(currentRGB,rotatedHistory*0.94,uFeedback*0.57);
+            vec3 blended=mix(ghost,max(ghost,decayedHistory),uFeedback*0.60);
 
             gl_FragColor = vec4(clamp(blended, 0.0, 1.0), 1.0);
         }
