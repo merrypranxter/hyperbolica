@@ -11,13 +11,13 @@ For development: `npm install && npm run dev`, then open the printed local addre
 - Parametric 3D manifold geometries with live displacement
 - GPU instanced orbit glyphs, plus solo/mixed render layers
 - Damped pointer/touch drag: camera orbit, interactive field warp and mathematical phase torque
-- **162 source-faithful MATHEMAGICAL! palettes** stored locally
+- **167 source-faithful MATHEMAGICAL! palettes** stored locally
 - Seeded mutations, selective mutations, variation gallery, adjustable palettes, PNG captures
 - Mobile quality controls, touch-friendly pinned/tabbed HUD, context-loss status
 
 ## Source and provenance
 - `legacy/hyperbolic-photoelastic-original.html` is the original shader/artifact supplied by the artist, retained unmodified as reference.
-- `data/mathemagical-palettes.json` is copied from `merrypranxter/flockingartapp/data/mathemagical-palettes.json` (103 foundational palettes), plus 28 from `impossibleloom/src/palettes.js` and 31 from `austereograms_art_app/src/palette-bank.js` (162 total) for portable, independent use.
+- `data/mathemagical-palettes.json` is copied from `merrypranxter/flockingartapp/data/mathemagical-palettes.json` (103 foundational palettes), plus 28 from `impossibleloom/src/palettes.js` and 31 from `austereograms_art_app/src/palette-bank.js` (162 total) plus five preserved Astral Loom ink banks (167 total) for portable, independent use.
 - The Three.js/GLSL source is an original implementation for Hyperbolica, not a claim that the Hyper-Loom pasted demo is already a working integrated module.
 
 ## Export notes
@@ -47,6 +47,22 @@ The default startup design is now **32 · OPAL CATHEDRAL MEMORY GARDEN**. It com
 
 New Opal controls in **Optics**: shell opacity, pearlescent transmission, optical thickness, and Fresnel edge glow. **Flow / Print** adds gesture-driven curl impulse strength. Dragging the art creates directional flow injection in the history buffer around the fingertip, while ordinary camera and field gestures still work. The hero opens in orbital drag mode, with Sculpt mode available in **Motion**.
 
-Press **ENTER OPAL CATHEDRAL MEMORY GARDEN** on the Designs tab to return to this scene from any other artwork. Its initial palette is the existing `itsamoire/opal`, but all 162 local palette IDs and per-stop editing remain available. **None of these modes uses a paid API or launches a Netlify deployment.**
+Press **ENTER OPAL CATHEDRAL MEMORY GARDEN** on the Designs tab to return to this scene from any other artwork. Its initial palette is the existing `itsamoire/opal`, but all 167 local palette IDs and per-stop editing remain available. **None of these modes uses a paid API or launches a Netlify deployment.**
 
 The translucent material is a physically inspired alpha/Fresnel/thin-film optical approximation, **not real glass transmission or ray-traced refraction**. GPU shader compilation, particularly WebGL Safari performance, must still be validated on a live device; JavaScript syntax and static code/controls tests alone do not certify it.
+
+
+## November 12 — Astral Loom four-engine expansion alongside Opal Memory Garden
+
+Alongside the pre-existing Opal Cathedral Memory Garden on main, the artist's complete 2,019-line `legacy/astral-loom-4-engine-original.html` is retained unchanged as provenance. The corresponding integrated renderer is `src/shaders/astral-field.frag`, with independent `src/shaders/astral-swarm.vert` and `src/shaders/astral-swarm.frag`.
+
+- **Four distinct animated mathematical shader families**, fully selectable and continuously cross-morphable: complex-sheet / Calabi–Yau-inspired folds, Turing–Physarum-style wavelet morphology, truncated alternating eta/zeta-inspired cymatic and crop-circle harmonic geometry, and Hopf/ferrofoam-inspired flux filaments. These are **procedural visual approximations**, not a true 6D geometry solver, actual reaction-diffusion PDE, or physical MHD simulation.
+- **Three new render modes**: Astral solo, Astral over Biomineral, Astral over the 4D flying Cathedral. Existing independent 3D geometry and glyph swarm remain available.
+- **Separate GPU point swarm**, up to 12,000 source-derived phyllotaxis/Thomas trajectories, with independent toggle/strength/count. Coexists with the existing 14k-capable 3D Hopf swarm.
+- **Five additional original Astral Loom color banks**, transferred from its original five RGB stop lists. MATHEMAGICAL palette count is now **167**, and the original palette dropdown and color-stop editor still control every engine and swarm.
+- **Signature startup artwork preserved from main**: Preset 32, *Opal Cathedral Memory Garden*, retains its 4D cathedral, pearlescent shell transmission controls, and directional gesture-driven curl advection. Astral is an additional choice and can also be blended with the cathedral through the new render modes.
+- **Other new starter designs**: 8 Astral source-inspired modes and *Opal Ferrofoam Cathedral*, bringing the shared bank to **45 curated presets**.
+- **Mobile controls**: lower initial ray depth and optional cheaper Astral normal evaluation; capped framebuffer resolution, independently adjustable sprite counts and quality.
+- **Source safety**: original artist sources are preserved as HTML under `legacy/`. Running `npm test` checks the palette library, all preset IDs, UI element links, original references and basic shader structure. `npm run build` compiles the Vite app; a real browser GPU and mobile Safari trial is still necessary before declaring the render pipeline production-tested.
+
+No Netlify deployment was initiated.

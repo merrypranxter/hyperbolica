@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRAL-LOOM // 4-ENGINE PSYCHEDELIC MATHEMATICAL SYNTHESIS SUITE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-magenta: #ff007f;
+            --neon-cyan: #00f5ff;
+            --neon-lime: #b8ff00;
+            --neon-violet: #9d00ff;
+            --neon-gold: #ffbe00;
+            --obsidian-void: #04010a;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--obsidian-void);
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+        }
+
+        #glcanvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            z-index: 1;
+            cursor: crosshair;
+        }
+
+        /* Cyber-Brutalist Glass Studio Panels */
+        .studio-panel {
+            background: rgba(7, 3, 18, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 2px solid var(--neon-cyan);
+            box-shadow:
+                6px 6px 0px var(--neon-magenta),
+                12px 12px 0px rgba(184, 255, 0, 0.28),
+                0 0 32px rgba(255, 0, 127, 0.25);
+            border-radius: 6px;
+        }
+
+        .cyber-btn {
+            background: rgba(16, 6, 34, 0.95);
+            border: 1.5px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 3px 3px 0px var(--neon-magenta);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-radius: 4px;
+            transition: all 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .cyber-btn:hover {
+            background: var(--neon-magenta);
+            color: #ffffff;
+            border-color: var(--neon-lime);
+            box-shadow: 4px 4px 0px var(--neon-cyan);
+            transform: translate(-1px, -1px);
+        }
+
+        .cyber-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--neon-cyan);
+        }
+
+        .cyber-btn.active-pill {
+            background: var(--neon-lime);
+            color: #000000;
+            border-color: #ffffff;
+            box-shadow: 3px 3px 0px var(--neon-magenta);
+        }
+
+        .palette-chip {
+            border: 1.5px solid rgba(0, 245, 255, 0.45);
+            background: rgba(12, 4, 26, 0.9);
+            border-radius: 4px;
+            transition: all 0.12s ease;
+            cursor: pointer;
+        }
+
+        .palette-chip.active {
+            border-color: var(--neon-lime);
+            background: rgba(255, 0, 127, 0.32);
+            box-shadow: 2px 2px 0px var(--neon-cyan);
+            color: #ffffff;
+        }
+
+        /* Custom Cyber Range Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+            margin: 4px 0;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 7px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #15052b 0%, #9d00ff 38%, #ff007f 72%, #00f5ff 100%);
+            border: 1px solid rgba(184, 255, 0, 0.6);
+            border-radius: 3px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 17px;
+            width: 11px;
+            background: var(--neon-lime);
+            cursor: pointer;
+            margin-top: -6px;
+            border: 2px solid #000000;
+            border-radius: 2px;
+            box-shadow: 2px 2px 0px var(--neon-magenta);
+            transition: transform 0.1s ease, background-color 0.1s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.15);
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #05010d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-magenta);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 3px;
+        }
+
+        .code-selectable {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- FULLSCREEN WEBGL CANVAS -->
+    <canvas id="glcanvas"></canvas>
+
+    <!-- TOP STUDIO HEADER & ENGINE SELECTOR BAR -->
+    <header class="fixed top-3 left-3 right-3 z-20 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-2 pointer-events-none">
+        <!-- Brand & Live Engine Switcher Pills -->
+        <div class="pointer-events-auto studio-panel px-3.5 py-2 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="relative flex items-center justify-center">
+                    <span class="w-3 h-3 rounded-full bg-[#b8ff00] animate-ping absolute"></span>
+                    <span class="w-3 h-3 rounded-full bg-[#b8ff00] relative border border-black"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xs sm:text-sm font-extrabold tracking-wider text-[#b8ff00] leading-none" style="font-family: 'Syne', sans-serif;">
+                            ASTRAL-LOOM // 4-ENGINE PSYCHEDELIC SYNTHESIS SUITE
+                        </h1>
+                        <span id="fps-readout" class="px-1.5 py-0.5 text-[9px] font-extrabold bg-[#ff007f] text-white rounded">
+                            60 FPS
+                        </span>
+                    </div>
+                    <p id="status-subtitle" class="text-[9px] text-[#00f5ff] tracking-widest mt-0.5">
+                        DARK-GROUND NEON LOCK ACTIVE // 4 SWITCHABLE &amp; MORPHABLE SHADER ENGINES + 12K GPU SWARM
+                    </p>
+                </div>
+            </div>
+
+            <!-- 4 Engine Selector Pills -->
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button data-engine="0" class="engine-pill cyber-btn active-pill px-2.5 py-1.5 text-[10px]">
+                    [E1: CALABI-YAU 6D]
+                </button>
+                <button data-engine="1" class="engine-pill cyber-btn px-2.5 py-1.5 text-[10px]">
+                    [E2: TURING-PHYSARUM]
+                </button>
+                <button data-engine="2" class="engine-pill cyber-btn px-2.5 py-1.5 text-[10px]">
+                    [E3: CROP-CIRCLE ZETA]
+                </button>
+                <button data-engine="3" class="engine-pill cyber-btn px-2.5 py-1.5 text-[10px]">
+                    [E4: HOPF FERRO-FOAM]
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Action Toolbar -->
+        <div class="pointer-events-auto flex flex-wrap items-center gap-1.5 self-end xl:self-auto">
+            <button id="btn-mutate" class="cyber-btn px-2.5 py-2 text-[10px] sm:text-xs bg-[#9d00ff] text-white border-[#b8ff00]">
+                RANDOMIZE MUTATION [R]
+            </button>
+            <button id="btn-pause" class="cyber-btn px-2.5 py-2 text-[10px] sm:text-xs">
+                PAUSE [SPACE]
+            </button>
+            <button id="btn-snapshot" class="cyber-btn px-2.5 py-2 text-[10px] sm:text-xs bg-[#b8ff00] text-black border-white">
+                4K PNG SNAPSHOT
+            </button>
+            <button id="btn-export-modal" class="cyber-btn px-3 py-2 text-[10px] sm:text-xs bg-[#ff007f] text-white border-[#b8ff00]">
+                &lt;/&gt; EXPORT FOR YOUR APP
+            </button>
+            <button id="btn-toggle-hud" class="cyber-btn px-2.5 py-2 text-[10px] sm:text-xs bg-[#00f5ff] text-black">
+                HIDE HUD [H]
+            </button>
+        </div>
+    </header>
+
+    <!-- LEFT COLLAPSIBLE PARAMETER & PRESET DOCK -->
+    <aside id="hud-dock" class="fixed top-28 xl:top-20 left-3 bottom-3 w-80 sm:w-96 studio-panel z-20 flex flex-col overflow-hidden transition-transform duration-300">
+        <!-- Dock Header -->
+        <div class="p-3 border-b-2 border-[#ff007f] bg-black/65 flex items-center justify-between">
+            <div>
+                <span class="text-[9px] font-bold tracking-widest text-[#ff007f] block">EXPANSION PACK UNIFORM MATRIX</span>
+                <span class="text-xs font-extrabold text-white">8 PRESETS &bull; 5 PALETTES &bull; 12 SLIDERS</span>
+            </div>
+            <button id="btn-center-pole" class="cyber-btn px-2 py-1 text-[9px]">
+                CENTER POLE
+            </button>
+        </div>
+
+        <!-- Scrollable Controls Body -->
+        <div class="flex-1 overflow-y-auto p-3.5 space-y-4">
+
+            <!-- 8 CURATED MASTER PRESETS (2 PER ENGINE) -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-extrabold tracking-widest text-[#b8ff00] uppercase">
+                        // 8 Curated Master Presets
+                    </span>
+                    <span class="text-[9px] text-gray-400">2 PER ENGINE</span>
+                </div>
+                <div class="grid grid-cols-1 gap-1.5">
+                    <button data-preset="calabiLisaFrank" class="preset-btn cyber-btn active-pill px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>01. CALABI-YAU LISA FRANK QUINTIC</span>
+                        <span class="text-[8px] opacity-80">E1: 6D FOLD</span>
+                    </button>
+                    <button data-preset="weierstrassRibbon" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>02. WEIERSTRASS HOLOGRAPHIC RIBBON</span>
+                        <span class="text-[8px] opacity-80">E1: ELLIPTIC</span>
+                    </button>
+                    <button data-preset="bacterialMitosisLace" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>03. BACTERIAL MITOSIS NEON LACE</span>
+                        <span class="text-[8px] opacity-80">E2: TURING</span>
+                    </button>
+                    <button data-preset="physarumBiolume" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>04. PHYSARUM BIOLUMINESCENT MYCELIUM</span>
+                        <span class="text-[8px] opacity-80">E2: DIATOM</span>
+                    </button>
+                    <button data-preset="wiltshireCropZeta" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>05. WILTSHIRE ZETA CROP-CIRCLE MATRIX</span>
+                        <span class="text-[8px] opacity-80">E3: SACRED</span>
+                    </button>
+                    <button data-preset="cymaticBesselMandala" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>06. CYMATIC BESSEL LASER MANDALA</span>
+                        <span class="text-[8px] opacity-80">E3: CHLADNI</span>
+                    </button>
+                    <button data-preset="hopfFerrofluidCrown" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>07. HOPF FIBRATION FERROFLUID CROWN</span>
+                        <span class="text-[8px] opacity-80">E4: MHD FOAM</span>
+                    </button>
+                    <button data-preset="screenPrintAcidFroth" class="preset-btn cyber-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>08. SCREEN-PRINT MOIRÉ ACID FROTH</span>
+                        <span class="text-[8px] opacity-80">E4: ROSETTE</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5 SELECTABLE NEON INK PALETTES -->
+            <div class="border-t border-white/15 pt-3">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-extrabold tracking-widest text-[#00f5ff] uppercase">
+                        // 5 Dark-Ground Neon Ink Palettes
+                    </span>
+                    <span id="palette-name-label" class="text-[9px] text-[#ff007f] font-bold">LISA FRANK 1989</span>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                    <button data-palette="0" class="palette-chip active py-1.5 text-[9px] font-extrabold text-center" title="Lisa Frank 1989">
+                        P1: LISA
+                    </button>
+                    <button data-palette="1" class="palette-chip py-1.5 text-[9px] font-extrabold text-center" title="Ultraviolet Biolume">
+                        P2: BIO
+                    </button>
+                    <button data-palette="2" class="palette-chip py-1.5 text-[9px] font-extrabold text-center" title="Cyber-Ska Acid Lime">
+                        P3: ACID
+                    </button>
+                    <button data-palette="3" class="palette-chip py-1.5 text-[9px] font-extrabold text-center" title="Tokyo VHS Chrome">
+                        P4: VHS
+                    </button>
+                    <button data-palette="4" class="palette-chip py-1.5 text-[9px] font-extrabold text-center" title="Radioactive Diatom">
+                        P5: RAD
+                    </button>
+                </div>
+            </div>
+
+            <!-- GROUP I: ENGINE MORPH & TOPOLOGY SLIDERS -->
+            <div class="space-y-2.5 border-t border-white/15 pt-3">
+                <div class="text-[10px] font-extrabold tracking-widest text-[#00f5ff] uppercase">
+                    // I. Mathematical Engine &amp; Topology
+                </div>
+
+                <!-- 1. Engine Cross-Morph -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-engine" class="text-[#b8ff00]">1. ENGINE CROSS-MORPH (0=E1 .. 3=E4)</label>
+                        <span id="v-engine" class="text-[#b8ff00]">0.00</span>
+                    </div>
+                    <input type="range" id="s-engine" min="0.00" max="3.00" step="0.01" value="0.00">
+                </div>
+
+                <!-- 2. Symmetry / Harmonics -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-symmetry" class="text-gray-200">2. SYMMETRY / HARMONICS (N)</label>
+                        <span id="v-symmetry" class="text-[#00f5ff]">7</span>
+                    </div>
+                    <input type="range" id="s-symmetry" min="3" max="24" step="1" value="7">
+                </div>
+
+                <!-- 3. Fractal / Wavelet Octaves -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-octaves" class="text-gray-200">3. FRACTAL / WAVELET OCTAVES</label>
+                        <span id="v-octaves" class="text-[#00f5ff]">6</span>
+                    </div>
+                    <input type="range" id="s-octaves" min="2" max="10" step="1" value="6">
+                </div>
+
+                <!-- 4. Manifold Twist / Phase -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-twist" class="text-gray-200">4. MANIFOLD TWIST &amp; PHASE</label>
+                        <span id="v-twist" class="text-[#00f5ff]">1.45</span>
+                    </div>
+                    <input type="range" id="s-twist" min="0.00" max="5.00" step="0.05" value="1.45">
+                </div>
+
+                <!-- 5. Micro-Pore & Stipple Density -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-density" class="text-gray-200">5. MICRO-PORE &amp; LATTICE DENSITY</label>
+                        <span id="v-density" class="text-[#00f5ff]">10.5</span>
+                    </div>
+                    <input type="range" id="s-density" min="1.0" max="30.0" step="0.5" value="10.5">
+                </div>
+            </div>
+
+            <!-- GROUP II: OPTICS, NEON LOCK & CONTOUR CARVE -->
+            <div class="space-y-2.5 border-t border-white/15 pt-3">
+                <div class="text-[10px] font-extrabold tracking-widest text-[#ff007f] uppercase">
+                    // II. Iridescence &amp; Dark-Ground Neon Lock
+                </div>
+
+                <!-- 6. Iridescent Specular Gloss -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-gloss" class="text-gray-200">6. IRIDESCENT SPECULAR GLOSS</label>
+                        <span id="v-gloss" class="text-[#ff007f]">1.65</span>
+                    </div>
+                    <input type="range" id="s-gloss" min="0.00" max="3.00" step="0.05" value="1.65">
+                </div>
+
+                <!-- 7. Acid Neon Overdrive -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-acid" class="text-gray-200">7. ACID NEON OVERDRIVE (NO-WHITE)</label>
+                        <span id="v-acid" class="text-[#ff007f]">2.10</span>
+                    </div>
+                    <input type="range" id="s-acid" min="0.50" max="3.50" step="0.05" value="2.10">
+                </div>
+
+                <!-- 8. Obsidian Contour Carve -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-carve" class="text-gray-200">8. OBSIDIAN INK CONTOUR CARVE</label>
+                        <span id="v-carve" class="text-[#ff007f]">0.85</span>
+                    </div>
+                    <input type="range" id="s-carve" min="0.10" max="2.00" step="0.05" value="0.85">
+                </div>
+            </div>
+
+            <!-- GROUP III: 12K SWARM, HALFTONE MOIRE & VHS -->
+            <div class="space-y-2.5 border-t border-white/15 pt-3">
+                <div class="text-[10px] font-extrabold tracking-widest text-[#b8ff00] uppercase">
+                    // III. 12K Attractor Swarm &amp; Screen-Print
+                </div>
+
+                <!-- 9. 12K Attractor Glyph Swarm -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-swarm" class="text-gray-200">9. 12K ATTRACTOR GLYPH SWARM</label>
+                        <span id="v-swarm" class="text-[#b8ff00]">0.75</span>
+                    </div>
+                    <input type="range" id="s-swarm" min="0.00" max="1.50" step="0.05" value="0.75">
+                </div>
+
+                <!-- 10. Spot-Neon Halftone Moire -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-halftone" class="text-gray-200">10. SPOT-NEON HALFTONE MOIRÉ</label>
+                        <span id="v-halftone" class="text-[#b8ff00]">0.30</span>
+                    </div>
+                    <input type="range" id="s-halftone" min="0.00" max="1.00" step="0.02" value="0.30">
+                </div>
+
+                <!-- 11. Chromatic Prism & VHS Tear -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-glitch" class="text-gray-200">11. CHROMATIC PRISM &amp; VHS TEAR</label>
+                        <span id="v-glitch" class="text-[#b8ff00]">0.28</span>
+                    </div>
+                    <input type="range" id="s-glitch" min="0.00" max="1.50" step="0.02" value="0.28">
+                </div>
+
+                <!-- 12. Temporal Evolution Speed -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <label for="s-speed" class="text-gray-200">12. TEMPORAL EVOLUTION SPEED</label>
+                        <span id="v-speed" class="text-[#b8ff00]">0.75</span>
+                    </div>
+                    <input type="range" id="s-speed" min="0.00" max="2.50" step="0.05" value="0.75">
+                </div>
+            </div>
+        </div>
+
+        <!-- Dock Footer -->
+        <div class="p-2.5 border-t-2 border-[#00f5ff] bg-black/85 text-[9px] text-gray-300 flex items-center justify-between">
+            <span>DRAG: WARP SINGULARITY // SCROLL: ZOOM</span>
+            <span id="zoom-readout" class="text-[#b8ff00] font-bold">ZOOM: 1.00x</span>
+        </div>
+    </aside>
+
+    <!-- BOTTOM-RIGHT TELEMETRY VECTOR SCOPE & ANTI-WHITEOUT METER -->
+    <div id="scope-widget" class="fixed bottom-3 right-3 z-20 studio-panel p-2.5 w-64 sm:w-72 flex flex-col gap-1.5">
+        <div class="flex items-center justify-between border-b border-white/20 pb-1">
+            <span id="scope-engine-label" class="text-[9px] font-extrabold text-[#b8ff00] tracking-wider">
+                E1: CALABI-YAU 6D QUINTIC
+            </span>
+            <span class="text-[8px] text-[#00f5ff] font-bold">DARK-LOCK: 100%</span>
+        </div>
+        <canvas id="vector-scope" width="260" height="110" class="w-full h-24 bg-[#030108] border border-white/15 rounded"></canvas>
+        <div class="flex justify-between text-[8px] text-gray-400 font-bold">
+            <span class="text-[#ff007f]">PEAK CHROMA: LOCKED</span>
+            <span class="text-[#00f5ff]">WHITE FLOOR: 0%</span>
+            <span class="text-[#b8ff00]">12K SWARM</span>
+        </div>
+    </div>
+
+    <!-- FULL-SCREEN APP-BUILDER & CODE EXPORT MODAL -->
+    <div id="export-modal" class="fixed inset-0 z-40 bg-black/88 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6">
+        <div class="studio-panel w-full max-w-6xl h-full max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-3.5 border-b-2 border-[#ff007f] bg-black flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-[10px] font-bold text-[#ff007f] tracking-widest block">APP-BUILDER MODULE EXPORTER</span>
+                    <h2 class="text-sm sm:text-base font-extrabold text-[#b8ff00]">
+                        4-ENGINE GLSL SHADER + 12K ATTRACTOR SWARM + 7-ENGINE UNIFIED APP ADAPTER
+                    </h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-copy-code" class="cyber-btn px-3 py-1.5 text-xs bg-[#b8ff00] text-black border-white">
+                        COPY ACTIVE MODULE
+                    </button>
+                    <button id="btn-download-code" class="cyber-btn px-3 py-1.5 text-xs">
+                        DOWNLOAD FILE
+                    </button>
+                    <button id="btn-close-modal" class="cyber-btn px-3 py-1.5 text-xs bg-[#ff007f] text-white">
+                        CLOSE [ESC]
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Code Tabs -->
+            <div class="bg-[#090315] border-b border-white/15 px-3 py-2 flex flex-wrap gap-1.5">
+                <button data-tab="fragShader" class="code-tab-btn cyber-btn active-pill px-2.5 py-1 text-[10px]">
+                    1. 4-ENGINE FRAGMENT SHADER (.FRAG)
+                </button>
+                <button data-tab="swarmShader" class="code-tab-btn cyber-btn px-2.5 py-1 text-[10px]">
+                    2. 12K ATTRACTOR SWARM SHADERS (.GLSL)
+                </button>
+                <button data-tab="appAdapter" class="code-tab-btn cyber-btn px-2.5 py-1 text-[10px]">
+                    3. UNIFIED 7-ENGINE APP ADAPTER (.JS)
+                </button>
+                <button data-tab="presetsJson" class="code-tab-btn cyber-btn px-2.5 py-1 text-[10px]">
+                    4. 8 CURATED PRESETS BANK (.JSON)
+                </button>
+            </div>
+
+            <!-- Code Viewer Pre -->
+            <div class="flex-1 overflow-auto p-4 bg-[#030108] font-mono text-xs leading-relaxed text-[#00f5ff] code-selectable">
+                <pre id="code-export-pre" class="whitespace-pre-wrap break-words code-selectable"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION BANNER -->
+    <div id="toast-banner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 studio-panel px-4 py-2 text-xs font-extrabold text-[#b8ff00] pointer-events-none opacity-0 translate-y-4 transition-all duration-200">
+        ASTRAL-LOOM INITIALIZED
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PASS 1 VERTEX SHADER: FULLSCREEN QUAD                               -->
+    <!-- =================================================================== -->
+    <script id="quad-vs" type="x-shader/x-vertex">
+        attribute vec2 a_position;
+        varying vec2 vUv;
+        void main() {
+            vUv = a_position * 0.5 + 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <!-- =================================================================== -->
+    <!-- PASS 1 FRAGMENT SHADER:                                             -->
+    <!-- 4-ENGINE MATHEMATICAL SYNTHESIZER + DARK-GROUND NEON LOCK           -->
+    <!-- =================================================================== -->
+    <script id="synth-fs" type="x-shader/x-fragment">
+        precision highp float;
+        varying vec2 vUv;
+
+        uniform vec2  uResolution;
+        uniform float uTime;
+        uniform vec2  uMouse;
+        uniform float uZoom;
+
+        uniform float uEngineMorph;   // 0.0=Calabi-Yau, 1.0=Turing-Physarum, 2.0=Crop-Circle Zeta, 3.0=Hopf Ferro-Foam
+        uniform float uSymmetry;      // 3 .. 24
+        uniform float uOctaves;       // 2 .. 10
+        uniform float uTwist;         // 0.0 .. 5.0
+        uniform float uDensity;       // 1.0 .. 30.0
+        uniform float uGloss;         // 0.0 .. 3.0
+        uniform float uAcid;          // 0.5 .. 3.5
+        uniform float uContourCarve;  // 0.1 .. 2.0
+        uniform float uHalftoneMix;   // 0.0 .. 1.0
+        uniform float uGlitch;        // 0.0 .. 1.5
+        uniform float uPaletteId;     // 0 .. 4
+
+        #define PI  3.14159265359
+        #define TAU 6.28318530718
+        #define PHI 1.61803398875
+
+        // -------------------------------------------------------------------
+        // 1. HARDWARE-SAFE MATHEMATICAL GUARDS (ZERO NaN / ZERO INFINITY)
+        // -------------------------------------------------------------------
+        float safePow(float base, float expVal) {
+            return pow(max(abs(base), 1e-5), expVal);
+        }
+
+        float safeAtan(float y, float x) {
+            float safeX = (abs(x) + abs(y) < 1e-6) ? 1e-6 : x;
+            return atan(y, safeX);
+        }
+
+        vec3 safeTanh3(vec3 x) {
+            vec3 c = clamp(x, 0.0, 10.0);
+            return c * (27.0 + c * c) / (27.0 + 9.0 * c * c);
+        }
+
+        mat2 rot2(float a) {
+            float s = sin(a), c = cos(a);
+            return mat2(c, -s, s, c);
+        }
+
+        float hash12(vec2 p) {
+            vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+            p3 += dot(p3, p3.yzx + 33.33);
+            return fract((p3.x + p3.y) * p3.z);
+        }
+
+        vec2 hash22(vec2 p) {
+            vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+            p3 += dot(p3, p3.yzx + 33.33);
+            return fract((p3.xx + p3.yz) * p3.zy);
+        }
+
+        // Smooth Minimum for organic ferrofluid & soap-bubble fusion
+        float smin(float a, float b, float k) {
+            float h = clamp(0.5 + 0.5 * (b - a) / max(k, 1e-4), 0.0, 1.0);
+            return mix(b, a, h) - k * h * (1.0 - h);
+        }
+
+        // N-Fold Dihedral Kaleidoscope Folding
+        vec2 foldDihedral(vec2 p, float nSides) {
+            float r = length(p);
+            float a = safeAtan(p.y, p.x);
+            float sector = TAU / clamp(nSides, 3.0, 24.0);
+            a = mod(a + 0.5 * sector, sector) - 0.5 * sector;
+            a = sqrt(a * a + 1e-5);
+            return vec2(cos(a), sin(a)) * r;
+        }
+
+        // -------------------------------------------------------------------
+        // 2. 5 SELECTABLE DARK-GROUND NEON INK PALETTES
+        // -------------------------------------------------------------------
+        vec3 getPaletteStop(int pal, int idx) {
+            if (pal == 0) {
+                // P1: Lisa Frank 1989 (Hot Magenta, Electric Cyan, Acid Lime, Laser Gold, Hyper Violet)
+                if (idx == 0) return vec3(1.00, 0.00, 0.52);
+                if (idx == 1) return vec3(0.00, 0.96, 1.00);
+                if (idx == 2) return vec3(0.72, 1.00, 0.00);
+                if (idx == 3) return vec3(1.00, 0.75, 0.00);
+                return vec3(0.62, 0.00, 1.00);
+            } else if (pal == 1) {
+                // P2: Ultraviolet Biolume (Deep Indigo, Biolume Cyan, Seafoam Green, Electric Magenta, Coral Orange)
+                if (idx == 0) return vec3(0.45, 0.00, 1.00);
+                if (idx == 1) return vec3(0.00, 1.00, 0.85);
+                if (idx == 2) return vec3(0.15, 1.00, 0.25);
+                if (idx == 3) return vec3(1.00, 0.00, 0.68);
+                return vec3(1.00, 0.28, 0.00);
+            } else if (pal == 2) {
+                // P3: Cyber-Ska Acid Lime (Venom Lime, Hyper Yellow, Hot Pink, Electric Blue, Toxic Purple)
+                if (idx == 0) return vec3(0.65, 1.00, 0.00);
+                if (idx == 1) return vec3(1.00, 0.92, 0.00);
+                if (idx == 2) return vec3(1.00, 0.00, 0.45);
+                if (idx == 3) return vec3(0.00, 0.65, 1.00);
+                return vec3(0.55, 0.00, 0.95);
+            } else if (pal == 3) {
+                // P4: Tokyo VHS Chrome (Laser Red-Pink, Synthwave Cyan, Sunset Tangerine, Neon Violet, Electric Gold)
+                if (idx == 0) return vec3(1.00, 0.05, 0.38);
+                if (idx == 1) return vec3(0.00, 0.92, 1.00);
+                if (idx == 2) return vec3(1.00, 0.32, 0.00);
+                if (idx == 3) return vec3(0.70, 0.00, 1.00);
+                return vec3(1.00, 0.85, 0.00);
+            } else {
+                // P5: Radioactive Diatom ( Emerald, Turquoise, Magenta, Amber, Ultraviolet)
+                if (idx == 0) return vec3(0.00, 1.00, 0.45);
+                if (idx == 1) return vec3(0.00, 0.82, 1.00);
+                if (idx == 2) return vec3(1.00, 0.00, 0.75);
+                if (idx == 3) return vec3(1.00, 0.60, 0.00);
+                return vec3(0.42, 0.00, 1.00);
+            }
+        }
+
+        vec3 evaluateNeonPalette(float phase) {
+            float p = fract(phase);
+            int pal = int(floor(clamp(uPaletteId, 0.0, 4.0) + 0.5));
+            float scaled = p * 5.0;
+            int seg = int(floor(scaled));
+            float f = smoothstep(0.0, 1.0, fract(scaled));
+
+            vec3 c0 = getPaletteStop(pal, seg);
+            vec3 c1 = getPaletteStop(pal, seg >= 4 ? 0 : seg + 1);
+            return mix(c0, c1, f);
+        }
+
+        // -------------------------------------------------------------------
+        // 3. CRITICAL ANTI-WHITEOUT / DARK-GROUND NEON LOCK
+        // -------------------------------------------------------------------
+        vec3 lockAcidNeon(vec3 col, float overdrive, float contrastCarve) {
+            // 1. Scrub any invalid/negative numbers
+            vec3 c = clamp(col, 0.0, 12.0);
+            if (!(c.r >= 0.0 && c.r <= 12.0)) c.r = 0.0;
+            if (!(c.g >= 0.0 && c.g <= 12.0)) c.g = 0.0;
+            if (!(c.b >= 0.0 && c.b <= 12.0)) c.b = 0.0;
+
+            // 2. Suppress the achromatic white floor so R, G, B NEVER all hit 1.0 simultaneously
+            float minCh = min(c.r, min(c.g, c.b));
+            c = max(c - minCh * 0.84, vec3(0.0));
+
+            // 3. Peak-channel normalization + chroma power curve
+            float peak = max(c.r, max(c.g, max(c.b, 1e-4)));
+            vec3 pureHue = c / peak;
+            pureHue = vec3(
+                safePow(pureHue.r, 1.18),
+                safePow(pureHue.g, 1.18),
+                safePow(pureHue.b, 1.18)
+            );
+
+            // 4. Bounded rational saturation + dark obsidian contour carving
+            float amp = (1.0 - exp(-peak * overdrive * 1.15));
+            vec3 locked = safeTanh3(pureHue * amp * (0.95 + 0.35 * overdrive));
+
+            // Blend with deep obsidian void (#04010a) along structural contour boundaries
+            vec3 obsidianVoid = vec3(0.016, 0.004, 0.04);
+            return mix(obsidianVoid, locked, clamp(contrastCarve, 0.0, 1.0));
+        }
+
+        // -------------------------------------------------------------------
+        // ENGINE 01: CALABI-YAU 6D QUINTIC & WEIERSTRASS ELLIPTIC LATTICE
+        // Returns vec4(height, phaseMetric, contourSignal, microDetail)
+        // -------------------------------------------------------------------
+        vec4 evalEngine01_CalabiYau(vec2 p, float t) {
+            // Fold coordinate into N-fold dihedral symmetry + interactive Mobius pole
+            vec2 z = p - uMouse * 0.45;
+            float r0 = length(z) + 1e-4;
+            z = foldDihedral(z, uSymmetry);
+
+            // Complex-plane Weierstrass Elliptic Lattice & Quintic Fermat Sheet Projection
+            float nExp = clamp(floor(uSymmetry * 0.5 + 2.0), 3.0, 9.0);
+            float scale = 1.6 + uDensity * 0.14;
+            vec2 w = z * scale;
+
+            float sheetAccum = 0.0;
+            float branchPhase = 0.0;
+            float ribbonEdge = 1e4;
+            float maxSheets = clamp(uOctaves, 2.0, 8.0);
+
+            for (int k = 0; k < 8; k++) {
+                float fk = float(k);
+                if (fk >= maxSheets) break;
+
+                // Rotate across 6D Calabi-Yau projection angle
+                float sheetAngle = fk * TAU / nExp + uTwist * 0.65 + t * 0.22;
+                vec2 wk = rot2(sheetAngle) * w;
+
+                // Complex hyperbolic cosine/sine projection of z1^n + z2^n = 1
+                float u = wk.x;
+                float v = clamp(wk.y, -2.2, 2.2);
+                float ch = 0.5 * (exp(v) + exp(-v));
+                float sh = 0.5 * (exp(v) - exp(-v));
+
+                vec2 cosZ = vec2(cos(u) * ch, -sin(u) * sh);
+                vec2 sinZ = vec2(sin(u) * ch,  cos(u) * sh);
+
+                float rad1 = safePow(length(cosZ), 2.0 / nExp);
+                float ang1 = (safeAtan(cosZ.y, cosZ.x) + fk * TAU) / nExp;
+
+                float rad2 = safePow(length(sinZ), 2.0 / nExp);
+                float ang2 = (safeAtan(sinZ.y, sinZ.x) - fk * TAU) / nExp;
+
+                // Project 4D complex coordinates (Re(z1), Im(z1), Re(z2), Im(z2)) into 3D height
+                float proj = rad1 * cos(ang1 + uTwist) + rad2 * sin(ang2 - uTwist * 0.7);
+                float weight = safePow(0.76, fk);
+
+                sheetAccum += sin(proj * PI + t * 0.6) * weight;
+                branchPhase += (ang1 - ang2) * weight;
+                ribbonEdge = min(ribbonEdge, abs(fract(proj * 1.5) - 0.5));
+
+                // Elliptic modular domain fold for next sheet
+                w = abs(w) / clamp(dot(w, w), 0.35, 1.45) - vec2(0.62, 0.48);
+            }
+
+            // Doubly-periodic Weierstrass elliptic lattice micro-filigree
+            vec2 lat = sin(w * (2.5 + uDensity * 0.25) + t * 0.5);
+            float ellipticPores = lat.x * lat.y;
+
+            float height = sheetAccum * 0.55 + ellipticPores * 0.25;
+            float phase = branchPhase * 0.45 + height * 0.85 - t * 0.15 + r0 * 0.3;
+            float contour = abs(sin(sheetAccum * (3.5 + uContourCarve * 2.5))) * smoothstep(0.01, 0.18 * uContourCarve, ribbonEdge);
+
+            return vec4(height, phase, contour, ellipticPores);
+        }
+
+        // -------------------------------------------------------------------
+        // ENGINE 02: TURING-PHYSARUM MORPHOGENETIC CORAL & BACTERIAL LACE
+        // Returns vec4(height, phaseMetric, contourSignal, microDetail)
+        // -------------------------------------------------------------------
+        vec4 evalEngine02_TuringPhysarum(vec2 p, float t) {
+            vec2 q = p - uMouse * 0.4;
+            // Subtle organic symmetry warp
+            float r = length(q);
+            float a = safeAtan(q.y, q.x);
+            a += 0.12 * sin(a * uSymmetry + r * 3.0 - t * 0.4);
+            q = vec2(cos(a), sin(a)) * r * (1.8 + uDensity * 0.12);
+
+            float activator = 0.0;
+            float inhibitor = 0.0;
+            float slimeVein = 1e4;
+            float freq = 1.65;
+            float amp = 0.65;
+            float octs = clamp(uOctaves, 2.0, 9.0);
+
+            for (int i = 0; i < 9; i++) {
+                float fi = float(i);
+                if (fi >= octs) break;
+
+                vec2 sp = q * freq + vec2(sin(t * 0.35 + fi), cos(t * 0.28 - fi * 1.3));
+
+                // Coupled Swift-Hohenberg / Turing Band-Pass Wavelet Triad (120 deg hexagonal basis)
+                float w1 = cos(sp.x * 2.0 + sin(sp.y * 1.5 + uTwist));
+                float w2 = cos((-0.5 * sp.x + 0.866025 * sp.y) * 2.0 + sin(sp.x * 1.4 - t * 0.5));
+                float w3 = cos((-0.5 * sp.x - 0.866025 * sp.y) * 2.0 + cos(sp.y * 1.4 + t * 0.4));
+
+                float triad = (w1 + w2 + w3) / 3.0;
+                // Inhibitor ring at 2x spatial frequency (Difference-of-Gaussians kernel)
+                float inhib = (cos(sp.x * 4.0) + cos(sp.y * 4.0)) * 0.25;
+
+                float rdLayer = triad - inhib * (0.45 + 0.15 * sin(uTwist));
+                activator += rdLayer * amp;
+                inhibitor += abs(rdLayer) * amp;
+
+                // Chemotactic Physarum slime-mold filament ridge
+                float vein = abs(triad);
+                slimeVein = min(slimeVein, vein);
+
+                // Curl advection of coordinate along reaction-diffusion gradient
+                vec2 curlStep = vec2(-sin(sp.y * 2.0), sin(sp.x * 2.0)) * 0.42;
+                q = rot2(0.52 + uTwist * 0.12) * (q + curlStep * amp);
+
+                freq *= 1.62;
+                amp *= 0.72;
+            }
+
+            // Hexagonal Diatom Silica Frustule Micro-Pores (Areolae) inside bacterial cells
+            vec2 hexP = q * (1.2 + uDensity * 0.18);
+            float hex1 = sin(hexP.x);
+            float hex2 = sin(-0.5 * hexP.x + 0.866025 * hexP.y);
+            float hex3 = sin(-0.5 * hexP.x - 0.866025 * hexP.y);
+            float diatomPores = abs(hex1 * hex2 * hex3);
+
+            float height = activator * 0.75 + diatomPores * 0.25;
+            float phase = (activator - inhibitor * 0.6) * 1.15 + uTwist * 0.25 - t * 0.14;
+
+            // Chitinous dark cell walls where activator crosses zero (mitosis membrane boundary)
+            float cellWall = smoothstep(0.02, 0.24 * uContourCarve, abs(activator));
+            float poreWall = smoothstep(0.03, 0.20 * uContourCarve, diatomPores + 0.08);
+            float contour = cellWall * mix(0.35, 1.0, poreWall);
+
+            return vec4(height, phase, contour, diatomPores);
+        }
+
+        // -------------------------------------------------------------------
+        // ENGINE 03: RIEMANN ZETA & CROP-CIRCLE HARMONIC CYMATICS
+        // Returns vec4(height, phaseMetric, contourSignal, microDetail)
+        // -------------------------------------------------------------------
+        vec4 evalEngine03_CropCircleZeta(vec2 p, float t) {
+            vec2 z = (p - uMouse * 0.35) * (1.5 + uDensity * 0.08);
+            float r = length(z) + 1e-5;
+            float theta = safeAtan(z.y, z.x);
+            float nSym = floor(clamp(uSymmetry, 3.0, 24.0));
+
+            // 1. Truncated Dirichlet / Riemann Eta-Zeta Complex Series along critical strip
+            vec2 zetaSum = vec2(0.0);
+            vec2 sComplex = vec2(0.5 + cos(r * 2.0 - t * 0.3) * 0.35, (theta * nSym / PI + r * uTwist * 1.5) * 3.0);
+            float maxTerms = clamp(uOctaves, 3.0, 9.0);
+
+            for (int m = 1; m <= 9; m++) {
+                float fm = float(m);
+                if (fm > maxTerms) break;
+                float logM = log(fm);
+                float mag = safePow(fm, -sComplex.x);
+                float ang = -sComplex.y * logM + t * 0.4 * (mod(fm, 2.0) == 0.0 ? -1.0 : 1.0);
+                float altSign = (mod(fm, 2.0) < 0.5) ? -1.0 : 1.0;
+                zetaSum += altSign * mag * vec2(cos(ang), sin(ang));
+            }
+
+            float zetaPhase = safeAtan(zetaSum.y, zetaSum.x) / TAU;
+            float zetaMag = length(zetaSum);
+
+            // 2. Authentic Wiltshire Crop-Circle Standing-Wave Geometry
+            // Nested Epitrochoid / Hypotrochoid Spirograph Gear Rings
+            float epiWave = r - (0.75 + 0.18 * cos(nSym * theta + t * 0.6) + 0.10 * cos(nSym * 2.0 * theta - t * 0.9 + uTwist));
+            float gearTrack = sin(epiWave * (12.0 + uDensity * 0.6));
+
+            // Off-Center Crescent / Vesica Piscis Satellite Circles (Milk Hill / Crabwood motif)
+            vec2 foldZ = foldDihedral(z, nSym);
+            float satDist1 = length(foldZ - vec2(0.68 + 0.12 * sin(t * 0.5), 0.0)) - 0.32;
+            float satDist2 = length(foldZ - vec2(0.62, 0.08 * cos(t * 0.5 + uTwist))) - 0.26;
+            float vesicaCrescent = sin(min(abs(satDist1), abs(satDist2)) * (18.0 + uDensity));
+
+            // Bessel J_0 / J_n Cymatic Standing Wave + Phyllotaxis Golden Spiral Lattice
+            float besselCymatic = cos(r * (8.0 + uDensity * 0.5) - t * 1.2) * cos(nSym * theta);
+            float goldenSpiral = sin(log(r + 0.05) * nSym * PHI + theta * nSym - t * 0.8);
+
+            float height = (gearTrack * 0.35 + vesicaCrescent * 0.30 + besselCymatic * 0.25 + goldenSpiral * 0.20);
+            float phase = zetaPhase + height * 0.45 + zetaMag * 0.25 + uTwist * 0.15;
+
+            // Razor-sharp Crop-Circle blueprint tracks and nodal lines
+            float c1 = smoothstep(0.04, 0.28 * uContourCarve, abs(height));
+            float c2 = smoothstep(0.02, 0.22 * uContourCarve, abs(sin(zetaPhase * PI * 6.0)));
+            float contour = c1 * mix(0.28, 1.0, c2);
+
+            return vec4(height, phase, contour, goldenSpiral);
+        }
+
+        // -------------------------------------------------------------------
+        // ENGINE 04: HOPF FIBRATION MHD PLASMA & FERROFLUID FOAM
+        // Returns vec4(height, phaseMetric, contourSignal, microDetail)
+        // -------------------------------------------------------------------
+        vec4 evalEngine04_HopfFerroFoam(vec2 p, float t) {
+            vec2 q = (p - uMouse * 0.4) * (1.35 + uDensity * 0.06);
+            float r2 = dot(q, q);
+            float nSym = clamp(uSymmetry, 3.0, 24.0);
+
+            // 1. 4D Stereographic Inverse Hopf Projection (R^2 -> S^3)
+            float denom = 1.0 / (1.0 + r2);
+            float psi = uTwist * 0.8 + t * 0.35 + sin(safeAtan(q.y, q.x) * floor(nSym * 0.5)) * 0.4;
+            vec4 hopf4 = vec4(
+                2.0 * (q.x * cos(psi) - q.y * sin(psi)) * denom,
+                2.0 * (q.x * sin(psi) + q.y * cos(psi)) * denom,
+                (1.0 - r2) * denom * cos(psi * 0.7),
+                (1.0 - r2) * denom * sin(psi * 0.7)
+            );
+
+            // 2. Magnetohydrodynamic (MHD) Alfvén Linked Flux Filaments
+            float fluxTube = sin(hopf4.x * nSym + hopf4.w * 4.0 + t) * cos(hopf4.y * nSym - hopf4.z * 4.0 - t * 0.8);
+
+            // 3. Smooth-Voronoi Rosensweig Ferrofluid Spikes & Plateau Soap-Bubble Borders
+            vec2 cellUV = foldDihedral(q, max(3.0, floor(nSym * 0.5))) * (2.2 + uDensity * 0.16) + vec2(fluxTube * 0.35);
+            vec2 iCell = floor(cellUV);
+            vec2 fCell = fract(cellUV);
+
+            float dMin1 = 8.0;
+            float dMin2 = 8.0;
+            float smoothBubble = 8.0;
+
+            for (int y = -1; y <= 1; y++) {
+                for (int x = -1; x <= 1; x++) {
+                    vec2 neighbor = vec2(float(x), float(y));
+                    vec2 rnd = hash22(iCell + neighbor);
+                    vec2 pt = neighbor + 0.5 + 0.42 * sin(t * 0.9 + TAU * rnd + uTwist);
+                    vec2 diff = pt - fCell;
+                    float d = length(diff);
+
+                    smoothBubble = smin(smoothBubble, d, 0.32);
+                    if (d < dMin1) {
+                        dMin2 = dMin1;
+                        dMin1 = d;
+                    } else if (d < dMin2) {
+                        dMin2 = d;
+                    }
+                }
+            }
+
+            // Plateau soap-film border metric (dMin2 - dMin1 = 0 at cell boundaries)
+            float plateauBorder = dMin2 - dMin1;
+            // Conical Rosensweig ferrofluid spike at cell centers
+            float ferroSpike = cos(smoothBubble * PI * 2.5 - t * 1.4) * exp(-smoothBubble * 1.2);
+
+            float height = ferroSpike * 0.65 + fluxTube * 0.35;
+            float phase = smoothBubble * 0.85 + fluxTube * 0.45 - t * 0.18 + plateauBorder * 0.5;
+
+            // Dark magnetic valleys & crisp Plateau borders
+            float borderCarve = smoothstep(0.015, 0.14 * uContourCarve, plateauBorder);
+            float ringCarve = smoothstep(0.03, 0.22 * uContourCarve, abs(sin(smoothBubble * (6.0 + uDensity * 0.3))));
+            float contour = borderCarve * mix(0.25, 1.0, ringCarve);
+
+            return vec4(height, phase, contour, plateauBorder);
+        }
+
+        // -------------------------------------------------------------------
+        // UNIFIED MULTI-ENGINE CROSS-MORPHER
+        // -------------------------------------------------------------------
+        vec4 evaluateUnifiedField(vec2 p, float t) {
+            float m = clamp(uEngineMorph, 0.0, 3.0);
+
+            if (m <= 0.001) return evalEngine01_CalabiYau(p, t);
+            if (abs(m - 1.0) <= 0.001) return evalEngine02_TuringPhysarum(p, t);
+            if (abs(m - 2.0) <= 0.001) return evalEngine03_CropCircleZeta(p, t);
+            if (m >= 2.999) return evalEngine04_HopfFerroFoam(p, t);
+
+            if (m < 1.0) {
+                return mix(evalEngine01_CalabiYau(p, t), evalEngine02_TuringPhysarum(p, t), smoothstep(0.0, 1.0, m));
+            } else if (m < 2.0) {
+                return mix(evalEngine02_TuringPhysarum(p, t), evalEngine03_CropCircleZeta(p, t), smoothstep(0.0, 1.0, m - 1.0));
+            } else {
+                return mix(evalEngine03_CropCircleZeta(p, t), evalEngine04_HopfFerroFoam(p, t), smoothstep(0.0, 1.0, m - 2.0));
+            }
+        }
+
+        // -------------------------------------------------------------------
+        // 4-ANGLE SPOT-NEON SCREEN-PRINT HALFTONE ROSETTE (BLACK SUBSTRATE)
+        // -------------------------------------------------------------------
+        float spotHalftoneDot(vec2 metricUV, float angleDeg, float lpi, float inkVal) {
+            float rad = angleDeg * (PI / 180.0);
+            vec2 g = rot2(rad) * metricUV * lpi;
+            vec2 cell = fract(g) - 0.5;
+            float d = length(cell) * 1.41421356;
+            // Capped at 0.78 so dark black shirt substrate ALWAYS shows between dots
+            float dotRadius = sqrt(clamp(inkVal, 0.0, 1.0)) * 0.78;
+            return 1.0 - smoothstep(dotRadius - 0.12, dotRadius + 0.12, d);
+        }
+
+        void main() {
+            vec2 uv = vUv;
+            vec2 p = uv * 2.0 - 1.0;
+            float aspect = uResolution.x / max(uResolution.y, 1.0);
+            p.x *= aspect;
+
+            float t = uTime;
+
+            // --- 1. ANALOG VHS SYNC TEAR & WAVE WOBBLE ---
+            if (uGlitch > 0.005) {
+                float band = floor(uv.y * 44.0 - t * 6.5);
+                float rnd = hash12(vec2(band, floor(t * 14.0)));                float tearMask = step(0.91 - min(uGlitch, 1.2) * 0.15, rnd);
+                float tearOffset = (hash12(vec2(uv.y * 85.0, t)) - 0.5) * 0.11 * uGlitch * tearMask;
+                float syncWave = sin(uv.y * 32.0 + t * 9.5) * 0.005 * uGlitch;
+                p.x += tearOffset + syncWave;
+            }
+
+            // Apply continuous field zoom
+            vec2 worldP = p / clamp(uZoom, 0.20, 6.0);
+
+            // --- 2. FINITE-DIFFERENCE 3D NORMAL & CHROMATIC DISPERSION ---
+            float eps = 0.004 / clamp(uZoom, 0.3, 4.0);
+            vec4 centerSample = evaluateUnifiedField(worldP, t);
+            vec4 sampleX      = evaluateUnifiedField(worldP + vec2(eps, 0.0), t);
+            vec4 sampleY      = evaluateUnifiedField(worldP + vec2(0.0, eps), t);
+
+            float h0 = centerSample.x;
+            float hX = sampleX.x;
+            float hY = sampleY.x;
+
+            vec3 normal = normalize(vec3((h0 - hX) / eps * 0.08, (h0 - hY) / eps * 0.08, 1.0));
+            vec3 viewDir = vec3(0.0, 0.0, 1.0);
+
+            // --- 3. THIN-FILM IRIDESCENCE & CHROMATIC PRISM SPLIT ---
+            float fresnel = 1.0 - max(dot(normal, viewDir), 0.0);
+            float basePhase = centerSample.y + fresnel * 0.45 * uGloss + h0 * 0.25;
+            float prismShift = (0.025 + length(normal.xy) * 0.06) * (0.35 + uGlitch);
+
+            vec3 palR = evaluateNeonPalette(basePhase + prismShift);
+            vec3 palG = evaluateNeonPalette(basePhase);
+            vec3 palB = evaluateNeonPalette(basePhase - prismShift);
+
+            vec3 rawNeon = vec3(palR.r, palG.g, palB.b);
+
+            // Blend in secondary harmonic hue along micro-details
+            vec3 accentHue = evaluateNeonPalette(basePhase + 0.38);
+            rawNeon = mix(rawNeon, accentHue, clamp(abs(centerSample.w) * 0.45, 0.0, 0.65));
+
+            // --- 4. DUAL-LIGHT SPECULAR MICRO-GLOSS (COLORED NEON HIGHLIGHTS) ---
+            if (uGloss > 0.01) {
+                vec3 L1 = normalize(vec3(cos(t * 0.8) * 0.7, sin(t * 0.6) * 0.7, 0.9));
+                vec3 L2 = normalize(vec3(-sin(t * 0.5) * 0.8, cos(t * 0.7) * 0.8, 0.75));
+                vec3 H1 = normalize(L1 + viewDir);
+                vec3 H2 = normalize(L2 + viewDir);
+
+                float spec1 = safePow(max(dot(normal, H1), 0.0), 28.0);
+                float spec2 = safePow(max(dot(normal, H2), 0.0), 18.0);
+
+                // Tinted with complementary neon palette stops so highlights never turn white
+                vec3 specHue1 = evaluateNeonPalette(basePhase + 0.22);
+                vec3 specHue2 = evaluateNeonPalette(basePhase + 0.58);
+
+                rawNeon += specHue1 * spec1 * uGloss * 0.75;
+                rawNeon += specHue2 * spec2 * uGloss * 0.55;
+            }
+
+            // --- 5. DARK-GROUND OBSIDIAN CONTOUR CARVING ---
+            float ridgeSlope = length(normal.xy);
+            float slopeCarve = smoothstep(0.88, 0.15, ridgeSlope * uContourCarve * 0.85);
+            float totalCarve = clamp(centerSample.z * mix(0.45, 1.0, slopeCarve), 0.0, 1.0);
+
+            // Lock to pure neon over #04010a obsidian void
+            vec3 lockedColor = lockAcidNeon(rawNeon, uAcid, totalCarve);
+
+            // --- 6. SPOT-NEON SCREEN-PRINT HALFTONE ROSETTE ENGINE ---
+            if (uHalftoneMix > 0.005) {
+                vec2 metricUV = (uv - 0.5) * vec2(aspect, 1.0);
+                float lpi = 55.0 + uDensity * 3.2;
+
+                float cIntensity = clamp(lockedColor.b * 0.75 + lockedColor.g * 0.45, 0.0, 1.0);
+                float mIntensity = clamp(lockedColor.r * 0.80 + lockedColor.b * 0.35, 0.0, 1.0);
+                float yIntensity = clamp(lockedColor.g * 0.80 + lockedColor.r * 0.35, 0.0, 1.0);
+                float vIntensity = clamp(max(lockedColor.r, lockedColor.b) * 0.70, 0.0, 1.0);
+
+                float dotC = spotHalftoneDot(metricUV, 15.0, lpi, cIntensity);
+                float dotM = spotHalftoneDot(metricUV, 75.0, lpi, mIntensity);
+                float dotY = spotHalftoneDot(metricUV, 0.0,  lpi, yIntensity);
+                float dotV = spotHalftoneDot(metricUV, 45.0, lpi * 0.7071, vIntensity);
+
+                vec3 blackShirt = vec3(0.016, 0.004, 0.04);
+                vec3 plastisol = blackShirt;
+                plastisol = max(plastisol, vec3(0.55, 0.00, 1.00) * dotV * 0.65);
+                plastisol = max(plastisol, vec3(0.00, 0.96, 1.00) * dotC * 0.95);
+                plastisol = max(plastisol, vec3(1.00, 0.00, 0.55) * dotM * 0.95);
+                plastisol = max(plastisol, vec3(0.75, 1.00, 0.00) * dotY * 0.85);
+
+                // Re-lock plastisol print to guarantee zero whiteout
+                plastisol = lockAcidNeon(plastisol, uAcid, totalCarve);
+                lockedColor = mix(lockedColor, plastisol, uHalftoneMix);
+            }
+
+            // Optional CRT Scanlines
+            if (uGlitch > 0.01) {
+                float scan = (sin(gl_FragCoord.y * PI) * 0.5 + 0.5) * 0.16 * min(uGlitch, 1.0);
+                lockedColor *= (1.0 - scan);
+            }
+
+            // Crisp Dark Vignette
+            float vig = 1.0 - smoothstep(0.72, 1.68, length(uv * 2.0 - 1.0));
+            lockedColor *= mix(0.72, 1.0, vig);
+
+            gl_FragColor = vec4(clamp(lockedColor, 0.0, 1.0), 1.0);
+        }
+    </script>
+
+    <!-- =================================================================== -->
+    <!-- PASS 2: 12,000 GPU STRANGE-ATTRACTOR & PHYLLOTAXIS STIPPLE SWARM    -->
+    <!-- =================================================================== -->
+    <script id="swarm-vs" type="x-shader/x-vertex">
+        attribute vec4 a_particleData; // x: idFrac (0..1), y: goldenAngle, z: shellRadius, w: glyphType (0..3)
+
+        uniform vec2  uResolution;
+        uniform float uTime;
+        uniform vec2  uMouse;
+        uniform float uZoom;
+        uniform float uEngineMorph;
+        uniform float uSymmetry;
+        uniform float uTwist;
+        uniform float uSwarmMix;
+        uniform float uDpr;
+
+        varying float vGlyphType;
+        varying float vColorSeed;
+        varying float vAlpha;
+
+        #define PI  3.14159265359
+        #define TAU 6.28318530718
+        #define PHI 1.61803398875
+
+        void main() {
+            float idFrac = a_particleData.x;
+            float gAngle = a_particleData.y;
+            float rShell = a_particleData.z;
+            vGlyphType   = a_particleData.w;
+
+            float t = uTime * 0.55;
+            float nSym = clamp(uSymmetry, 3.0, 24.0);
+
+            // 1. Phyllotaxis Golden-Ratio Spiral & Crop-Circle Orbital Ring Position
+            float orbitAngle = gAngle + t * (0.35 + 0.65 * (1.0 - rShell)) * (mod(floor(idFrac * 12000.0), 2.0) < 0.5 ? 1.0 : -1.0);
+            float cymaticMod = 0.14 * sin(orbitAngle * nSym + t * 2.0 + uTwist);
+            float radius = (0.08 + rShell * 1.15 + cymaticMod);
+
+            vec2 phylloPos = vec2(cos(orbitAngle), sin(orbitAngle)) * radius;
+
+            // 2. Thomas Cyclically Symmetric Strange Attractor Streamlines
+            float phase3D = idFrac * TAU * 29.0 + t * 1.2;
+            vec3 thomas = vec3(
+                sin(phase3D + sin(orbitAngle * 3.0)),
+                sin(phase3D * PHI + cos(orbitAngle * 2.0)),
+                cos(phase3D / PHI - sin(orbitAngle * 4.0))
+            );
+            vec2 attractorPos = thomas.xy * (0.55 + 0.35 * cos(thomas.z * PI + uTwist));
+
+            // Cross-morph particle trajectories based on active Engine
+            float attractorBlend = 0.35 + 0.30 * sin(uEngineMorph * PI * 0.5);
+            vec2 pos = mix(phylloPos, attractorPos, attractorBlend);
+
+            // Interactive mouse gravity swirl
+            vec2 toMouse = pos - uMouse * 0.5;
+            float mDist = length(toMouse) + 0.15;
+            pos += vec2(-toMouse.y, toMouse.x) * (0.08 / mDist) * sin(t * 2.0);
+
+            // Aspect & Zoom projection
+            float aspect = uResolution.x / max(uResolution.y, 1.0);
+            vec2 screenPos = pos * clamp(uZoom, 0.35, 3.5);
+            screenPos.x /= aspect;
+
+            vColorSeed = fract(idFrac * 7.3 + rShell * 1.9 - t * 0.15);
+            vAlpha = clamp(uSwarmMix * (0.45 + 0.45 * sin(idFrac * 150.0 + t * 3.5)), 0.0, 0.92);
+
+            gl_Position = vec4(screenPos, 0.0, 1.0);
+            gl_PointSize = clamp((3.2 + 5.8 * fract(idFrac * 97.1)) * uSwarmMix * uDpr, 1.0, 22.0);
+        }
+    </script>
+
+    <script id="swarm-fs" type="x-shader/x-fragment">
+        precision highp float;
+
+        varying float vGlyphType;
+        varying float vColorSeed;
+        varying float vAlpha;
+
+        uniform float uPaletteId;
+        uniform float uAcid;
+
+        #define PI  3.14159265359
+        #define TAU 6.28318530718
+
+        float safeAtan(float y, float x) {
+            float safeX = (abs(x) + abs(y) < 1e-6) ? 1e-6 : x;
+            return atan(y, safeX);
+        }
+
+        vec3 swarmNeonColor(float p) {
+            float s = fract(p + uPaletteId * 0.21);
+            if (s < 0.25) return vec3(1.00, 0.00, 0.55); // Hot Magenta
+            if (s < 0.50) return vec3(0.00, 0.96, 1.00); // Electric Cyan
+            if (s < 0.75) return vec3(0.75, 1.00, 0.00); // Acid Lime
+            return vec3(1.00, 0.78, 0.00);               // Laser Gold
+        }
+
+        void main() {
+            if (vAlpha <= 0.01) discard;
+
+            vec2 p = gl_PointCoord * 2.0 - 1.0;
+            float r = length(p);
+            if (r > 1.0) discard;
+
+            float a = safeAtan(p.y, p.x);
+            float mask = 0.0;
+
+            if (vGlyphType < 0.5) {
+                // Glyph 0: 6-Pointed Diatom Silica Star
+                float rays = abs(cos(a * 3.0));
+                mask = smoothstep(rays, rays - 0.25, r);
+            } else if (vGlyphType < 1.5) {
+                // Glyph 1: Concentric Moiré Target Ring
+                float ring = abs(r - 0.62);
+                float core = smoothstep(0.28, 0.05, r);
+                mask = max(smoothstep(0.18, 0.02, ring), core);
+            } else if (vGlyphType < 2.5) {
+                // Glyph 2: Crisp Stipple Dot
+                mask = smoothstep(0.85, 0.20, r);
+            } else {
+                // Glyph 3: Cyber Diamond Reticle
+                float d = abs(p.x) + abs(p.y);
+                mask = smoothstep(0.20, 0.02, abs(d - 0.65)) + smoothstep(0.22, 0.05, r);
+            }
+
+            // Dark obsidian halo around each sprite so particles never wash out to white!
+            float innerNeon = clamp(mask, 0.0, 1.0);
+            float outerRim  = smoothstep(1.0, 0.55, r);
+            if (outerRim < 0.05) discard;
+
+            vec3 neonCol = swarmNeonColor(vColorSeed);
+            // Multiply by innerNeon so the outer rim of the sprite is dark obsidian ink (#04010a)
+            vec3 finalRGB = mix(vec3(0.02, 0.005, 0.04), neonCol, innerNeon);
+
+            gl_FragColor = vec4(finalRGB, outerRim * vAlpha * 0.85);
+        }
+    </script>
+
+    <!-- =================================================================== -->
+    <!-- MAIN JAVASCRIPT ENGINE, PRESETS & APP-BUILDER EXPORTER              -->
+    <!-- =================================================================== -->
+    <script>
+        // --- 1. REACTIVE SYNTHESIZER STATE ---
+        const state = {
+            engineMorph: 0.00,
+            symmetry: 7,
+            octaves: 6,
+            twist: 1.45,
+            density: 10.5,
+            gloss: 1.65,
+            acid: 2.10,
+            contourCarve: 0.85,
+            swarmMix: 0.75,
+            halftoneMix: 0.30,
+            glitch: 0.28,
+            speed: 0.75,
+            paletteId: 0,
+            // Interactive View State
+            paused: false,
+            zoom: 1.00,
+            mouseX: 0.0,
+            mouseY: 0.0,
+            targetMouseX: 0.0,
+            targetMouseY: 0.0
+        };
+
+        const PALETTE_NAMES = [
+            'LISA FRANK 1989',
+            'ULTRAVIOLET BIOLUME',
+            'CYBER-SKA ACID LIME',
+            'TOKYO VHS CHROME',
+            'RADIOACTIVE DIATOM'
+        ];
+
+        const ENGINE_TITLES = [
+            'E1: CALABI-YAU 6D QUINTIC',
+            'E2: TURING-PHYSARUM CORAL',
+            'E3: CROP-CIRCLE ZETA CYMATICS',
+            'E4: HOPF FERROFLUID FOAM'
+        ];
+
+        // --- 2. 8 CURATED MASTER PRESETS (2 PER ENGINE) ---
+        const PRESETS = {
+            calabiLisaFrank: {
+                engineMorph: 0.00,
+                symmetry: 7,
+                octaves: 6,
+                twist: 1.45,
+                density: 10.5,
+                gloss: 1.65,
+                acid: 2.10,
+                contourCarve: 0.85,
+                swarmMix: 0.75,
+                halftoneMix: 0.30,
+                glitch: 0.28,
+                speed: 0.75,
+                paletteId: 0
+            },
+            weierstrassRibbon: {
+                engineMorph: 0.00,
+                symmetry: 12,
+                octaves: 8,
+                twist: 2.85,
+                density: 16.0,
+                gloss: 2.35,
+                acid: 2.45,
+                contourCarve: 1.15,
+                swarmMix: 0.55,
+                halftoneMix: 0.18,
+                glitch: 0.42,
+                speed: 0.60,
+                paletteId: 3
+            },
+            bacterialMitosisLace: {
+                engineMorph: 1.00,
+                symmetry: 6,
+                octaves: 7,
+                twist: 1.20,
+                density: 12.0,
+                gloss: 1.85,
+                acid: 2.30,
+                contourCarve: 1.10,
+                swarmMix: 0.85,
+                halftoneMix: 0.22,
+                glitch: 0.18,
+                speed: 0.65,
+                paletteId: 1
+            },
+            physarumBiolume: {
+                engineMorph: 1.00,
+                symmetry: 9,
+                octaves: 9,
+                twist: 3.10,
+                density: 19.5,
+                gloss: 1.40,
+                acid: 2.65,
+                contourCarve: 1.35,
+                swarmMix: 1.10,
+                halftoneMix: 0.45,
+                glitch: 0.32,
+                speed: 0.80,
+                paletteId: 4
+            },
+            wiltshireCropZeta: {
+                engineMorph: 2.00,
+                symmetry: 8,
+                octaves: 7,
+                twist: 1.75,
+                density: 14.0,
+                gloss: 1.50,
+                acid: 2.25,
+                contourCarve: 1.05,
+                swarmMix: 0.95,
+                halftoneMix: 0.35,
+                glitch: 0.25,
+                speed: 0.70,
+                paletteId: 2
+            },
+            cymaticBesselMandala: {
+                engineMorph: 2.00,
+                symmetry: 16,
+                octaves: 8,
+                twist: 3.60,
+                density: 22.0,
+                gloss: 2.10,
+                acid: 2.75,
+                contourCarve: 1.25,
+                swarmMix: 0.65,
+                halftoneMix: 0.58,
+                glitch: 0.48,
+                speed: 0.90,
+                paletteId: 0
+            },
+            hopfFerrofluidCrown: {
+                engineMorph: 3.00,
+                symmetry: 10,
+                octaves: 6,
+                twist: 2.15,
+                density: 13.5,
+                gloss: 2.65,
+                acid: 2.40,
+                contourCarve: 0.95,
+                swarmMix: 0.80,
+                halftoneMix: 0.20,
+                glitch: 0.30,
+                speed: 0.85,
+                paletteId: 3
+            },
+            screenPrintAcidFroth: {
+                engineMorph: 3.00,
+                symmetry: 14,
+                octaves: 7,
+                twist: 2.90,
+                density: 17.5,
+                gloss: 1.95,
+                acid: 2.85,
+                contourCarve: 1.20,
+                swarmMix: 1.15,
+                halftoneMix: 0.88,
+                glitch: 0.65,
+                speed: 0.75,
+                paletteId: 0
+            }
+        };
+
+        // --- 3. TOAST BANNER HELPER ---
+        let toastTimer = null;
+        function showToast(msg) {
+            const banner = document.getElementById('toast-banner');
+            banner.textContent = msg;
+            banner.classList.remove('opacity-0', 'translate-y-4');
+            banner.classList.add('opacity-100', 'translate-y-0');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                banner.classList.remove('opacity-100', 'translate-y-0');
+                banner.classList.add('opacity-0', 'translate-y-4');
+            }, 2300);
+        }
+
+        // --- 4. UI SLIDER CONFIGURATION & SYNC ---
+        const SLIDER_CONFIG = [
+            { id: 's-engine',   valId: 'v-engine',   key: 'engineMorph',  decimals: 2 },
+            { id: 's-symmetry', valId: 'v-symmetry', key: 'symmetry',     decimals: 0 },
+            { id: 's-octaves',  valId: 'v-octaves',  key: 'octaves',      decimals: 0 },
+            { id: 's-twist',    valId: 'v-twist',    key: 'twist',        decimals: 2 },
+            { id: 's-density',  valId: 'v-density',  key: 'density',      decimals: 1 },
+            { id: 's-gloss',    valId: 'v-gloss',    key: 'gloss',        decimals: 2 },
+            { id: 's-acid',     valId: 'v-acid',     key: 'acid',         decimals: 2 },
+            { id: 's-carve',    valId: 'v-carve',    key: 'contourCarve', decimals: 2 },
+            { id: 's-swarm',    valId: 'v-swarm',    key: 'swarmMix',     decimals: 2 },
+            { id: 's-halftone', valId: 'v-halftone', key: 'halftoneMix',  decimals: 2 },
+            { id: 's-glitch',   valId: 'v-glitch',   key: 'glitch',       decimals: 2 },
+            { id: 's-speed',    valId: 'v-speed',    key: 'speed',        decimals: 2 }
+        ];
+
+        function syncUIFromState() {
+            SLIDER_CONFIG.forEach(({ id, valId, key, decimals }) => {
+                const slider = document.getElementById(id);
+                const label = document.getElementById(valId);
+                if (slider && label) {
+                    slider.value = state[key];
+                    label.textContent = Number(state[key]).toFixed(decimals);
+                }
+            });
+
+            // Sync Engine Selector Pills
+            const nearestEngine = Math.round(state.engineMorph);
+            document.querySelectorAll('.engine-pill').forEach((pill) => {
+                const eIdx = parseInt(pill.getAttribute('data-engine'), 10);
+                pill.classList.toggle('active-pill', Math.abs(state.engineMorph - eIdx) < 0.25);
+            });
+
+            const scopeTitle = document.getElementById('scope-engine-label');
+            if (scopeTitle) {
+                scopeTitle.textContent = ENGINE_TITLES[nearestEngine] || 'HYBRID CROSS-MORPH';
+            }
+
+            // Sync Palette Chips
+            document.querySelectorAll('.palette-chip').forEach((chip) => {
+                const pIdx = parseInt(chip.getAttribute('data-palette'), 10);
+                chip.classList.toggle('active', pIdx === state.paletteId);
+            });
+            const palLabel = document.getElementById('palette-name-label');
+            if (palLabel) {
+                palLabel.textContent = PALETTE_NAMES[state.paletteId] || 'LISA FRANK 1989';
+            }
+
+            const zoomEl = document.getElementById('zoom-readout');
+            if (zoomEl) {
+                zoomEl.textContent = `ZOOM: ${state.zoom.toFixed(2)}x`;
+            }
+        }
+
+        // --- 5. WEBGL PIPELINE & 12,000 PARTICLE BUFFER ---
+        let gl = null;
+        let canvas = null;
+        let synthProgram = null;
+        let swarmProgram = null;
+        let quadBuffer = null;
+        let swarmBuffer = null;
+        const SWARM_COUNT = 12000;
+
+        function compileGLSL(glCtx, type, source, label) {
+            const shader = glCtx.createShader(type);
+            glCtx.shaderSource(shader, source);
+            glCtx.compileShader(shader);
+            if (!glCtx.getShaderParameter(shader, glCtx.COMPILE_STATUS)) {
+                console.error(`[${label}] GLSL Compile Error:`, glCtx.getShaderInfoLog(shader));
+                glCtx.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(glCtx, vsSource, fsSource, label) {
+            const vs = compileGLSL(glCtx, glCtx.VERTEX_SHADER, vsSource, label + '_VS');
+            const fs = compileGLSL(glCtx, glCtx.FRAGMENT_SHADER, fsSource, label + '_FS');
+            if (!vs || !fs) return null;
+            const prog = glCtx.createProgram();
+            glCtx.attachShader(prog, vs);
+            glCtx.attachShader(prog, fs);
+            glCtx.linkProgram(prog);
+            if (!glCtx.getProgramParameter(prog, glCtx.LINK_STATUS)) {
+                console.error(`[${label}] Program Link Error:`, glCtx.getProgramInfoLog(prog));
+                return null;
+            }
+            return prog;
+        }
+
+        function initWebGL() {
+            canvas = document.getElementById('glcanvas');
+            gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: true })
+              || canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: true });
+
+            if (!gl) {
+                showToast('ERROR: WEBGL NOT AVAILABLE');
+                return;
+            }
+
+            // Build Pass 1 (4-Engine Synthesizer) & Pass 2 (12K GPU Particle Swarm)
+            synthProgram = createProgram(
+                gl,
+                document.getElementById('quad-vs').textContent,
+                document.getElementById('synth-fs').textContent,
+                'SYNTH_4_ENGINE'
+            );
+
+            swarmProgram = createProgram(
+                gl,
+                document.getElementById('swarm-vs').textContent,
+                document.getElementById('swarm-fs').textContent,
+                'SWARM_12K'
+            );
+
+            // Fullscreen Quad Buffer
+            const quadVerts = new Float32Array([
+                -1.0, -1.0,
+                 1.0, -1.0,
+                -1.0,  1.0,
+                -1.0,  1.0,
+                 1.0, -1.0,
+                 1.0,  1.0
+            ]);
+            quadBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STATIC_DRAW);
+
+            // 12,000 Particle Swarm Attribute Buffer
+            const swarmData = new Float32Array(SWARM_COUNT * 4);
+            const goldenAngle = Math.PI * (3.0 - Math.sqrt(5.0));
+            for (let i = 0; i < SWARM_COUNT; i++) {
+                const i4 = i * 4;
+                const frac = i / SWARM_COUNT;
+                swarmData[i4 + 0] = frac;
+                swarmData[i4 + 1] = (i * goldenAngle) % (Math.PI * 2.0);
+                swarmData[i4 + 2] = Math.sqrt(frac); // Uniform disk phyllotaxis distribution
+                swarmData[i4 + 3] = i % 4;           // Glyph archetype (0..3)
+            }
+            swarmBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, swarmBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, swarmData, gl.STATIC_DRAW);
+
+            resizeViewport();
+            window.addEventListener('resize', resizeViewport);
+        }
+
+        function resizeViewport() {
+            if (!gl || !canvas) return;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        function renderScene(simTime) {
+            if (!gl || !synthProgram) return;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+
+            gl.viewport(0, 0, w, h);
+            gl.disable(gl.BLEND);
+
+            // --- PASS 1: 4-ENGINE MATHEMATICAL SYNTHESIZER ---
+            gl.useProgram(synthProgram);
+            gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+            const posLoc = gl.getAttribLocation(synthProgram, 'a_position');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            gl.uniform2f(gl.getUniformLocation(synthProgram, 'uResolution'), w, h);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uTime'), simTime);
+            gl.uniform2f(gl.getUniformLocation(synthProgram, 'uMouse'), state.mouseX, state.mouseY);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uZoom'), state.zoom);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uEngineMorph'), state.engineMorph);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uSymmetry'), state.symmetry);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uOctaves'), state.octaves);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uTwist'), state.twist);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uDensity'), state.density);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uGloss'), state.gloss);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uAcid'), state.acid);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uContourCarve'), state.contourCarve);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uHalftoneMix'), state.halftoneMix);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uGlitch'), state.glitch);
+            gl.uniform1f(gl.getUniformLocation(synthProgram, 'uPaletteId'), state.paletteId);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            // --- PASS 2: 12,000 GPU STRANGE-ATTRACTOR & PHYLLOTAXIS STIPPLE SWARM ---
+            if (state.swarmMix > 0.01 && swarmProgram) {
+                gl.enable(gl.BLEND);
+                // Standard alpha blending with dark obsidian rim around each sprite prevents additive whiteout!
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+                gl.useProgram(swarmProgram);
+                gl.bindBuffer(gl.ARRAY_BUFFER, swarmBuffer);
+                const partLoc = gl.getAttribLocation(swarmProgram, 'a_particleData');
+                gl.enableVertexAttribArray(partLoc);
+                gl.vertexAttribPointer(partLoc, 4, gl.FLOAT, false, 0, 0);
+
+                gl.uniform2f(gl.getUniformLocation(swarmProgram, 'uResolution'), w, h);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uTime'), simTime);
+                gl.uniform2f(gl.getUniformLocation(swarmProgram, 'uMouse'), state.mouseX, state.mouseY);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uZoom'), state.zoom);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uEngineMorph'), state.engineMorph);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uSymmetry'), state.symmetry);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uTwist'), state.twist);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uSwarmMix'), state.swarmMix);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uDpr'), dpr);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uPaletteId'), state.paletteId);
+                gl.uniform1f(gl.getUniformLocation(swarmProgram, 'uAcid'), state.acid);
+
+                gl.drawArrays(gl.POINTS, 0, SWARM_COUNT);
+                gl.disable(gl.BLEND);
+            }
+        }
+
+        // --- 6. MINI TELEMETRY VECTOR SCOPE ---
+        const scopeCanvas = document.getElementById('vector-scope');
+        const scopeCtx = scopeCanvas ? scopeCanvas.getContext('2d') : null;
+
+        function renderVectorScope(simTime) {
+            if (!scopeCtx) return;
+            const w = scopeCanvas.width;
+            const h = scopeCanvas.height;
+
+            scopeCtx.fillStyle = 'rgba(4, 1, 10, 0.34)';
+            scopeCtx.fillRect(0, 0, w, h);
+
+            // Left: Active Engine Parametric Lissajous / Rose Attractor
+            const cx1 = w * 0.32;
+            const cy1 = h * 0.50;
+            const rad = 36;
+            const n = state.symmetry;
+            const eng = state.engineMorph;
+
+            scopeCtx.save();
+            scopeCtx.beginPath();
+            for (let i = 0; i <= 100; i++) {
+                const a = (i / 100) * Math.PI * 2.0;
+                const k = 0.55 + 0.45 * Math.cos(n * a + simTime * 2.0) * Math.cos((eng + 1.0) * a - state.twist);
+                const x = cx1 + Math.cos(a + simTime * 0.3) * rad * k;
+                const y = cy1 + Math.sin(a * (1.0 + Math.floor(eng) * 0.5) - simTime * 0.4) * rad * k;
+                if (i === 0) scopeCtx.moveTo(x, y);
+                else scopeCtx.lineTo(x, y);
+            }
+            scopeCtx.strokeStyle = '#00f5ff';
+            scopeCtx.lineWidth = 1.5;
+            scopeCtx.stroke();
+            scopeCtx.restore();
+
+            // Right: 4-Engine Morph Meter & Peak Chroma Bars
+            const bx = w * 0.62;
+            const bw = w * 0.32;
+            const colors = ['#ff007f', '#00f5ff', '#b8ff00', '#9d00ff'];
+            const labels = ['E1', 'E2', 'E3', 'E4'];
+
+            for (let idx = 0; idx < 4; idx++) {
+                const y = 16 + idx * 22;
+                const weight = Math.max(0.08, 1.0 - Math.abs(state.engineMorph - idx));
+                scopeCtx.fillStyle = 'rgba(255,255,255,0.12)';
+                scopeCtx.fillRect(bx, y, bw, 10);
+
+                scopeCtx.fillStyle = colors[idx];
+                scopeCtx.fillRect(bx, y, bw * weight, 10);
+
+                scopeCtx.fillStyle = '#ffffff';
+                scopeCtx.font = 'bold 8px JetBrains Mono';
+                scopeCtx.fillText(labels[idx], bx - 16, y + 8);
+            }
+        }
+
+        // --- 7. APP-BUILDER ADAPTER TEMPLATE GENERATOR ---
+        function generateAppAdapterCode() {
+            return `/**
+ * ASTRAL-LOOM // UNIFIED 7-ENGINE GENERATIVE ART APP ADAPTER
+ * Combines the previous 3 shaders + these 4 new mathematical expansion engines
+ * into a single modular state & WebGL manager for React / Three.js / Vanilla JS.
+ */
+
+export const ASTRAL_ENGINE_CATALOG = [
+  // --- EXPANSION PACK: 4 NEW MATHEMATICAL ENGINES (Included in astral_loom_4_engines.frag) ---
+  { id: 'calabi_yau_6d',      type: 'uniform_morph', morphIndex: 0.0, title: 'Calabi-Yau 6D Quintic & Weierstrass Lattice' },
+  { id: 'turing_physarum',    type: 'uniform_morph', morphIndex: 1.0, title: 'Turing-Physarum Coral & Bacterial Lace' },
+  { id: 'crop_circle_zeta',   type: 'uniform_morph', morphIndex: 2.0, title: 'Riemann Zeta & Crop-Circle Cymatics' },
+  { id: 'hopf_ferro_foam',    type: 'uniform_morph', morphIndex: 3.0, title: 'Hopf Fibration MHD & Ferrofluid Foam' },
+
+  // --- PREVIOUS 3 STANDALONE SHADER MODULES ---
+  { id: 'kifs_birefringence', type: 'standalone_gl', file: 'psychedelic_kifs_birefringence.html', title: 'Hyperbolic Photoelastic Biomineralization' },
+  { id: 'quasicrystal_swarm', type: 'threejs_multi', file: 'threejs_quasicrystal_swarm_synth.html', title: '3D Quasicrystal & 14K Instanced Sprite Swarm' },
+  { id: 'nematic_cathedral',  type: 'multipass_fbo', file: 'hyper_loom_4d_nematic_cathedral.html', title: '4D Nematic Cathedral & Halftone Moire' }
+];
+
+export class AstralLoomController {
+  constructor(canvasElement) {
+    this.canvas = canvasElement;
+    this.uniformState = ${JSON.stringify(state, null, 2)};
+  }
+
+  setEngine(engineIndex) {
+    this.uniformState.engineMorph = Math.max(0.0, Math.min(3.0, engineIndex));
+  }
+
+  loadPreset(presetObject) {
+    Object.assign(this.uniformState, presetObject);
+  }
+}`;
+        }
+
+        // --- 8. UI CONTROLS, SHORTCUTS & EXPORT MODAL ---
+        function setupControls() {
+            // Sliders
+            SLIDER_CONFIG.forEach(({ id, valId, key, decimals }) => {
+                const slider = document.getElementById(id);
+                const label = document.getElementById(valId);
+                slider.addEventListener('input', (e) => {
+                    state[key] = parseFloat(e.target.value);
+                    label.textContent = state[key].toFixed(decimals);
+                    syncUIFromState();
+                });
+            });
+
+            // 4 Engine Selector Pills
+            document.querySelectorAll('.engine-pill').forEach((pill) => {
+                pill.addEventListener('click', () => {
+                    const eIdx = parseFloat(pill.getAttribute('data-engine'));
+                    state.engineMorph = eIdx;
+                    syncUIFromState();
+                    showToast(`SWITCHED TO ${ENGINE_TITLES[eIdx]}`);
+                });
+            });
+
+            // 8 Presets
+            const presetBtns = document.querySelectorAll('.preset-btn');
+            presetBtns.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const key = btn.getAttribute('data-preset');
+                    if (!PRESETS[key]) return;
+                    Object.assign(state, PRESETS[key]);
+                    syncUIFromState();
+                    presetBtns.forEach(b => b.classList.remove('active-pill'));
+                    btn.classList.add('active-pill');
+                    showToast(`LOADED // ${btn.children[0].textContent}`);
+                });
+            });
+
+            // 5 Palettes
+            document.querySelectorAll('.palette-chip').forEach((chip) => {
+                chip.addEventListener('click', () => {
+                    state.paletteId = parseInt(chip.getAttribute('data-palette'), 10);
+                    syncUIFromState();
+                    showToast(`INK PALETTE // ${PALETTE_NAMES[state.paletteId]}`);
+                });
+            });
+
+            // Randomize Mutation
+            function randomizeGenome() {
+                state.engineMorph  = +(Math.floor(Math.random() * 4)).toFixed(2);
+                state.symmetry     = Math.floor(3 + Math.random() * 20);
+                state.octaves      = Math.floor(4 + Math.random() * 6);
+                state.twist        = +(0.40 + Math.random() * 4.20).toFixed(2);
+                state.density      = +(4.0 + Math.random() * 22.0).toFixed(1);
+                state.gloss        = +(0.60 + Math.random() * 2.20).toFixed(2);
+                state.acid         = +(1.60 + Math.random() * 1.65).toFixed(2);
+                state.contourCarve = +(0.45 + Math.random() * 1.35).toFixed(2);
+                state.swarmMix     = +(0.30 + Math.random() * 1.05).toFixed(2);
+                state.halftoneMix  = +(Math.random() * 0.75).toFixed(2);
+                state.glitch       = +(Math.random() * 0.70).toFixed(2);
+                state.paletteId    = Math.floor(Math.random() * 5);
+                syncUIFromState();
+                presetBtns.forEach(b => b.classList.remove('active-pill'));
+                showToast(`MUTATED // ${ENGINE_TITLES[Math.round(state.engineMorph)]}`);
+            }
+            document.getElementById('btn-mutate').addEventListener('click', randomizeGenome);
+
+            // Center Pole
+            document.getElementById('btn-center-pole').addEventListener('click', () => {
+                state.targetMouseX = 0.0;
+                state.targetMouseY = 0.0;
+                state.zoom = 1.00;
+                syncUIFromState();
+                showToast('SINGULARITY & ZOOM RESET');
+            });
+
+            // Pause Toggle
+            const pauseBtn = document.getElementById('btn-pause');
+            function togglePause() {
+                state.paused = !state.paused;
+                pauseBtn.textContent = state.paused ? 'PLAY [SPACE]' : 'PAUSE [SPACE]';
+                showToast(state.paused ? 'SYNTHESIS FROZEN' : 'SYNTHESIS RUNNING');
+            }
+            pauseBtn.addEventListener('click', togglePause);
+
+            // Hide / Show HUD
+            const hudDock = document.getElementById('hud-dock');
+            const toggleHudBtn = document.getElementById('btn-toggle-hud');
+            let hudVisible = true;
+            function toggleHud() {
+                hudVisible = !hudVisible;
+                hudDock.style.transform = hudVisible ? 'translateX(0)' : 'translateX(-110%)';
+                toggleHudBtn.textContent = hudVisible ? 'HIDE HUD [H]' : 'SHOW HUD [H]';
+            }
+            toggleHudBtn.addEventListener('click', toggleHud);
+
+            // 4K PNG Snapshot
+            document.getElementById('btn-snapshot').addEventListener('click', () => {
+                const origW = canvas.width;
+                const origH = canvas.height;
+                showToast('RENDERING 4K ULTRA-HD PNG...');
+                setTimeout(() => {
+                    const targetW = 2560;
+                    const targetH = Math.round(targetW * (window.innerHeight / Math.max(window.innerWidth, 1)));
+                    canvas.width = targetW;
+                    canvas.height = targetH;
+                    renderScene(accumulatedTime);
+
+                    const url = canvas.toDataURL('image/png');
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `astral_loom_engine${Math.round(state.engineMorph)}_${Date.now()}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+
+                    canvas.width = origW;
+                    canvas.height = origH;
+                    showToast('SAVED 4K PNG SNAPSHOT');
+                }, 40);
+            });
+
+            // Canvas Pointer & Wheel Interactions
+            let isDragging = false;
+            function updatePointer(clientX, clientY) {
+                state.targetMouseX = (clientX / window.innerWidth) * 2.0 - 1.0;
+                state.targetMouseY = 1.0 - (clientY / window.innerHeight) * 2.0;
+            }
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updatePointer(e.clientX, e.clientY);
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) updatePointer(e.clientX, e.clientY);
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) {
+                    isDragging = true;
+                    updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (isDragging && e.touches.length > 0) {
+                    updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchend', () => { isDragging = false; });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                state.zoom = Math.max(0.25, Math.min(5.00, +(state.zoom - e.deltaY * 0.0012).toFixed(2)));
+                syncUIFromState();
+            }, { passive: false });
+
+            // Export Modal & Code Tabs
+            const exportModal = document.getElementById('export-modal');
+            const codePre = document.getElementById('code-export-pre');
+            const tabBtns = document.querySelectorAll('.code-tab-btn');
+
+            const codeModules = {
+                fragShader: document.getElementById('synth-fs').textContent.trim(),
+                swarmShader: `// === 12,000 ATTRACTOR VERTEX SHADER ===\n` +
+                             document.getElementById('swarm-vs').textContent.trim() +
+                             `\n\n// === 12,000 ATTRACTOR FRAGMENT SHADER ===\n` +
+                             document.getElementById('swarm-fs').textContent.trim(),
+                appAdapter: generateAppAdapterCode(),
+                presetsJson: JSON.stringify(PRESETS, null, 2)
+            };
+
+            let activeTabKey = 'fragShader';
+            codePre.textContent = codeModules[activeTabKey];
+
+            tabBtns.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    activeTabKey = btn.getAttribute('data-tab');
+                    codeModules.appAdapter = generateAppAdapterCode();
+                    codePre.textContent = codeModules[activeTabKey];
+                    tabBtns.forEach(b => b.classList.remove('active-pill'));
+                    btn.classList.add('active-pill');
+                });
+            });
+
+            document.getElementById('btn-export-modal').addEventListener('click', () => {
+                codeModules.appAdapter = generateAppAdapterCode();
+                codePre.textContent = codeModules[activeTabKey];
+                exportModal.classList.remove('hidden');
+                exportModal.classList.add('flex');
+            });
+
+            document.getElementById('btn-close-modal').addEventListener('click', () => {
+                exportModal.classList.add('hidden');
+                exportModal.classList.remove('flex');
+            });
+
+            document.getElementById('btn-copy-code').addEventListener('click', () => {
+                const ta = document.createElement('textarea');
+                ta.value = codeModules[activeTabKey];
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('COPIED MODULE TO CLIPBOARD!');
+                } catch (err) {
+                    showToast('SELECT TEXT MANUALLY TO COPY');
+                }
+                document.body.removeChild(ta);
+            });
+
+            document.getElementById('btn-download-code').addEventListener('click', () => {
+                const extMap = { fragShader: 'frag', swarmShader: 'glsl', appAdapter: 'js', presetsJson: 'json' };
+                const ext = extMap[activeTabKey] || 'txt';
+                const blob = new Blob([codeModules[activeTabKey]], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `astral_loom_${activeTabKey}.${ext}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`DOWNLOADED astral_loom_${activeTabKey}.${ext}`);
+            });
+
+            // Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    togglePause();
+                } else if (e.key === 'h' || e.key === 'H') {
+                    toggleHud();
+                } else if (e.key === 'r' || e.key === 'R') {
+                    randomizeGenome();
+                } else if (e.key === 'Escape') {
+                    exportModal.classList.add('hidden');
+                    exportModal.classList.remove('flex');
+                }
+            });
+
+            syncUIFromState();
+        }
+
+        // --- 9. MAIN ANIMATION LOOP ---
+        let accumulatedTime = 0.0;
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fpsTime = 0.0;
+
+        function animate(now) {
+            const dt = Math.min((now - lastTime) * 0.001, 0.1);
+            lastTime = now;
+
+            frameCount++;
+            fpsTime += dt;
+            if (fpsTime >= 0.5) {
+                const fps = Math.round(frameCount / fpsTime);
+                const fpsEl = document.getElementById('fps-readout');
+                if (fpsEl) fpsEl.textContent = `${fps} FPS`;
+                frameCount = 0;
+                fpsTime = 0.0;
+            }
+
+            if (!state.paused) {
+                accumulatedTime += dt * state.speed;            }
+
+            state.mouseX += (state.targetMouseX - state.mouseX) * 0.08;
+            state.mouseY += (state.targetMouseY - state.mouseY) * 0.08;
+
+            renderScene(accumulatedTime);
+            renderVectorScope(accumulatedTime);
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = () => {
+            initWebGL();
+            setupControls();
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>
