@@ -6,6 +6,7 @@ uniform sampler2D u_palette;
 uniform float u_time, u_family, u_symmetry, u_density, u_iterations, u_inversion;
 uniform float u_warp, u_morph, u_iridescence, u_saturation, u_moire, u_glitch, u_zoom, u_seed, u_phase;
 uniform float u_touch;
+uniform float u_fieldOpacity;
 #define PI 3.141592653589793
 #define TAU 6.283185307179586
 #define PHI 1.618033988749895
@@ -198,5 +199,5 @@ void main(){
   color=vec3(1.0)-exp(-color*(0.88+u_saturation*0.17));
   float vig=1.0-smoothstep(0.65,1.7,length((uv-0.5)*2.0));
   color*=mix(0.75,1.0,vig);
-  gl_FragColor=vec4(color,1.0);
+  gl_FragColor=vec4(color,u_fieldOpacity);
 }
