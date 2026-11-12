@@ -132,7 +132,7 @@ vec3 measure(vec2 q,float t){
     f=sin(p.x*d*15.0+sin(p.y*4.0+t)*2.0)+cos(p.y*d*22.0+sin(p.x*3.0-t)*2.5);
     pore=sin(a0*n+r*11.0);relief=cos(f*10.0);
   }else if(fam<12.5){
-    vec2 h=vec2(sinh(clamp(q.x*0.8,-3.0,3.0)),sin(q.y*1.2));
+    vec2 h=vec2((0.5*(exp(clamp(q.x*0.8,-3.0,3.0))-exp(-clamp(q.x*0.8,-3.0,3.0)))),sin(q.y*1.2));
     f=sin(h.x*d*11.0+t)+cos((h.y+length(h)*0.3)*d*23.0-t*0.6);
     pore=sin(f*6.0);relief=cos(length(h)*20.0);
   }else if(fam<13.5){
