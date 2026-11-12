@@ -276,6 +276,13 @@ function makeSliders(){
         state[key]=Number(slider.value);
         value.textContent=String(state[key]);
         if(key==='quality')resize();
+        if(key==='otherSpaceP'||key==='otherSpaceQ'){
+          validateOtherSpaceTiling();
+          for(const name of ['otherSpaceP','otherSpaceQ']){
+            if(sliderInputs[name])sliderInputs[name].value=state[name];
+            if($('out-'+name))$('out-'+name).textContent=String(state[name]);
+          }
+        }
         if(key==='swarmCount')setSpriteCount();
     if(key==='astralSwarmCount')setAstralCount();
     if(key==='astralMorph')$('astralEngineSelect').value=String(Math.round(state.astralMorph));
@@ -436,6 +443,73 @@ function ensureAddOn(mode,family=state.textureFamily){
   }
   return ok;
 }
+// Optional atlas is truly opt-in: original Opal startup never compiles or draws it.
+function ensureOtherSpace(){
+  if(otherSpaceValidated)return otherSpaceReady;
+  if(!renderer||!fieldCamera)return false;
+  const errors=[],previous=console.error;
+  console.error=(...args)=>{
+    const msg=args.map(x=>String(x)).join(' ');
+    if(msg.includes('Shader Error')||msg.includes('THREE.WebGLProgram'))errors.push(msg);
+    previous.apply(console,args);
+  };
+  try{renderer.compile(otherSpaceScene,fieldCamera);}
+  catch(e){errors.push(String(e));}
+  finally{console.error=previous;}
+  otherSpaceValidated=true;otherSpaceReady=errors.length===0;
+  if(!otherSpaceReady){
+    previous.call(console,'OTHERSPACE optional GPU pass unavailable',errors.join('\n').slice(0,2500));
+    notify('OTHERSPACE SHADER UNSUPPORTED · OTHER ART STILL WORKS');
+  }
+  return otherSpaceReady;
+}
+function validateOtherSpaceTiling(){
+  if(state.otherSpaceMode!==0)return;
+  if(1/state.otherSpaceP+1/state.otherSpaceQ<0.5)return;
+  for(let q=state.otherSpaceQ;q<=8;q++){
+    if(1/state.otherSpaceP+1/q<0.5){state.otherSpaceQ=q;return;}
+  }
+  state.otherSpaceP=7;state.otherSpaceQ=3;
+}
+function loadOtherSpaceStarter(index){
+  index=Math.round(clamp(index,0,OTHERSPACE_MODES.length-1));
+  if(!ensureOtherSpace()){syncControls();return;}
+  const recipe=OTHERSPACE_MODES[index];
+  const source={...OTHERSPACE_DEFAULT,...recipe.params,...recipe.effects,mode:index};
+  for(const [uniform,key] of Object.entries(OTHERSPACE_STATE_KEYS)){
+    if(Object.hasOwn(source,uniform))state[key]=source[uniform];
+  }
+  if(mobile)state.otherSpaceDepth=Math.min(24,state.otherSpaceDepth);
+  state.otherSpaceMode=index;validateOtherSpaceTiling();
+  state.otherSpaceEnabled=true;state.layerBg=true;
+  syncControls();clearTrails();notify('OTHERSPACE · '+recipe.name.toUpperCase());
+}
+function applyOtherSpaceSourceColors(){
+  const recipe=OTHERSPACE_MODES[state.otherSpaceMode];
+  const name=OTHERSPACE_PALETTES[recipe.palette]?.[0];
+  const original=paletteList.find(p=>p.source==='otherspace'&&p.name==='OTHERSPACE · '+name);
+  if(original){
+    pickPalette(original.id,true,false);
+    notify('ORIGINAL OTHERSPACE PALETTE · '+name);
+  }
+}
+function mutateOtherSpaceOnly(){
+  if(!ensureOtherSpace())return;
+  const rand=seededRng();
+  state.otherSpaceMode=Math.floor(rand()*OTHERSPACE_MODES.length);
+  state.otherSpaceP=3+Math.floor(rand()*14);
+  state.otherSpaceQ=3+Math.floor(rand()*6);
+  state.otherSpaceDensity=Number((0.8+rand()*13.2).toFixed(2));
+  state.otherSpaceShape=Number((rand()*4).toFixed(2));
+  state.otherSpaceTwist=Number((rand()*6).toFixed(2));
+  state.otherSpacePhase=Number(rand().toFixed(3));
+  state.otherSpaceWidth=Number((0.2+rand()*2.8).toFixed(2));
+  state.otherSpaceDepth=mobile?12+Math.floor(rand()*13):18+Math.floor(rand()*31);
+  validateOtherSpaceTiling();
+  state.otherSpaceEnabled=true;state.layerBg=true;
+  syncControls();clearTrails();notify('OTHERSPACE GEOMETRY MUTATED · KEEP THE OTHER LAYERS');
+}
+
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
@@ -1313,6 +1387,37 @@ function installUI(){
   $('textureSolo').addEventListener('click',()=>switchNewEngine('texture'));
   $('textureField').addEventListener('click',()=>switchNewEngine('texture-field'));
   $('textureCathedral').addEventListener('click',()=>switchNewEngine('texture-cathedral'));
+  $('otherSpaceModeSelect').addEventListener('change',e=>loadOtherSpaceStarter(Number(e.target.value)));
+  $('otherSpaceProjectionSelect').addEventListener('change',e=>{
+    state.otherSpaceProjection=Number(e.target.value);
+    if(!state.otherSpaceEnabled)state.otherSpaceEnabled=ensureOtherSpace();
+    syncControls();
+  });
+  $('otherSpaceBlend').addEventListener('click',()=>{
+    if(!ensureOtherSpace())return;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=false;state.layerBg=true;
+    if(state.otherSpaceOpacity<.06)state.otherSpaceOpacity=.24;
+    syncControls();notify('OTHERSPACE MATHEMATICS OVERLAY ENABLED');
+  });
+  $('otherSpaceSolo').addEventListener('click',()=>{
+    if(!ensureOtherSpace())return;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=true;
+    state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;
+    syncControls();notify('SOLO OTHERSPACE · ORIGINAL HYPERBOLIC MATHEMATICS');
+  });
+  $('otherSpaceOff').addEventListener('click',()=>{
+    state.otherSpaceEnabled=false;state.otherSpaceSolo=false;syncControls();clearTrails();
+    notify('OTHERSPACE LAYER DISABLED');
+  });
+  $('otherSpaceColors').addEventListener('click',applyOtherSpaceSourceColors);
+  $('otherSpaceMutate').addEventListener('click',mutateOtherSpaceOnly);
+  for(const [key,id] of Object.entries(OTHERSPACE_SOURCE_NAMES)){
+    $(id).addEventListener('click',()=>{
+      if(!ensureOtherSpace())return;
+      state[key]=!state[key];state.otherSpaceEnabled=true;
+      syncControls();
+    });
+  }
   $('inkMode').addEventListener('change',e=>state.paletteInkMix=Number(e.target.value));
   $('clearTrails').addEventListener('click',()=>{clearTrails();notify('CURL HISTORY CLEARED');});
   $('trailOff').addEventListener('click',()=>{state.feedback=0;syncControls();clearTrails();notify('CURL TRAILS DISABLED');});
