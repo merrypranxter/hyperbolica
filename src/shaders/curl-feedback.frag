@@ -8,6 +8,8 @@ precision highp float;
         uniform vec2      uMouse;
         uniform float     uFeedback;
         uniform float uCurlStrength;
+        uniform vec2 uGestureVelocity;
+        uniform float uGesturePower;
         uniform float     uSchlierenFreq;
 
         // 2D Simplex-style Value Noise for Curl Velocity Field
@@ -64,6 +66,17 @@ precision highp float;
             vec2 tangentDrift = vec2(-centered.y, centered.x) * 0.0038 * sin(dist * 8.0 - uTime);
 
             vec2 totalOffset = (curlVel * 0.0045 * uCurlStrength + radialDrift + tangentDrift) * (0.6 + 0.6 * uFeedback);
+
+            // Inject real pointer drag impulse into the *temporal advection*, not
+            // merely the camera. Radial vortex + directional current retain
+            // rotational momentum, then naturally decay after releasing touch.
+            vec2 gestureCenter = 0.5 + uMouse * 0.5;
+            vec2 delta = vUv - gestureCenter;
+            float falloff = exp(-dot(delta,delta)*19.0);
+            vec2 swirl = vec2(-delta.y,delta.x);
+            float angularImpulse = uGestureVelocity.x*0.72 - uGestureVelocity.y*0.45;
+            vec2 localCurl = uGestureVelocity * 0.011 + swirl * angularImpulse * 0.035;
+            totalOffset += localCurl * falloff * clamp(uGesturePower,0.0,3.0);
 
             // Sample RGB channels from history buffer with slight chromatic phase separation
             float trailDisp = 0.0018 * uFeedback;
