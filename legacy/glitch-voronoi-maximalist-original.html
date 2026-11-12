@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Brutalist Texture Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        /* Cyber-Brutalist Range Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            margin: 10px 0;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 12px;
+            border-radius: 0;
+            background: #00ffff; /* Cyan thumb */
+            cursor: pointer;
+            margin-top: -10px;
+            border: 2px solid #000;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: #ff007f; /* Hot pink track */
+            border: 1px solid #000;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #ffff00; /* Yellow on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- WebGL Canvas -->
+    <canvas id="glcanvas"></canvas>
+
+    <!-- Cyber-Brutalist UI Panel -->
+    <div class="absolute top-6 left-6 w-80 bg-black border-4 border-[#ff007f] p-6 text-[#00ffff] font-mono shadow-[8px_8px_0px_#ffff00] z-10 flex flex-col gap-5 uppercase">
+        <div class="border-b-2 border-[#00ffff] pb-2 mb-2">
+            <h1 class="text-xl font-bold tracking-widest text-[#ffff00]">System.Glitch</h1>
+            <p class="text-xs mt-1 text-[#ff007f]">Voronoi // Moiré // CRT</p>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <!-- Voronoi Density -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-xs font-bold">
+                    <label>Cell Density</label>
+                    <span id="val-density">5.0</span>
+                </div>
+                <input type="range" id="density" min="2.0" max="20.0" step="0.5" value="5.0">
+            </div>
+
+            <!-- Moiré Frequency -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-xs font-bold">
+                    <label>Moiré Freq</label>
+                    <span id="val-moire">50.0</span>
+                </div>
+                <input type="range" id="moire" min="10.0" max="150.0" step="1.0" value="50.0">
+            </div>
+
+            <!-- Glitch / Aberration -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-xs font-bold">
+                    <label>Glitch & Aberration</label>
+                    <span id="val-glitch">0.8</span>
+                </div>
+                <input type="range" id="glitch" min="0.0" max="3.0" step="0.05" value="0.8">
+            </div>
+
+            <!-- Speed -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-xs font-bold">
+                    <label>Evo. Speed</label>
+                    <span id="val-speed">1.0</span>
+                </div>
+                <input type="range" id="speed" min="0.0" max="3.0" step="0.1" value="1.0">
+            </div>
+
+            <!-- Color Phase -->
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between text-xs font-bold">
+                    <label>Color Phase</label>
+                    <span id="val-colorPhase">0.0</span>
+                </div>
+                <input type="range" id="colorPhase" min="0.0" max="1.0" step="0.01" value="0.0">
+            </div>
+        </div>
+    </div>
+
+    <!-- Vertex Shader -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec2 a_position;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <!-- Fragment Shader -->
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision highp float;
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform float u_density;
+        uniform float u_moire;
+        uniform float u_glitch;
+        uniform float u_speed;
+        uniform float u_colorPhase;
+
+        // Hash function for randomness
+        vec2 hash2(vec2 p) {
+            p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+            return fract(sin(p) * 43758.5453);
+        }
+
+        float hash1(vec2 p) {
+            return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+
+        // Fractional Voronoi (Worley noise)
+        // Returns vec3: x = min distance, y,z = ID of the closest cell
+        vec3 voronoi(vec2 x, float t) {
+            vec2 n = floor(x);
+            vec2 f = fract(x);
+
+            float md = 8.0; // minimum distance
+            vec2 cid = vec2(0.0); // cell id
+
+            // Check neighboring cells
+            for(int j = -1; j <= 1; j++) {
+                for(int i = -1; i <= 1; i++) {
+                    vec2 g = vec2(float(i), float(j));
+                    vec2 o = hash2(n + g); // random offset for point in cell
+                    
+                    // Animate the points
+                    o = 0.5 + 0.5 * sin(t + 6.2831 * o);
+                    
+                    vec2 r = g + o - f; // vector from pixel to point
+                    float d = dot(r, r); // distance squared (gives a more "acidic" geometric look than true distance)
+                    
+                    if(d < md) {
+                        md = d;
+                        cid = n + g;
+                    }
+                }
+            }
+            return vec3(md, cid);
+        }
+
+        // Generate the core texture pattern
+        vec3 generatePattern(vec2 uv, float t) {
+            // Get Voronoi data
+            vec3 v = voronoi(uv * u_density, t);
+            float dist = v.x;
+            vec2 cellId = v.yz;
+
+            // Hyper-neon color palette (Lisa Frank acid nightmare)
+            vec3 c_pink = vec3(1.0, 0.0, 0.5);
+            vec3 c_cyan = vec3(0.0, 1.0, 1.0);
+            vec3 c_yellow = vec3(1.0, 1.0, 0.0);
+            vec3 c_purple = vec3(0.4, 0.0, 1.0);
+
+            // Assign color based on cell ID hash
+            float cHash = fract(hash1(cellId) + u_colorPhase);
+            vec3 baseColor;
+            if(cHash < 0.25) baseColor = c_pink;
+            else if(cHash < 0.50) baseColor = c_cyan;
+            else if(cHash < 0.75) baseColor = c_yellow;
+            else baseColor = c_purple;
+
+            // High-frequency Moiré interference pattern based on distance and UVs
+            float moire = sin(dist * u_moire) * cos((uv.x + uv.y) * u_moire * 0.5 + t);
+            // Sharpen the interference lines
+            float moireLine = smoothstep(0.0, 0.15, abs(moire));
+
+            // Invert colors along the moiré lines for extreme contrast
+            vec3 finalPattern = mix(vec3(1.0) - baseColor, baseColor, moireLine);
+            
+            // Add cellular borders
+            finalPattern *= smoothstep(0.01, 0.05, dist);
+
+            return finalPattern;
+        }
+
+        void main() {
+            vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+            // Center and correct aspect ratio
+            vec2 p = uv * 2.0 - 1.0;
+            p.x *= u_resolution.x / u_resolution.y;
+
+            float t = u_time * u_speed;
+
+            // --- VHS GLITCH: Horizontal Tearing ---
+            // Divide screen into horizontal bands
+            float band = floor(uv.y * 30.0); 
+            // Randomly offset some bands based on time and glitch intensity
+            float tearOffset = (hash1(vec2(band, floor(t * 10.0))) - 0.5) * 0.2;
+            // Only apply tear occasionally based on hash threshold
+            if (hash1(vec2(band, 1.0)) < u_glitch * 0.3) {
+                p.x += tearOffset * u_glitch;
+            }
+
+            // --- CHROMATIC ABERRATION ---
+            // Offset coordinates for Red, Green, Blue channels
+            float caOffset = 0.02 * u_glitch;
+            vec2 p_r = p + vec2(caOffset, 0.0);
+            vec2 p_g = p;
+            vec2 p_b = p - vec2(caOffset, 0.0);
+
+            // Fetch pattern for each channel to simulate RGB separation
+            float r = generatePattern(p_r, t).r;
+            float g = generatePattern(p_g, t).g;
+            float b = generatePattern(p_b, t).b;
+
+            vec3 color = vec3(r, g, b);
+
+            // --- CRT SCANLINES ---
+            // High frequency vertical sine wave mapped to screen Y
+            float scanline = sin(gl_FragCoord.y * 2.0) * 0.08 * u_glitch;
+            color -= scanline;
+
+            // --- CRT FLICKER / VIGNETTE ---
+            float flicker = 1.0 - (hash1(vec2(t, t)) * 0.1 * u_glitch);
+            color *= flicker;
+
+            // Vignette for depth
+            float vignette = length(uv - 0.5) * 1.5;
+            color *= 1.0 - (vignette * vignette * 0.3);
+
+            gl_FragColor = vec4(color, 1.0);
+        }
+    </script>
+
+    <!-- Main JavaScript Logic -->
+    <script>
+        // State variables linked to UI
+        const state = {
+            density: 5.0,
+            moire: 50.0,
+            glitch: 0.8,
+            speed: 1.0,
+            colorPhase: 0.0
+        };
+
+        // Bind sliders to state
+        function setupUI() {
+            const bindSlider = (id, stateKey, displayId) => {
+                const slider = document.getElementById(id);
+                const display = document.getElementById(displayId);
+                slider.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    state[stateKey] = val;
+                    // Format to 2 decimal places for consistent width in UI
+                    display.innerText = val.toFixed(2);
+                });
+                // Init display
+                display.innerText = parseFloat(slider.value).toFixed(2);
+            };
+
+            bindSlider('density', 'density', 'val-density');
+            bindSlider('moire', 'moire', 'val-moire');
+            bindSlider('glitch', 'glitch', 'val-glitch');
+            bindSlider('speed', 'speed', 'val-speed');
+            bindSlider('colorPhase', 'colorPhase', 'val-colorPhase');
+        }
+
+        // Initialize WebGL
+        function initWebGL() {
+            const canvas = document.getElementById('glcanvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (!gl) {
+                alert('WebGL is not supported.');
+                return;
+            }
+
+            function compileShader(type, sourceId) {
+                const source = document.getElementById(sourceId).text;
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            const vertexShader = compileShader(gl.VERTEX_SHADER, 'vertex-shader');
+            const fragmentShader = compileShader(gl.FRAGMENT_SHADER, 'fragment-shader');
+
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program link error:', gl.getProgramInfoLog(program));
+                return;
+            }
+
+            gl.useProgram(program);
+
+            // Buffer full screen quad
+            const vertices = new Float32Array([
+                -1.0, -1.0,   1.0, -1.0,  -1.0,  1.0,
+                -1.0,  1.0,   1.0, -1.0,   1.0,  1.0
+            ]);
+
+            const vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+            const positionLocation = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+            // Map uniform locations
+            const uniforms = {
+                resolution: gl.getUniformLocation(program, 'u_resolution'),
+                time: gl.getUniformLocation(program, 'u_time'),
+                density: gl.getUniformLocation(program, 'u_density'),
+                moire: gl.getUniformLocation(program, 'u_moire'),
+                glitch: gl.getUniformLocation(program, 'u_glitch'),
+                speed: gl.getUniformLocation(program, 'u_speed'),
+                colorPhase: gl.getUniformLocation(program, 'u_colorPhase')
+            };
+
+            // Canvas resize handler
+            function resizeCanvas() {
+                // High pixel density for sharp glitch edges
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = window.innerWidth * dpr;
+                canvas.height = window.innerHeight * dpr;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas(); 
+
+            let startTime = performance.now();
+
+            // Render loop
+            function render(currentTime) {
+                const elapsedTime = (currentTime - startTime) / 1000.0;
+
+                gl.uniform1f(uniforms.time, elapsedTime);
+                gl.uniform1f(uniforms.density, state.density);
+                gl.uniform1f(uniforms.moire, state.moire);
+                gl.uniform1f(uniforms.glitch, state.glitch);
+                gl.uniform1f(uniforms.speed, state.speed);
+                gl.uniform1f(uniforms.colorPhase, state.colorPhase);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        }
+
+        window.onload = () => {
+            setupUI();
+            initWebGL();
+        };
+    </script>
+</body>
+</html>

@@ -13,6 +13,10 @@ import printFragment from './shaders/halftone.frag?raw';
 import astralFragment from './shaders/astral-field.frag?raw';
 import astralSwarmVertex from './shaders/astral-swarm.vert?raw';
 import astralSwarmFragment from './shaders/astral-swarm.frag?raw';
+import pack2Fragment from './shaders/hyperweave-pack2.frag?raw';
+import textureVoronoiFragment from './shaders/texture-voronoi.frag?raw';
+import textureVelvetFragment from './shaders/texture-velvet.frag?raw';
+import textureMaximalistFragment from './shaders/texture-maximalist.frag?raw';
 
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
 
@@ -27,6 +31,12 @@ const defaultState={
   astralGloss:1.65,astralAcid:2.1,astralContour:0.85,astralMix:0.6,astralQuality:mobile?0:1,
   astralSwarmStrength:0.8,astralSwarmCount:mobile?2200:8000,layerAstralSwarm:true,translucency:0,
 
+  pack2Morph:0,pack2Depth:mobile?6:10,pack2DetailFreq:15,pack2Tension:2.4,
+  pack2PhaseShift:0.3,pack2Acid:2.85,pack2InkWeight:1.15,pack2Engraving:0.52,
+  pack2Dispersion:0.75,pack2FlowSpeed:0.8,pack2Opacity:0.8,pack2Quality:mobile?0:1,pack2ChromaLock:.75,
+  textureFamily:0,textureDensity:5,textureMoire:50,textureGlitch:0.8,textureSpeed:1,
+  textureColorPhase:0,velvetSheen:32,velvetGlow:1.2,maxScale:3,maxDistortion:2.5,
+  maxColorFreq:1.5,maxIterations:mobile?4:6,textureBlend:0.8,texturePaletteMix:1,
   hybridMix:0.55,rot4D:1.15,cathedralApollo:1.38,chladniFreq:6.50,
   volumetricGlow:1.55,schlierenFreq:6.80,flySpeed:0.85,rayQuality:mobile?0:1,
   feedback:0,curlStrength:1.0,halftoneMix:0,halftoneScale:110,
@@ -54,6 +64,9 @@ let cathedralScene,feedbackScene,printScene;
 let cathedralMaterial,feedbackMaterial,printMaterial;
 let astralScene,astralMaterial,astralSwarmScene,astralPoints,astralSwarmMaterial;
 let astralReady=true;
+let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
+let pack2Ready=true,textureReady=[true,true,true];
+let pack2Validated=false,textureValidated=[false,false,false];
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -107,6 +120,37 @@ const sliderDefs={
     ['astralQuality','ASTRAL NORMAL DETAIL · 0=FAST',0,1,1],
     ['astralSwarmStrength','PHYLLOTAXIS SWARM STRENGTH',0,1.5,0.05],
     ['astralSwarmCount','ACTIVE 2D GLYPHS',0,12000,200]
+  ],
+  pack2:[
+    ['pack2Morph','PACK II ENGINE MORPH · E5 → E8',0,3,0.01],
+    ['pack2Depth','P O I N C A R É FOLD / DEPTH',2,14,1],
+    ['pack2DetailFreq','GIRIH / FACET / THREAD FREQUENCY',2,28,0.5],
+    ['pack2Tension','CATACAUSTIC / WEAVE TENSION',0.15,3.5,0.05],
+    ['pack2PhaseShift','OPTICAL PHASON SHIFT',0,1,0.01],
+    ['pack2Acid','NEON SPECTRAL OVERDRIVE',0.6,3.6,0.05],
+    ['pack2InkWeight','OBSIDIAN TRENCH / INK WIDTH',0.15,2.2,0.05],
+    ['pack2Engraving','GUILLOCHÉ / PRINT ROSETTES',0,1,0.02],
+    ['pack2Dispersion','NEON PRISM / VHS DISPERSION',0,1.5,0.02],
+    ['pack2FlowSpeed','DYNAMIC MATHEMATICS SPEED',0,2.5,0.05],
+    ['pack2Opacity','PACK II COMPOSITING OPACITY',0,1,0.05],
+    ['pack2Quality','ANALYTIC NORMALS · 0=FAST',0,1,1],
+    ['pack2ChromaLock','PACK II BLACKLIGHT LOCK',0,1,0.05]
+  ],
+  textures:[
+    ['textureFamily','TEXTURE FAMILY INDEX',0,2,1],
+    ['textureDensity','VORONOI / VELVET CELL DENSITY',2,20,0.5],
+    ['textureMoire','VORONOI INTERFERENCE FREQUENCY',10,150,1],
+    ['textureGlitch','CRT ABERRATION / BAND TEAR',0,3,0.05],
+    ['textureSpeed','EVOLUTION SPEED · MOVING PIXELS',0,3,0.05],
+    ['textureColorPhase','VORONOI COLOR ID PHASE',0,1,0.01],
+    ['velvetSheen','VELVET TANGENT MICRO-SHEEN',4,128,2],
+    ['velvetGlow','VELVET CREVICE GLOW',0,3,0.1],
+    ['maxScale','MAXIMALIST DOMAIN SCALE',0.5,10,0.1],
+    ['maxDistortion','NESTED fBm WARP',0,8,0.1],
+    ['maxColorFreq','MAXIMALIST CHROMA FREQUENCY',0.1,5,0.1],
+    ['maxIterations','NESTED fBm OCTAVES',1,10,1],
+    ['textureBlend','TEXTURE LAYER OPACITY',0,1,0.05],
+    ['texturePaletteMix','USE 168 PALETTE BANK · 0=SOURCE',0,1,0.05]
   ],
   feedback:[
     ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
@@ -179,6 +223,15 @@ function makeSliders(){
         if(key==='swarmCount')setSpriteCount();
     if(key==='astralSwarmCount')setAstralCount();
     if(key==='astralMorph')$('astralEngineSelect').value=String(Math.round(state.astralMorph));
+    if(key==='pack2Morph')$('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
+    if(key==='textureFamily'){
+      $('textureFamilySelect').value=String(Math.round(state.textureFamily));
+      if(state.renderMode.startsWith('texture')&&!ensureAddOn(state.renderMode,state.textureFamily)){
+        state.textureFamily=0;
+        slider.value=0;value.textContent='0';$('textureFamilySelect').value='0';
+        if(!ensureAddOn(state.renderMode,0))state.renderMode='field';
+      }
+    }
     if(key==='feedback')clearTrails();
       });
     }
@@ -216,6 +269,8 @@ function updatePaletteTexture(rebuildEditors=true){
   if(cathedralMaterial)cathedralMaterial.uniforms.uPalette.value=next;
   if(astralMaterial)astralMaterial.uniforms.u_palette.value=next;
   if(astralSwarmMaterial)astralSwarmMaterial.uniforms.u_palette.value=next;
+  if(pack2Material)pack2Material.uniforms.u_palette.value=next;
+  for(const m of textureMaterials)if(m)m.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
   if(texture)texture.dispose();
   texture=next;
@@ -264,6 +319,8 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
+  $('textureFamilySelect').value=String(Math.round(state.textureFamily));
   $('astralEngineSelect').value=String(Math.round(state.astralMorph));
   $('astralSwarmToggle').classList.toggle('selected',state.layerAstralSwarm);
   $('astralSwarmToggle').textContent=state.layerAstralSwarm?'PHYLLOTAXIS / THOMAS SWARM ON':'PHYLLOTAXIS / THOMAS SWARM OFF';
@@ -276,9 +333,41 @@ function syncControls(){
   setSpriteCount();
   setAstralCount();
 }
+// Avoid compiling three additional heavyweight shader families on startup;
+ // compile only the new mode actually selected so the existing Opal Garden stays snappy.
+function ensureAddOn(mode,family=state.textureFamily){
+  const isPack=mode.startsWith('pack2'),isTexture=mode.startsWith('texture');
+  if(!isPack&&!isTexture)return true;
+  const idx=Math.round(clamp(family,0,2));
+  if(isPack){
+    if(pack2Validated)return pack2Ready;
+  }else{
+    if(textureValidated[idx])return textureReady[idx];
+  }
+  if(!renderer||!fieldCamera)return false;
+  const errors=[],previous=console.error;
+  console.error=(...args)=>{
+    const info=args.map(x=>String(x)).join(' ');
+    if(info.includes('Shader Error')||info.includes('THREE.WebGLProgram'))errors.push(info);
+    previous.apply(console,args);
+  };
+  try{
+    renderer.compile(isPack?pack2Scene:textureScenes[idx],fieldCamera);
+  }catch(e){errors.push(String(e));}
+  finally{console.error=previous;}
+  const ok=errors.length===0;
+  if(isPack){pack2Validated=true;pack2Ready=ok;}
+  else{textureValidated[idx]=true;textureReady[idx]=ok;}
+  if(!ok){
+    previous.call(console,'Optional mathematical texture shader did not compile:',errors.join('\n').slice(0,2000));
+    notify(isPack?'PACK II SHADER UNSUPPORTED ON THIS GPU':'THIS TEXTURE SHADER UNSUPPORTED ON THIS GPU');
+  }
+  return ok;
+}
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
+  if(!ensureAddOn(preset.renderMode||'field',preset.textureFamily??state.textureFamily))return;
   const base=copy(defaultState);
   const keepLayers={};
   for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm']){
@@ -306,8 +395,30 @@ function mutate(onlyStructure=false){
   const rand=seededRng();
   if(!onlyStructure){
     const modePick=rand();
-    state.renderMode=modePick<0.16?'cathedral':modePick<0.3?'hybrid':modePick<0.52?'astral':modePick<0.68?'astral-field':modePick<0.8?'astral-cathedral':'field';
-    if(!astralReady && state.renderMode.startsWith('astral'))state.renderMode='field';
+    const modes=['field','cathedral','hybrid','astral','astral-field','astral-cathedral','pack2','pack2-field','pack2-cathedral','texture','texture-field','texture-cathedral'];
+    state.renderMode=modes[Math.min(modes.length-1,Math.floor(modePick*modes.length))];
+    if(!astralReady&&state.renderMode.startsWith('astral'))state.renderMode='field';
+    state.textureFamily=Math.floor(rand()*3);
+    if(!ensureAddOn(state.renderMode,state.textureFamily))state.renderMode='field';
+    state.pack2Morph=Number((rand()*3).toFixed(2));
+    state.pack2Depth=mobile?4+Math.floor(rand()*5):5+Math.floor(rand()*9);
+    state.pack2DetailFreq=Number((5+rand()*23).toFixed(2));
+    state.pack2Tension=Number((.15+rand()*3.35).toFixed(2));
+    state.pack2PhaseShift=Number(rand().toFixed(2));
+    state.pack2Acid=Number((.8+rand()*2.8).toFixed(2));
+    state.pack2InkWeight=Number((.25+rand()*1.8).toFixed(2));
+    state.pack2Engraving=Number(rand().toFixed(2));
+    state.pack2Dispersion=Number((rand()*1.5).toFixed(2));
+    state.pack2Opacity=Number((.45+rand()*.55).toFixed(2));
+    state.textureDensity=Number((2+rand()*18).toFixed(2));
+    state.textureMoire=10+Math.floor(rand()*140);
+    state.textureGlitch=Number((rand()*2.7).toFixed(2));
+    state.textureColorPhase=Number(rand().toFixed(2));
+    state.texturePaletteMix=Number((.45+rand()*.55).toFixed(2));
+    state.textureBlend=Number((.45+rand()*.55).toFixed(2));
+    state.maxScale=Number((.5+rand()*9.5).toFixed(2));
+    state.maxDistortion=Number((rand()*8).toFixed(2));
+    state.maxIterations=mobile?3+Math.floor(rand()*4):3+Math.floor(rand()*8);
     state.astralMorph=Number((rand()*3).toFixed(2));
     state.astralOctaves=2+Math.floor(rand()*(mobile?5:9));
     state.astralTwist=Number((rand()*5).toFixed(2));
@@ -389,6 +500,35 @@ function buildEffects(){
     uChromaLock:{value:0},uAstralOpacity:{value:1},uAstralQuality:{value:1}
   });
   astralMaterial.transparent=true;
+  [pack2Scene,pack2Material]=pass(pack2Fragment,{
+    uResolution:vec(),uTime:{value:0},uMouse:vec(),uZoom:{value:1},
+    uEngineMorph:{value:0},uSymmetry:{value:7},uDepth:{value:10},
+    uDetailFreq:{value:15},uTension:{value:2.4},uPhaseShift:{value:.3},
+    uAcidOverdrive:{value:2.85},uInkWeight:{value:1.15},
+    uEngravingMix:{value:.52},uDispersion:{value:.75},
+    u_palette:{value:texture},uPalettePhase:{value:0},
+    uChromaLock:{value:.75},uPackOpacity:{value:1},uPackQuality:{value:1}
+  });
+  pack2Material.transparent=true;
+  pack2Material.extensions.derivatives=true;
+  // Separate source-faithful shader programs keep each texture's mathematics unique.
+  const textureSources=[textureVoronoiFragment,textureVelvetFragment,textureMaximalistFragment];
+  textureScenes=[];textureMaterials=[];
+  for(let family=0;family<textureSources.length;family++){
+    const uniforms={
+      u_resolution:vec(),u_time:{value:0},
+      u_palette:{value:texture},uPalettePhase:{value:0},
+      uPaletteMix:{value:1},u_layerOpacity:{value:1},
+      u_density:{value:5},u_moire:{value:50},u_glitch:{value:.8},
+      u_speed:{value:1},u_colorPhase:{value:0},
+      u_sheen:{value:32},u_glow:{value:1.2},u_phase:{value:0},
+      u_scale:{value:3},u_distortion:{value:2.5},
+      u_colorFreq:{value:1.5},u_iterations:{value:6}
+    };
+    const [stage,mat]=pass(textureSources[family],uniforms);
+    mat.transparent=true;
+    textureScenes.push(stage);textureMaterials.push(mat);
+  }
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
@@ -474,6 +614,34 @@ function configureEffects(usingPost=true){
     g.uDpr.value=renderer.getPixelRatio();g.uPalettePhase.value=state.palettePhase;
     g.uAcid.value=state.astralAcid;
   }
+  const w=pack2Material.uniforms;
+  w.uResolution.value.set(effectW,effectH);
+  w.uTime.value=t*state.pack2FlowSpeed;
+  w.uMouse.value.set(p.pointerX,p.pointerY);
+  w.uZoom.value=5.1/p.radius;
+  w.uEngineMorph.value=state.pack2Morph;
+  w.uSymmetry.value=state.symmetry;
+  w.uDepth.value=state.pack2Depth;w.uDetailFreq.value=state.pack2DetailFreq;
+  w.uTension.value=state.pack2Tension;w.uPhaseShift.value=state.pack2PhaseShift;
+  w.uAcidOverdrive.value=state.pack2Acid;w.uInkWeight.value=state.pack2InkWeight;
+  w.uEngravingMix.value=state.pack2Engraving;w.uDispersion.value=state.pack2Dispersion;
+  w.uPalettePhase.value=state.palettePhase;w.uChromaLock.value=state.pack2ChromaLock;
+  w.uPackQuality.value=state.pack2Quality;
+  w.uPackOpacity.value=state.renderMode==='pack2'?1:state.pack2Opacity;
+  for(let family=0;family<textureMaterials.length;family++){
+    const u=textureMaterials[family].uniforms;
+    u.u_resolution.value.set(effectW,effectH);
+    u.u_time.value=t;u.uPalettePhase.value=state.palettePhase;
+    u.uPaletteMix.value=state.texturePaletteMix;
+    u.u_layerOpacity.value=state.renderMode==='texture'?1:state.textureBlend;
+    u.u_density.value=state.textureDensity;
+    u.u_moire.value=state.textureMoire;u.u_glitch.value=state.textureGlitch;
+    u.u_speed.value=state.textureSpeed;u.u_colorPhase.value=state.textureColorPhase;
+    u.u_sheen.value=state.velvetSheen;u.u_glow.value=state.velvetGlow;
+    u.u_phase.value=state.textureColorPhase;u.u_scale.value=state.maxScale;
+    u.u_distortion.value=state.maxDistortion;u.u_colorFreq.value=state.maxColorFreq;
+    u.u_iterations.value=state.maxIterations;
+  }
   const f=feedbackMaterial.uniforms;
   f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
@@ -494,20 +662,25 @@ function configureEffects(usingPost=true){
 function renderBaseScene(){
   renderer.clear(true,true,true);
   const mode=state.renderMode;
-  const isAstral=mode==='astral'||mode==='astral-field'||mode==='astral-cathedral';
+  const isAstral=mode.startsWith('astral');
+  const isPack2=mode.startsWith('pack2');
+  const isTexture=mode.startsWith('texture');
   if(state.layerBg){
-    if(mode==='cathedral'||mode==='hybrid'||mode==='astral-cathedral'){
+    if(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral')){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(mode==='field'||mode==='hybrid'||mode==='astral-field'){
+    if(mode==='field'||mode==='hybrid'||mode.endsWith('-field')){
       fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
-    if(isAstral){
-      renderer.render(astralScene,fieldCamera);
+    if(isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
+    if(isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
+    if(isTexture){
+      const family=Math.round(clamp(state.textureFamily,0,2));
+      if(textureReady[family]&&textureScenes[family])renderer.render(textureScenes[family],fieldCamera);
     }
   }
-  if(isAstral&&state.layerAstralSwarm&&astralPoints){
+  if(isAstral&&astralReady&&state.layerAstralSwarm&&astralPoints){
     renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
@@ -981,12 +1154,18 @@ function installUI(){
   $('materialMode').addEventListener('change',e=>state.material=Number(e.target.value));
   $('gestureMode').addEventListener('change',e=>state.gestureMode=e.target.value);
   const chooseRenderMode=value=>{
-    if(!astralReady && value.startsWith('astral')){notify('ASTRAL GLSL NOT SUPPORTED ON THIS GPU');return;}
+    if(!astralReady && value.startsWith('astral')){notify('ASTRAL GLSL NOT SUPPORTED ON THIS GPU');return false;}
+    if(!ensureAddOn(value)){
+      $('renderMode').value=state.renderMode;
+      $('renderModeCathedral').value=state.renderMode;
+      return false;
+    }
     state.renderMode=value;
     $('renderMode').value=value;
     $('renderModeCathedral').value=value;
     clearTrails();
-    notify(value.startsWith('astral')?'ASTRAL FOUR-ENGINE MODE':value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
+    notify(value.startsWith('pack2')?'HYPERWEAVE PACK II • FOUR NEW MATHEMATICS':value.startsWith('texture')?'THREE SOURCE-FAITHFUL TEXTURES':value.startsWith('astral')?'ASTRAL FOUR-ENGINE MODE':value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
+    return true;
   };
   $('renderMode').addEventListener('change',e=>chooseRenderMode(e.target.value));
   $('renderModeCathedral').addEventListener('change',e=>chooseRenderMode(e.target.value));
@@ -1006,6 +1185,31 @@ function installUI(){
   $('astralSolo').addEventListener('click',()=>switchAstral('astral'));
   $('astralField').addEventListener('click',()=>switchAstral('astral-field'));
   $('astralCathedral').addEventListener('click',()=>switchAstral('astral-cathedral'));
+  $('pack2EngineSelect').addEventListener('change',e=>{
+    state.pack2Morph=Number(e.target.value);
+    syncControls();
+    notify(['POINCARÉ GIRIH LACE','ABYSSAL CAUSTIC NEOVIUS','JACQUARD BROCADE','BZ MYCELIUM'][Math.round(state.pack2Morph)]);
+  });
+  $('textureFamilySelect').addEventListener('change',e=>{
+    const choice=Number(e.target.value);
+    if(state.renderMode.startsWith('texture')&&!ensureAddOn(state.renderMode,choice)){
+      $('textureFamilySelect').value=String(state.textureFamily);return;
+    }
+    state.textureFamily=choice;syncControls();
+    notify(['VORONOI MOIRÉ','IRIDESCENT ALIEN VELVET','MAXIMALIST DOMAIN WARP'][choice]);
+  });
+  const switchNewEngine=mode=>{
+    if(!chooseRenderMode(mode))return;
+    state.layerBg=true;
+    if(mode==='pack2'||mode==='texture'){state.layerMesh=false;state.layerSwarm=false;}
+    syncControls();
+  };
+  $('pack2Solo').addEventListener('click',()=>switchNewEngine('pack2'));
+  $('pack2Field').addEventListener('click',()=>switchNewEngine('pack2-field'));
+  $('pack2Cathedral').addEventListener('click',()=>switchNewEngine('pack2-cathedral'));
+  $('textureSolo').addEventListener('click',()=>switchNewEngine('texture'));
+  $('textureField').addEventListener('click',()=>switchNewEngine('texture-field'));
+  $('textureCathedral').addEventListener('click',()=>switchNewEngine('texture-cathedral'));
   $('inkMode').addEventListener('change',e=>state.paletteInkMix=Number(e.target.value));
   $('clearTrails').addEventListener('click',()=>{clearTrails();notify('CURL HISTORY CLEARED');});
   $('trailOff').addEventListener('click',()=>{state.feedback=0;syncControls();clearTrails();notify('CURL TRAILS DISABLED');});

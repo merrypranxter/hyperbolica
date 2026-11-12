@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from '../src/presets.js';
+import { HYPER_WEAVE_PACK2_PRESETS } from '../src/engines/HyperWeavePack2.js';
 
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const vault=JSON.parse(read('data/mathemagical-palettes.json'));
@@ -12,11 +13,13 @@ const shaders=[
   'src/shaders/manifold.vert','src/shaders/manifold.frag',
   'src/shaders/glyph.vert','src/shaders/glyph.frag',
   'src/shaders/cathedral.frag','src/shaders/curl-feedback.frag','src/shaders/halftone.frag',
-  'src/shaders/astral-field.frag','src/shaders/astral-swarm.vert','src/shaders/astral-swarm.frag'
+  'src/shaders/astral-field.frag','src/shaders/astral-swarm.vert','src/shaders/astral-swarm.frag',
+  'src/shaders/hyperweave-pack2.frag','src/shaders/texture-voronoi.frag',
+  'src/shaders/texture-velvet.frag','src/shaders/texture-maximalist.frag'
 ];
 
-test('all 167 real palettes and colors are present',()=>{
-  assert.equal(vault.palettes.length,167);
+test('all 168 real palettes and colors are present',()=>{
+  assert.equal(vault.palettes.length,168);
   assert.equal(names.size,vault.palettes.length);
   for(const p of vault.palettes){
     assert.ok(p.colors.length>=2,p.id);
@@ -26,7 +29,7 @@ test('all 167 real palettes and colors are present',()=>{
 test('the math engines expose distinct families',()=>{
   assert.equal(FIELD_FAMILIES.length,16);
   assert.equal(MESH_FAMILIES.length,12);
-  assert.ok(PRESETS.length>=45);
+  assert.ok(PRESETS.length>=57);
 });
 test('presets only reference existing palettes and math families',()=>{
   for(const preset of PRESETS){
@@ -85,6 +88,41 @@ test('Astral four-engine source and five source palettes are preserved',()=>{
   assert.ok(PRESETS.some(p=>p.renderMode==='astral-cathedral'));
 });
 
+test('HyperWeave II imports the actual source JS cartridge and all four GLSL math engines',()=>{
+  assert.equal(Object.keys(HYPER_WEAVE_PACK2_PRESETS).length,6);
+  const original=read('legacy/hyperweave-pack2-engines-original.frag');
+  const live=read('src/shaders/hyperweave-pack2.frag');
+  for(const fn of ['evalEngine05_HyperbolicGirih','evalEngine06_CausticNeovius','evalEngine07_JacquardMemphis','evalEngine08_BelousovMycelium']){
+    assert.ok(original.includes(fn),fn);
+    assert.ok(live.includes(fn),fn);
+  }
+  assert.equal(vault.palettes.filter(p=>p.source==='hyperweave_pack2').length,1);
+  assert.equal(PRESETS.filter(p=>p.renderMode?.startsWith('pack2')).length,6);
+  for(const p of PRESETS.filter(p=>p.renderMode?.startsWith('pack2'))){
+    assert.ok(p.pack2Morph>=0&&p.pack2Morph<=3,p.name);
+    assert.ok(p.pack2Depth>=2,p.name);
+  }
+});
+test('three source-distinct texture generators are wired into real selectable render passes',()=>{
+  for(const [htmlSource,shader,signature] of [
+    ['legacy/glitch-voronoi-maximalist-original.html','src/shaders/texture-voronoi.frag','voronoi('],
+    ['legacy/iridescent-alien-velvet-original.html','src/shaders/texture-velvet.frag','ridgeFBM('],
+    ['legacy/maximalist-texture-generator-original.html','src/shaders/texture-maximalist.frag','fbm(']
+  ]){
+    assert.match(read(htmlSource),/<script id="fragment-shader"/);
+    assert.ok(read(shader).includes(signature),shader);
+    assert.ok(read(shader).includes('u_layerOpacity'),shader);
+    assert.ok(read(shader).includes('u_palette'),shader);
+  }
+  assert.equal(PRESETS.filter(p=>p.renderMode?.startsWith('texture')).length,6);
+  for(const mode of ['pack2','pack2-field','pack2-cathedral','texture','texture-field','texture-cathedral']){
+    assert.ok(html.includes('value="'+mode+'"'),mode);
+  }
+  assert.match(html,/data-page="pack2"/);
+  assert.match(html,/data-page="textures"/);
+  assert.match(main,/function ensureAddOn/);
+  assert.match(main,/renderer\.render\(pack2Scene/);
+});
 test('the cathedral source was preserved as its own reference',()=>{
   const source=read('legacy/hyperloom-nematic-cathedral-original.html');
   assert.match(source,/4D NEMATIC CATHEDRAL/);
