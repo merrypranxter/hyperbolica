@@ -547,6 +547,11 @@ function initRenderer(){
   try{
     renderer.compile(fieldScene,fieldCamera);
     renderer.compile(scene,camera);
+    // Compile every material now; don't let the first Cathedral switch
+    // produce an unexplained purple/black canvas on iPhone Safari.
+    renderer.compile(cathedralScene,fieldCamera);
+    renderer.compile(feedbackScene,fieldCamera);
+    renderer.compile(printScene,fieldCamera);
   }finally{console.error=normalError;}
   if(shaderFailures.length)throw new Error('GPU shader compilation failed: '+shaderFailures.join('\n').slice(0,3500));
   window.addEventListener('resize',resize);
