@@ -11,11 +11,12 @@ const shaders=[
   'src/shaders/screen.vert','src/shaders/field.frag',
   'src/shaders/manifold.vert','src/shaders/manifold.frag',
   'src/shaders/glyph.vert','src/shaders/glyph.frag',
-  'src/shaders/cathedral.frag','src/shaders/curl-feedback.frag','src/shaders/halftone.frag'
+  'src/shaders/cathedral.frag','src/shaders/curl-feedback.frag','src/shaders/halftone.frag',
+  'src/shaders/astral-field.frag','src/shaders/astral-swarm.vert','src/shaders/astral-swarm.frag'
 ];
 
-test('all 162 real palettes and colors are present',()=>{
-  assert.equal(vault.palettes.length,162);
+test('all 167 real palettes and colors are present',()=>{
+  assert.equal(vault.palettes.length,167);
   assert.equal(names.size,vault.palettes.length);
   for(const p of vault.palettes){
     assert.ok(p.colors.length>=2,p.id);
@@ -25,7 +26,7 @@ test('all 162 real palettes and colors are present',()=>{
 test('the math engines expose distinct families',()=>{
   assert.equal(FIELD_FAMILIES.length,16);
   assert.equal(MESH_FAMILIES.length,12);
-  assert.ok(PRESETS.length>=36);
+  assert.ok(PRESETS.length>=45);
 });
 test('presets only reference existing palettes and math families',()=>{
   for(const preset of PRESETS){
@@ -66,6 +67,24 @@ test('opal cathedral is a real transparent fusion with drag-advected memory',()=
   assert.match(main,/transparent:true,depthWrite:false/);
   assert.match(html,/id="loadOpalCathedral"/);
 });
+test('Astral four-engine source and five source palettes are preserved',()=>{
+  const source=read('legacy/astral-loom-4-engine-original.html');
+  assert.match(source,/4-ENGINE PSYCHEDELIC/);
+  assert.match(source,/CALABI-YAU 6D/);
+  assert.match(source,/TURING-PHYSARUM/);
+  assert.match(source,/CROP-CIRCLE ZETA/);
+  assert.match(source,/HOPF FERRO-FOAM/);
+  assert.equal(vault.palettes.filter(p=>p.source==='astral_loom').length,5);
+  const shader=read('src/shaders/astral-field.frag');
+  for(const name of ['evalEngine01_CalabiYau','evalEngine02_TuringPhysarum','evalEngine03_CropCircleZeta','evalEngine04_HopfFerroFoam']){
+    assert.ok(shader.includes(name),name);
+  }
+  assert.match(main,/uAstralOpacity/);
+  assert.match(main,/makeAstralGeometry/);
+  assert.match(html,/data-page="astral"/);
+  assert.ok(PRESETS.some(p=>p.renderMode==='astral-cathedral'));
+});
+
 test('the cathedral source was preserved as its own reference',()=>{
   const source=read('legacy/hyperloom-nematic-cathedral-original.html');
   assert.match(source,/4D NEMATIC CATHEDRAL/);
