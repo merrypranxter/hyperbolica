@@ -40,3 +40,18 @@ PNG saves the current rendered frame. Browser video recording capabilities diffe
 ### Play and testing status
 
 Run `npm install && npm run dev` in the repo, then open the local address. `npm run build` produces a static website in `dist/`. **Source and static checks passed** (JS parse, UI binding references, shader structural checks, preset palette IDs); a real browser GPU compilation and iPhone Safari performance check are **still required**. Heavy cathedral mode should be tested at low Ray Depth first. A build in GitHub is not a live website and does not consume Netlify credits by itself.
+
+## November 12 — Astral Loom four-engine expansion + wet opal signature
+
+The artist's complete 2,019-line `legacy/astral-loom-4-engine-original.html` is retained unchanged as provenance. The corresponding integrated renderer is `src/shaders/astral-field.frag`, with independent `src/shaders/astral-swarm.vert` and `src/shaders/astral-swarm.frag`.
+
+- **Four distinct animated mathematical shader families**, fully selectable and continuously cross-morphable: complex-sheet / Calabi–Yau-inspired folds, Turing–Physarum-style wavelet morphology, truncated alternating eta/zeta-inspired cymatic and crop-circle harmonic geometry, and Hopf/ferrofoam-inspired flux filaments. These are **procedural visual approximations**, not a true 6D geometry solver, actual reaction-diffusion PDE, or physical MHD simulation.
+- **Three new render modes**: Astral solo, Astral over Biomineral, Astral over the 4D flying Cathedral. Existing independent 3D geometry and glyph swarm remain available.
+- **Separate GPU point swarm**, up to 12,000 source-derived phyllotaxis/Thomas trajectories, with independent toggle/strength/count. Coexists with the existing 14k-capable 3D Hopf swarm.
+- **Five additional original Astral Loom color banks**, transferred from its original five RGB stop lists. MATHEMAGICAL palette count is now **167**, and the original palette dropdown and color-stop editor still control every engine and swarm.
+- **Signature startup artwork**: Preset 32, *Wet Opal Cathedral with Curl Memory*. A real semi-transparent, view-dependent silica shell overlays a live 4D cathedral with a weakened biomineral background. Cursor velocity injects vorticity/advected optical trails in the GPU history-buffer pass. The existing mathematical field is not replaced with a static filter.
+- **Other new starter designs**: 8 Astral source-inspired modes and *Opal Ferrofoam Cathedral*, totaling **42 curated presets**.
+- **Mobile controls**: lower initial ray depth and optional cheaper Astral normal evaluation; capped framebuffer resolution, independently adjustable sprite counts and quality.
+- **Source safety**: original artist sources are preserved as HTML under `legacy/`. Running `npm test` checks the palette library, all preset IDs, UI element links, original references and basic shader structure. `npm run build` compiles the Vite app; a real browser GPU and mobile Safari trial is still necessary before declaring the render pipeline production-tested.
+
+No Netlify deployment was initiated.
