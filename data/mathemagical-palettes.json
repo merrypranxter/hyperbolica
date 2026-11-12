@@ -29,7 +29,8 @@
     "added_impossibleloom": "merrypranxter/impossibleloom/src/palettes.js",
     "added_color_systems_and_third_eye": "merrypranxter/austereograms_art_app/src/palette-bank.js",
     "astral-loom": "Artist-supplied Astral Loom four-engine synthesis HTML (five original 5-stop ink palettes)",
-    "otherspace": "Artist-provided original OTHERSPACE hyperbolic starter atlas; 12 preserved five-stop palettes"
+    "otherspace": "Artist-provided original OTHERSPACE hyperbolic starter atlas; 12 preserved five-stop palettes",
+    "otherspace-ii": "Artist-provided OTHERSPACE II Hyperbolic Acid Atlas: 14 preserved source five-stop palettes"
   },
   "palettes": [
     {
@@ -2525,6 +2526,174 @@
         "#71716b",
         "#d5d3c4",
         "#fffced"
+      ]
+    },
+    {
+      "id": "otherspace-ii/01-acid-sherbet",
+      "name": "OTHERSPACE II · ACID SHERBET",
+      "source": "otherspace-ii",
+      "colors": [
+        "#1a0033",
+        "#ff2fd0",
+        "#ffe600",
+        "#00ffc8",
+        "#7a2bff"
+      ]
+    },
+    {
+      "id": "otherspace-ii/02-sticker-binder-1991",
+      "name": "OTHERSPACE II · STICKER BINDER 1991",
+      "source": "otherspace-ii",
+      "colors": [
+        "#12002b",
+        "#ff0a8c",
+        "#00e5ff",
+        "#b8ff00",
+        "#ffa800"
+      ]
+    },
+    {
+      "id": "otherspace-ii/03-blacklight-poster",
+      "name": "OTHERSPACE II · BLACKLIGHT POSTER",
+      "source": "otherspace-ii",
+      "colors": [
+        "#05000f",
+        "#7b00ff",
+        "#ff00aa",
+        "#00ff66",
+        "#fff200"
+      ]
+    },
+    {
+      "id": "otherspace-ii/04-mango-ufo",
+      "name": "OTHERSPACE II · MANGO UFO",
+      "source": "otherspace-ii",
+      "colors": [
+        "#2b0a3d",
+        "#ff6b00",
+        "#ffd000",
+        "#ff2e88",
+        "#22e0ff"
+      ]
+    },
+    {
+      "id": "otherspace-ii/05-toxic-lagoon",
+      "name": "OTHERSPACE II · TOXIC LAGOON",
+      "source": "otherspace-ii",
+      "colors": [
+        "#001a1f",
+        "#00ffb3",
+        "#c6ff00",
+        "#ff3df2",
+        "#2a6bff"
+      ]
+    },
+    {
+      "id": "otherspace-ii/06-bubblegum-plasma",
+      "name": "OTHERSPACE II · BUBBLEGUM PLASMA",
+      "source": "otherspace-ii",
+      "colors": [
+        "#ffe3f6",
+        "#ff4fd8",
+        "#8a5cff",
+        "#27e8ff",
+        "#fff275"
+      ]
+    },
+    {
+      "id": "otherspace-ii/07-dayglo-riso",
+      "name": "OTHERSPACE II · DAYGLO RISO",
+      "source": "otherspace-ii",
+      "colors": [
+        "#fff6d6",
+        "#ff3b6b",
+        "#0057ff",
+        "#00d68f",
+        "#ff9d00"
+      ]
+    },
+    {
+      "id": "otherspace-ii/08-ultraviolet-citrus",
+      "name": "OTHERSPACE II · ULTRAVIOLET CITRUS",
+      "source": "otherspace-ii",
+      "colors": [
+        "#10002e",
+        "#5b1bff",
+        "#d400ff",
+        "#ff7a00",
+        "#eaff00"
+      ]
+    },
+    {
+      "id": "otherspace-ii/09-mermaid-chrome",
+      "name": "OTHERSPACE II · MERMAID CHROME",
+      "source": "otherspace-ii",
+      "colors": [
+        "#031033",
+        "#00b3ff",
+        "#7dffea",
+        "#ff7de9",
+        "#9a5bff"
+      ]
+    },
+    {
+      "id": "otherspace-ii/10-hot-lava-disco",
+      "name": "OTHERSPACE II · HOT LAVA DISCO",
+      "source": "otherspace-ii",
+      "colors": [
+        "#1f0010",
+        "#ff003c",
+        "#ff7b00",
+        "#ffe100",
+        "#ff00d4"
+      ]
+    },
+    {
+      "id": "otherspace-ii/11-alien-melon",
+      "name": "OTHERSPACE II · ALIEN MELON",
+      "source": "otherspace-ii",
+      "colors": [
+        "#06210f",
+        "#39ff14",
+        "#ffef00",
+        "#ff4d9d",
+        "#00d0ff"
+      ]
+    },
+    {
+      "id": "otherspace-ii/12-candy-raver",
+      "name": "OTHERSPACE II · CANDY RAVER",
+      "source": "otherspace-ii",
+      "colors": [
+        "#1b1035",
+        "#ff5fa2",
+        "#ffd166",
+        "#06d6a0",
+        "#4cc9f0"
+      ]
+    },
+    {
+      "id": "otherspace-ii/13-oil-slick",
+      "name": "OTHERSPACE II · OIL SLICK",
+      "source": "otherspace-ii",
+      "colors": [
+        "#0a0612",
+        "#3d1cff",
+        "#00f0c0",
+        "#ffe14d",
+        "#ff2f6d"
+      ]
+    },
+    {
+      "id": "otherspace-ii/14-tangerine-dreamcast",
+      "name": "OTHERSPACE II · TANGERINE DREAMCAST",
+      "source": "otherspace-ii",
+      "colors": [
+        "#240046",
+        "#ff9e00",
+        "#ff5400",
+        "#00f5d4",
+        "#f15bb5"
       ]
     }
   ]
