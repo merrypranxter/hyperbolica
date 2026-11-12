@@ -1,6 +1,10 @@
 # HYPERBOLICA
 **A playable mathematical biomineral / photoelastic / quasicrystal / manifold / particle-swarm art laboratory.**
 
+## ARGON experiment 001 — Spinodal Reliquary
+
+An independent playable material-state experiment is at [`experiments/spinodal-reliquary/index.html`](experiments/spinodal-reliquary/index.html). After `npm run dev`, open `/experiments/spinodal-reliquary/`. It implements conservative phase separation, nutrient-limited mineral deposition, reciprocal mobility/permeability feedback, and persistent deposition-driven relief/optics. Existing engines and designs are unchanged. [Play instructions, equations and validation limits](experiments/spinodal-reliquary/README.md) · [Source audit and ten ranked engine proposals](docs/ARGON-audit-and-engines.md).
+
 Built from the user's original **Hyperbolic Photoelastic Biomineralization** shader and inspired by the **Hyper-Loom** three-layer interaction model. Independent project; no Netlify deploy is triggered by this repository commit.
 
 ## Play locally
