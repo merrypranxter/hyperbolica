@@ -33,24 +33,24 @@ precision highp float;
             if (vGlyphType < 0.5) {
                 // Glyph 0: 6-Pointed Diatom Silica Star
                 float rays = abs(cos(a * 3.0));
-                mask = smoothstep(rays, rays - 0.25, r);
+                mask = (1.0-smoothstep(rays-0.25,rays,r));
             } else if (vGlyphType < 1.5) {
                 // Glyph 1: Concentric Moiré Target Ring
                 float ring = abs(r - 0.62);
-                float core = smoothstep(0.28, 0.05, r);
-                mask = max(smoothstep(0.18, 0.02, ring), core);
+                float core = (1.0-smoothstep(0.05,0.28,r));
+                mask = max((1.0-smoothstep(0.02,0.18,ring)), core);
             } else if (vGlyphType < 2.5) {
                 // Glyph 2: Crisp Stipple Dot
-                mask = smoothstep(0.85, 0.20, r);
+                mask = (1.0-smoothstep(0.20,0.85,r));
             } else {
                 // Glyph 3: Cyber Diamond Reticle
                 float d = abs(p.x) + abs(p.y);
-                mask = smoothstep(0.20, 0.02, abs(d - 0.65)) + smoothstep(0.22, 0.05, r);
+                mask = (1.0-smoothstep(0.02,0.20,abs(d-0.65))) + (1.0-smoothstep(0.05,0.22,r));
             }
 
             // Dark obsidian halo around each sprite so particles never wash out to white!
             float innerNeon = clamp(mask, 0.0, 1.0);
-            float outerRim  = smoothstep(1.0, 0.55, r);
+            float outerRim  = (1.0-smoothstep(0.55,1.0,r));
             if (outerRim < 0.05) discard;
 
             vec3 neonCol = swarmNeonColor(vColorSeed);
