@@ -168,6 +168,7 @@ function makeSliders(){
         if(key==='quality')resize();
         if(key==='swarmCount')setSpriteCount();
     if(key==='astralSwarmCount')setAstralCount();
+    if(key==='astralMorph')$('astralEngineSelect').value=String(Math.round(state.astralMorph));
     if(key==='feedback')clearTrails();
       });
     }
@@ -269,7 +270,7 @@ function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   const base=copy(defaultState);
   const keepLayers={};
-  for(const key of ['layerBg','layerMesh','layerSwarm']){
+  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm']){
     if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
   }
   Object.assign(state,base,preset,keepLayers);
@@ -294,7 +295,17 @@ function mutate(onlyStructure=false){
   const rand=seededRng();
   if(!onlyStructure){
     const modePick=rand();
-    state.renderMode=modePick<0.22?'cathedral':modePick<0.38?'hybrid':'field';
+    state.renderMode=modePick<0.16?'cathedral':modePick<0.3?'hybrid':modePick<0.52?'astral':modePick<0.68?'astral-field':modePick<0.8?'astral-cathedral':'field';
+    state.astralMorph=Number((rand()*3).toFixed(2));
+    state.astralOctaves=2+Math.floor(rand()*(mobile?5:9));
+    state.astralTwist=Number((rand()*5).toFixed(2));
+    state.astralDensity=Number((1+rand()*29).toFixed(2));
+    state.astralGloss=Number((rand()*3).toFixed(2));
+    state.astralAcid=Number((.7+rand()*2.7).toFixed(2));
+    state.astralContour=Number((.25+rand()*1.7).toFixed(2));
+    state.astralMix=Number((.30+rand()*.6).toFixed(2));
+    state.astralSwarmStrength=Number((rand()*1.5).toFixed(2));
+    state.translucency=Number((rand()*.7).toFixed(2));
     state.rot4D=Number((rand()*3).toFixed(2));
     state.cathedralApollo=Number((.45+rand()*1.9).toFixed(2));
     state.chladniFreq=Number((1.5+rand()*14).toFixed(2));
@@ -643,6 +654,11 @@ function initRenderer(){
   };
   try{
     renderer.compile(fieldScene,fieldCamera);
+    renderer.compile(cathedralScene,fieldCamera);
+    renderer.compile(astralScene,fieldCamera);
+    renderer.compile(astralSwarmScene,fieldCamera);
+    renderer.compile(feedbackScene,fieldCamera);
+    renderer.compile(printScene,fieldCamera);
     renderer.compile(scene,camera);
   }finally{console.error=normalError;}
   if(shaderFailures.length)throw new Error('GPU shader compilation failed: '+shaderFailures.join('\n').slice(0,3500));
@@ -677,6 +693,9 @@ function setupInteraction(){
     const old=pointers.get(e.pointerId);
     if(!old)return;
     const dx=e.clientX-old.x,dy=e.clientY-old.y;
+    const bounds=canvas.getBoundingClientRect();
+    cameraMotion.dragVX=clamp(dx/Math.max(1,bounds.width)*18,-1.4,1.4);
+    cameraMotion.dragVY=clamp(-dy/Math.max(1,bounds.height)*18,-1.4,1.4);
     pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pointers.size===2){
       const arr=[...pointers.values()];
@@ -704,7 +723,9 @@ function setupInteraction(){
 }
 function resetView(){
   cameraMotion.targetTheta=.3;cameraMotion.targetPhi=.22;cameraMotion.targetRadius=5.1;
-  cameraMotion.targetX=0;cameraMotion.targetY=0;cameraMotion.targetTouch=0;notify('CAMERA + WARP POLE CENTERED');
+  cameraMotion.targetX=0;cameraMotion.targetY=0;cameraMotion.targetTouch=0;
+  cameraMotion.dragVX=0;cameraMotion.dragVY=0;
+  notify('CAMERA + WARP POLE CENTERED');
 }
 function useUniforms(){
   if(!fieldMaterial)return;
@@ -776,6 +797,8 @@ function animate(now){
   cameraMotion.pointerX+=(cameraMotion.targetX-cameraMotion.pointerX)*k;
   cameraMotion.pointerY+=(cameraMotion.targetY-cameraMotion.pointerY)*k;
   cameraMotion.touch+=(cameraMotion.targetTouch-cameraMotion.touch)*(1-Math.exp(-dt*8));
+  cameraMotion.dragVX*=Math.exp(-dt*8);
+  cameraMotion.dragVY*=Math.exp(-dt*8);
   const ph=cameraMotion.phi;
   camera.position.set(
     cameraMotion.radius*Math.sin(cameraMotion.theta)*Math.cos(ph),
@@ -926,10 +949,26 @@ function installUI(){
     $('renderMode').value=value;
     $('renderModeCathedral').value=value;
     clearTrails();
-    notify(value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
+    notify(value.includes('astral')?'ASTRAL FOUR-ENGINE MODE':value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
   };
   $('renderMode').addEventListener('change',e=>chooseRenderMode(e.target.value));
   $('renderModeCathedral').addEventListener('change',e=>chooseRenderMode(e.target.value));
+  $('astralEngineSelect').addEventListener('change',e=>{
+    state.astralMorph=Number(e.target.value);
+    syncControls();
+    notify(['CALABI-YAU COMPLEX SHEETS','TURING / PHYSARUM','ZETA / CYMATICS','HOPF FERROFOAM'][Math.round(state.astralMorph)]);
+  });
+  $('astralSwarmToggle').addEventListener('click',()=>{
+    state.layerAstralSwarm=!state.layerAstralSwarm;syncControls();
+  });
+  const switchAstral=(mode)=>{
+    chooseRenderMode(mode);state.layerBg=true;
+    if(mode==='astral'){state.layerMesh=false;state.layerSwarm=false;}
+    syncControls();
+  };
+  $('astralSolo').addEventListener('click',()=>switchAstral('astral'));
+  $('astralField').addEventListener('click',()=>switchAstral('astral-field'));
+  $('astralCathedral').addEventListener('click',()=>switchAstral('astral-cathedral'));
   $('inkMode').addEventListener('change',e=>state.paletteInkMix=Number(e.target.value));
   $('clearTrails').addEventListener('click',()=>{clearTrails();notify('CURL HISTORY CLEARED');});
   $('trailOff').addEventListener('click',()=>{state.feedback=0;syncControls();clearTrails();notify('CURL TRAILS DISABLED');});
