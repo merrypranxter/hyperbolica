@@ -473,7 +473,7 @@ precision highp float;
 
             // --- 5. DARK-GROUND OBSIDIAN CONTOUR CARVING ---
             float ridgeSlope = length(normal.xy);
-            float slopeCarve = smoothstep(0.88, 0.15, ridgeSlope * uContourCarve * 0.85);
+            float slopeCarve = (1.0-smoothstep(0.15, 0.88, ridgeSlope * uContourCarve * 0.85));
             float totalCarve = clamp(centerSample.z * mix(0.45, 1.0, slopeCarve), 0.0, 1.0);
 
             // Lock to pure neon over #04010a obsidian void
