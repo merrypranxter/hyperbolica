@@ -357,10 +357,20 @@ function buildEffects(){
     uPalette:{value:texture},uPalettePhase:{value:0},
     uRayQuality:{value:1},uChromaLock:{value:0}
   });
+  [astralScene,astralMaterial]=pass(astralFragment,{
+    uResolution:vec(),uTime:{value:0},uMouse:vec(),uZoom:{value:1},
+    uEngineMorph:{value:0},uSymmetry:{value:7},uOctaves:{value:6},
+    uTwist:{value:1.45},uDensity:{value:10.5},uGloss:{value:1.65},
+    uAcid:{value:2.1},uContourCarve:{value:.85},uHalftoneMix:{value:0},
+    uGlitch:{value:0},u_palette:{value:texture},uPalettePhase:{value:0},
+    uChromaLock:{value:0},uAstralOpacity:{value:1},uAstralQuality:{value:1}
+  });
+  astralMaterial.transparent=true;
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
-    uFeedback:{value:0},uSchlierenFreq:{value:6.8},uCurlStrength:{value:1}
+    uFeedback:{value:0},uSchlierenFreq:{value:6.8},uCurlStrength:{value:1},
+    uDragVelocity:vec(),uDragEnergy:{value:0}
   });
   [printScene,printMaterial]=pass(printFragment,{
     uAccumulatedTex:{value:null},uResolution:vec(),uTime:{value:0},
@@ -420,8 +430,30 @@ function configureEffects(usingPost=true){
   c.uVolumetricGlow.value=state.volumetricGlow;c.uSchlierenFreq.value=state.schlierenFreq;
   c.uFlySpeed.value=state.flySpeed;c.uPalettePhase.value=state.palettePhase;
   c.uRayQuality.value=state.rayQuality;c.uChromaLock.value=state.chromaLock;
+  const a=astralMaterial.uniforms;
+  a.uResolution.value.set(effectW,effectH);
+  a.uTime.value=t;a.uMouse.value.set(p.pointerX,p.pointerY);
+  a.uZoom.value=5.1/p.radius;
+  a.uEngineMorph.value=state.astralMorph;a.uSymmetry.value=state.symmetry;
+  a.uOctaves.value=state.astralOctaves;a.uTwist.value=state.astralTwist;
+  a.uDensity.value=state.astralDensity;a.uGloss.value=state.astralGloss;
+  a.uAcid.value=state.astralAcid;a.uContourCarve.value=state.astralContour;
+  a.uHalftoneMix.value=0; // Global post-process owns the actual four-plate print pass.
+  a.uGlitch.value=state.glitch;a.uPalettePhase.value=state.palettePhase;
+  a.uChromaLock.value=state.chromaLock;a.uAstralQuality.value=state.astralQuality;
+  a.uAstralOpacity.value=state.renderMode==='astral'?1:state.astralMix;
+  if(astralSwarmMaterial){
+    const g=astralSwarmMaterial.uniforms;
+    g.uResolution.value.set(effectW,effectH);g.uTime.value=t;
+    g.uMouse.value.set(p.pointerX,p.pointerY);g.uZoom.value=5.1/p.radius;
+    g.uEngineMorph.value=state.astralMorph;g.uSymmetry.value=state.symmetry;
+    g.uTwist.value=state.astralTwist;g.uSwarmMix.value=state.astralSwarmStrength;
+    g.uDpr.value=renderer.getPixelRatio();g.uPalettePhase.value=state.palettePhase;
+    g.uAcid.value=state.astralAcid;
+  }
   const f=feedbackMaterial.uniforms;
-  f.uResolution.value.set(effectW,effectH);
+  f.uDragVelocity.value.set(p.dragVX,p.dragVY);
+  f.uDragEnergy.value=p.touch;
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
   f.uFeedback.value=state.feedback;f.uCurlStrength.value=state.curlStrength;
   f.uSchlierenFreq.value=state.schlierenFreq;
@@ -437,14 +469,22 @@ function configureEffects(usingPost=true){
 }
 function renderBaseScene(){
   renderer.clear(true,true,true);
+  const mode=state.renderMode;
+  const isAstral=mode==='astral'||mode==='astral-field'||mode==='astral-cathedral';
   if(state.layerBg){
-    if(state.renderMode!=='field'){
+    if(mode==='cathedral'||mode==='hybrid'||mode==='astral-cathedral'){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(state.renderMode!=='cathedral'){
-      fieldMaterial.uniforms.u_fieldOpacity.value=state.renderMode==='hybrid'?state.hybridMix:1.0;
+    if(mode==='field'||mode==='hybrid'||mode==='astral-field'){
+      fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
+    if(isAstral){
+      renderer.render(astralScene,fieldCamera);
+    }
+  }
+  if(isAstral&&state.layerAstralSwarm&&astralPoints){
+    renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
   if(state.layerMesh||state.layerSwarm)renderer.render(scene,camera);
@@ -471,6 +511,28 @@ function makeGeometry(us,vs){
   g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
   g.setAttribute('a_uvParam',new THREE.BufferAttribute(param,2));
   return g;
+}
+function makeAstralGeometry(){
+  const n=MAX_ASTRAL_SPRITES,attrs=new Float32Array(n*4);
+  const positions=new Float32Array(n*3);
+  const goldenAngle=Math.PI*(3-Math.sqrt(5));
+  let rng=0x123acc65;
+  const random=()=>{rng=(Math.imul(rng,1664525)+1013904223)>>>0;return rng/4294967296;};
+  for(let i=0;i<n;i++){
+    const j=i*4;
+    attrs[j]=i/n;
+    attrs[j+1]=(i*goldenAngle)%(Math.PI*2);
+    attrs[j+2]=Math.sqrt(random());
+    attrs[j+3]=i%4;
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  g.setAttribute('a_particleData',new THREE.BufferAttribute(attrs,4));
+  g.setDrawRange(0,state.astralSwarmCount);
+  return g;
+}
+function setAstralCount(){
+  if(astralPoints)astralPoints.geometry.setDrawRange(0,Math.round(clamp(state.astralSwarmCount,0,MAX_ASTRAL_SPRITES)));
 }
 function makeSwarmGeometry(){
   const plane=new THREE.PlaneGeometry(1,1);
@@ -531,17 +593,19 @@ function initRenderer(){
   camera=new THREE.PerspectiveCamera(52,1,.1,100);
   meshMaterial=new THREE.ShaderMaterial({
     vertexShader:manifoldVertex,fragmentShader:manifoldFragment,
+    transparent:true,depthWrite:false,blending:THREE.NormalBlending,
     side:THREE.DoubleSide,extensions:{derivatives:true},
     uniforms:{
       u_palette:{value:texture},u_pointer:{value:new THREE.Vector2()},
       u_time:{value:0},u_mode:{value:0},u_symmetry:{value:7},
       u_morph:{value:1},u_density:{value:4},u_touch:{value:0},u_seed:{value:1},
       u_iridescence:{value:5},u_saturation:{value:2},
-      u_material:{value:0},u_porosity:{value:0},u_moire:{value:0},u_phase:{value:0}
+      u_material:{value:0},u_porosity:{value:0},u_moire:{value:0},u_phase:{value:0},
+      u_translucency:{value:0}
     }
   });
   mesh=new THREE.Mesh(makeGeometry(mobile?96:164,mobile?48:82),meshMaterial);
-  mesh.frustumCulled=false;scene.add(mesh);
+  mesh.frustumCulled=false;mesh.renderOrder=0;scene.add(mesh);
   swarmMaterial=new THREE.ShaderMaterial({
     vertexShader:glyphVertex,fragmentShader:glyphFragment,
     transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
@@ -551,7 +615,22 @@ function initRenderer(){
       u_touch:{value:0},u_iridescence:{value:5},u_saturation:{value:2},u_phase:{value:0}
     }
   });
-  swarm=new THREE.Mesh(makeSwarmGeometry(),swarmMaterial);swarm.frustumCulled=false;scene.add(swarm);
+  swarm=new THREE.Mesh(makeSwarmGeometry(),swarmMaterial);
+  swarm.frustumCulled=false;swarm.renderOrder=1;scene.add(swarm);
+  astralSwarmScene=new THREE.Scene();
+  astralSwarmMaterial=new THREE.ShaderMaterial({
+    vertexShader:astralSwarmVertex,fragmentShader:astralSwarmFragment,
+    transparent:true,depthTest:false,depthWrite:false,blending:THREE.NormalBlending,
+    uniforms:{
+      uResolution:{value:new THREE.Vector2()},uTime:{value:0},
+      uMouse:{value:new THREE.Vector2()},uZoom:{value:1},
+      uEngineMorph:{value:0},uSymmetry:{value:7},uTwist:{value:1},
+      uSwarmMix:{value:1},uDpr:{value:1},
+      u_palette:{value:texture},uPalettePhase:{value:0},uAcid:{value:1}
+    }
+  });
+  astralPoints=new THREE.Points(makeAstralGeometry(),astralSwarmMaterial);
+  astralPoints.frustumCulled=false;astralSwarmScene.add(astralPoints);
   setupInteraction();
   resize();
   // Fail visibly instead of leaving the artist staring at a mysterious black canvas.
@@ -650,6 +729,7 @@ function useUniforms(){
   f.u_glitch.value=state.glitch;
   const m=meshMaterial.uniforms;
   m.u_mode.value=state.meshMode;m.u_material.value=state.material;m.u_porosity.value=state.porosity;
+  m.u_translucency.value=state.translucency;
   const g=swarmMaterial.uniforms;
   g.u_swarmSize.value=state.swarmSize;g.u_swarmFlow.value=state.swarmFlow;
   mesh.visible=state.layerMesh;swarm.visible=state.layerSwarm;
