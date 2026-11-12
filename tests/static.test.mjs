@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from '../src/presets.js';
 import { HYPER_WEAVE_PACK2_PRESETS } from '../src/engines/HyperWeavePack2.js';
+import { OTHERSPACE_MODES, OTHERSPACE_PALETTES, OTHERSPACE_DEFAULT } from '../src/otherspace-atlas.js';
 
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const vault=JSON.parse(read('data/mathemagical-palettes.json'));
@@ -15,11 +16,12 @@ const shaders=[
   'src/shaders/cathedral.frag','src/shaders/curl-feedback.frag','src/shaders/halftone.frag',
   'src/shaders/astral-field.frag','src/shaders/astral-swarm.vert','src/shaders/astral-swarm.frag',
   'src/shaders/hyperweave-pack2.frag','src/shaders/texture-voronoi.frag',
-  'src/shaders/texture-velvet.frag','src/shaders/texture-maximalist.frag'
+  'src/shaders/texture-velvet.frag','src/shaders/texture-maximalist.frag',
+  'src/shaders/otherspace-atlas.frag'
 ];
 
-test('all 168 real palettes and colors are present',()=>{
-  assert.equal(vault.palettes.length,168);
+test('all 180 real palettes and colors are present',()=>{
+  assert.equal(vault.palettes.length,180);
   assert.equal(names.size,vault.palettes.length);
   for(const p of vault.palettes){
     assert.ok(p.colors.length>=2,p.id);
@@ -123,6 +125,40 @@ test('three source-distinct texture generators are wired into real selectable re
   assert.match(main,/function ensureAddOn/);
   assert.match(main,/renderer\.render\(pack2Scene/);
 });
+test('OTHERSPACE original ten-mode stand-alone math and palettes are preserved separately',()=>{
+  assert.equal(OTHERSPACE_MODES.length,10);
+  assert.equal(OTHERSPACE_PALETTES.length,12);
+  assert.equal(vault.palettes.filter(p=>p.source==='otherspace').length,12);
+  assert.equal(OTHERSPACE_DEFAULT.mode,0);
+  for(const mode of OTHERSPACE_MODES){
+    assert.ok(mode.name&&mode.note&&mode.params,mode.name);
+  }
+  const source=read('legacy/otherspace-hyperbolic-starter-atlas-original.html');
+  for(const symbol of ['OTHERSPACE','const MODES=','const PALETTES=','function gallery()','function saveRecipe()']){
+    assert.ok(source.includes(symbol),symbol);
+  }
+  assert.ok(source.trimEnd().endsWith('</html>'));
+  const shader=read('src/shaders/otherspace-atlas.frag');
+  for(const symbol of ['vec2 mobius(','float hd(','vec2 fold(','vec3 field(','atlasOpacity']){
+    assert.ok(shader.includes(symbol),symbol);
+  }
+});
+test('OPTIONAL OTHERSPACE background is explicitly OFF in all normal startup art',()=>{
+  assert.match(main,/otherSpaceEnabled:false/);
+  assert.match(main,/function ensureOtherSpace/);
+  assert.match(main,/function loadOtherSpaceStarter/);
+  assert.match(main,/renderer.render\(otherSpaceScene,fieldCamera\)/);
+  assert.match(main,/state.otherSpaceSolo/);
+  assert.match(main,/OTHERSPACE_MODES\.forEach/);
+  assert.match(html,/data-page="otherspace"/);
+  assert.match(html,/id="otherSpaceOff"/);
+  assert.match(html,/id="otherSpaceBlend"/);
+  assert.match(html,/id="otherSpaceSolo"/);
+  const hero=PRESETS.find(p=>p.name.includes('OPAL CATHEDRAL MEMORY GARDEN'));
+  assert.ok(hero);
+  assert.ok(!hero.otherSpaceEnabled);
+});
+
 test('the cathedral source was preserved as its own reference',()=>{
   const source=read('legacy/hyperloom-nematic-cathedral-original.html');
   assert.match(source,/4D NEMATIC CATHEDRAL/);
