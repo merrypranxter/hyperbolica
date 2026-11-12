@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYPERBOLIC PHOTOELASTIC BIOMINERALIZATION // KIFS + GYROID + BIREFRINGENCE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff007f;
+            --neon-cyan: #00f5ff;
+            --neon-yellow: #f5ff00;
+            --neon-lime: #39ff14;
+            --neon-purple: #b026ff;
+            --bg-void: #05020a;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-void);
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+
+        /* Cyber-Brutalist Panel Architecture */
+        .brutalist-hud {
+            background: rgba(6, 3, 14, 0.86);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 
+                7px 7px 0px var(--neon-pink),
+                14px 14px 0px rgba(245, 255, 0, 0.35),
+                0 0 35px rgba(255, 0, 127, 0.25);
+        }
+
+        .brutalist-btn {
+            background: #0c0618;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 3px 3px 0px var(--neon-pink);
+            transition: all 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+        }
+
+        .brutalist-btn:hover {
+            background: var(--neon-pink);
+            color: #ffffff;
+            border-color: var(--neon-yellow);
+            box-shadow: 4px 4px 0px var(--neon-cyan);
+            transform: translate(-1px, -1px);
+        }
+
+        .brutalist-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--neon-cyan);
+        }
+
+        .brutalist-btn.active-preset {
+            background: var(--neon-yellow);
+            color: #000000;
+            border-color: #ffffff;
+            box-shadow: 3px 3px 0px var(--neon-pink);
+        }
+
+        /* Custom Cyber-Brutalist Range Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+            margin: 5px 0;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #1b0b2e 0%, #3a0ca3 50%, #ff007f 100%);
+            border: 1px solid rgba(0, 245, 255, 0.7);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 20px;
+            width: 12px;
+            background: var(--neon-yellow);
+            cursor: pointer;
+            margin-top: -7px;
+            border: 2px solid #000000;
+            box-shadow: 2px 2px 0px var(--neon-cyan);
+            transition: transform 0.1s ease, background-color 0.1s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.12);
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        /* Custom Scrollbar for HUD and Code Modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070312;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-pink);
+            border: 1px solid var(--neon-cyan);
+        }
+
+        .code-selectable {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+    </style>
+</head>
+<body class="relative select-none">
+
+    <!-- FULLSCREEN WEBGL CANVAS -->
+    <canvas id="glcanvas"></canvas>
+
+    <!-- TOP STATUS & QUICK ACTION BAR -->
+    <div class="fixed top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- Left Badge -->
+        <div class="pointer-events-auto brutalist-hud px-4 py-2.5 flex items-center gap-3">
+            <span class="inline-block w-3 h-3 bg-[#39ff14] border border-black animate-pulse"></span>
+            <div>
+                <h1 class="text-xs sm:text-sm font-extrabold tracking-wider text-[#f5ff00] leading-none" style="font-family: 'Syne', sans-serif;">
+                    HYPERBOLIC PHOTOELASTIC BIOMINERALIZATION
+                </h1>
+                <p id="gpu-status" class="text-[10px] text-[#00f5ff] tracking-widest mt-0.5">
+                    ENGINE: INITIALIZING WEBGL // KIFS + 3D GYROID + BIREFRINGENCE
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Quick Action Buttons -->
+        <div class="pointer-events-auto flex flex-wrap items-center gap-2">
+            <button id="btn-view-shader" class="brutalist-btn px-3 py-2 text-xs flex items-center gap-2 bg-[#ff007f] text-white border-[#f5ff00]">
+                <span>&lt;/&gt; VIEW / COPY RAW GLSL</span>
+            </button>
+            <button id="btn-snapshot" class="brutalist-btn px-3 py-2 text-xs">
+                SAVE HD PNG
+            </button>
+            <button id="btn-pause" class="brutalist-btn px-3 py-2 text-xs">
+                PAUSE [SPACE]
+            </button>
+            <button id="btn-toggle-hud" class="brutalist-btn px-3 py-2 text-xs bg-[#00f5ff] text-black">
+                HIDE HUD [H]
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN COLLAPSIBLE PARAMETER HUD -->
+    <aside id="hud-panel" class="fixed top-20 left-4 bottom-4 w-80 sm:w-96 brutalist-hud z-20 flex flex-col overflow-hidden transition-transform duration-200">
+        <!-- HUD Header -->
+        <div class="p-3.5 border-b-2 border-[#ff007f] bg-black/60 flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-bold tracking-widest text-[#ff007f] block">SHADER UNIFORM MATRIX</span>
+                <span class="text-xs font-extrabold text-white">REAL-TIME MATHEMATICAL SYNTHESIS</span>
+            </div>
+            <button id="btn-randomize" class="brutalist-btn px-2.5 py-1 text-[10px]" title="Mutate mathematical parameters">
+                MUTATE 🎲
+            </button>
+        </div>
+
+        <!-- Scrollable Controls Container -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-5">
+            
+            <!-- CURATED PRESETS -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-extrabold tracking-widest text-[#f5ff00] uppercase">
+                        // Curated State Presets
+                    </span>
+                    <span class="text-[9px] text-gray-400">CLICK TO LOAD</span>
+                </div>
+                <div class="grid grid-cols-1 gap-1.5" id="preset-container">
+                    <button data-preset="lisaFrankRadiolaria" class="preset-btn brutalist-btn active-preset px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>01. LISA FRANK RADIOLARIA</span>
+                        <span class="text-[9px] opacity-80">7-FOLD SILICA</span>
+                    </button>
+                    <button data-preset="dmtDiatomCathedral" class="preset-btn brutalist-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>02. DMT DIATOM CATHEDRAL</span>
+                        <span class="text-[9px] opacity-80">16-FOLD LATTICE</span>
+                    </button>
+                    <button data-preset="bismuthGyroidFoam" class="preset-btn brutalist-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>03. BISMUTH GYROID FOAM</span>
+                        <span class="text-[9px] opacity-80">APOLLONIAN FROTH</span>
+                    </button>
+                    <button data-preset="hyperbolicVhsAcid" class="preset-btn brutalist-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>04. HYPERBOLIC VHS ACID</span>
+                        <span class="text-[9px] opacity-80">MOBIUS + CRT</span>
+                    </button>
+                    <button data-preset="mandelboxSilica" class="preset-btn brutalist-btn px-2.5 py-1.5 text-[10px] text-left flex justify-between items-center">
+                        <span>05. 9-FOLD MANDELBOX SILICA</span>
+                        <span class="text-[9px] opacity-80">EXTREME FILIGREE</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SLIDER CONTROLS -->
+            <div class="space-y-3.5 border-t border-white/15 pt-4">
+                <div class="text-[10px] font-extrabold tracking-widest text-[#00f5ff] uppercase">
+                    // 01. Non-Euclidean Topology
+                </div>
+
+                <!-- Kaleidoscope Sides -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-kaleido" class="text-gray-200">KALEIDOSCOPE SIDES (N)</label>
+                        <span id="v-kaleido" class="text-[#f5ff00]">7</span>
+                    </div>
+                    <input type="range" id="s-kaleido" min="3" max="24" step="1" value="7">
+                </div>
+
+                <!-- Fractal Recursions -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-iterations" class="text-gray-200">FRACTAL RECURSIONS (KIFS)</label>
+                        <span id="v-iterations" class="text-[#f5ff00]">12</span>
+                    </div>
+                    <input type="range" id="s-iterations" min="2" max="16" step="1" value="12">
+                </div>
+
+                <!-- Apollonian Inversion -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-apollonian" class="text-gray-200">APOLLONIAN INVERSION (rMin)</label>
+                        <span id="v-apollonian" class="text-[#f5ff00]">0.45</span>
+                    </div>
+                    <input type="range" id="s-apollonian" min="0.05" max="1.20" step="0.01" value="0.45">
+                </div>
+
+                <!-- Gyroid Pore Density -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-gyroid" class="text-gray-200">GYROID PORE DENSITY</label>
+                        <span id="v-gyroid" class="text-[#f5ff00]">4.50</span>
+                    </div>
+                    <input type="range" id="s-gyroid" min="0.50" max="12.00" step="0.10" value="4.50">
+                </div>
+
+                <!-- Mobius Space Warp -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-mobius" class="text-gray-200">MOBIUS SPACE WARP</label>
+                        <span id="v-mobius" class="text-[#f5ff00]">1.00</span>
+                    </div>
+                    <input type="range" id="s-mobius" min="0.00" max="3.00" step="0.05" value="1.00">
+                </div>
+
+                <!-- Zoom Scale -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-zoom" class="text-gray-200">FIELD ZOOM SCALE</label>
+                        <span id="v-zoom" class="text-[#f5ff00]">1.35</span>
+                    </div>
+                    <input type="range" id="s-zoom" min="0.25" max="5.00" step="0.05" value="1.35">
+                </div>
+            </div>
+
+            <!-- OPTICS & BIREFRINGENCE -->
+            <div class="space-y-3.5 border-t border-white/15 pt-4">
+                <div class="text-[10px] font-extrabold tracking-widest text-[#ff007f] uppercase">
+                    // 02. Photoelastic Optics & Glitch
+                </div>
+
+                <!-- Stress Fringe Freq -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-fringe" class="text-gray-200">STRESS FRINGE FREQUENCY</label>
+                        <span id="v-fringe" class="text-[#00f5ff]">5.50</span>
+                    </div>
+                    <input type="range" id="s-fringe" min="0.50" max="15.00" step="0.10" value="5.50">
+                </div>
+
+                <!-- Acid Overdrive -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-acid" class="text-gray-200">ACID OVERDRIVE (SATURATION)</label>
+                        <span id="v-acid" class="text-[#00f5ff]">2.40</span>
+                    </div>
+                    <input type="range" id="s-acid" min="0.50" max="4.00" step="0.05" value="2.40">
+                </div>
+
+                <!-- Chromatic Dispersion -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-dispersion" class="text-gray-200">PRISMATIC DISPERSION</label>
+                        <span id="v-dispersion" class="text-[#00f5ff]">1.80</span>
+                    </div>
+                    <input type="range" id="s-dispersion" min="0.00" max="5.00" step="0.05" value="1.80">
+                </div>
+
+                <!-- Palette Phase Shift -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-palette" class="text-gray-200">CHROMATOPHORE PHASE</label>
+                        <span id="v-palette" class="text-[#00f5ff]">0.00</span>
+                    </div>
+                    <input type="range" id="s-palette" min="0.00" max="1.00" step="0.01" value="0.00">
+                </div>
+
+                <!-- Flow Speed -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-speed" class="text-gray-200">MORPHOGENESIS SPEED</label>
+                        <span id="v-speed" class="text-[#00f5ff]">0.60</span>
+                    </div>
+                    <input type="range" id="s-speed" min="0.00" max="3.00" step="0.05" value="0.60">
+                </div>
+
+                <!-- VHS Glitch -->
+                <div class="flex flex-col">
+                    <div class="flex justify-between text-[11px] font-bold">
+                        <label for="s-vhs" class="text-gray-200">VHS / CRT TRACKING WOBBLE</label>
+                        <span id="v-vhs" class="text-[#00f5ff]">0.15</span>
+                    </div>
+                    <input type="range" id="s-vhs" min="0.00" max="1.00" step="0.01" value="0.15">
+                </div>
+            </div>
+        </div>
+
+        <!-- HUD Footer Hint -->
+        <div class="p-3 border-t-2 border-[#00f5ff] bg-black/80 text-[10px] text-gray-300 flex items-center justify-between">
+            <span>DRAG CANVAS: WARP SINGULARITY</span>
+            <button id="btn-reset-mouse" class="text-[#f5ff00] underline font-bold hover:text-white">CENTER POLE</button>
+        </div>
+    </aside>
+
+    <!-- IN-APP RAW GLSL SHADER SOURCE VIEWER MODAL -->
+    <div id="shader-modal" class="fixed inset-0 z-40 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 sm:p-8">
+        <div class="brutalist-hud w-full max-w-5xl h-full max-h-[88vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-4 border-b-2 border-[#ff007f] bg-black flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <span class="text-[10px] font-bold text-[#ff007f] tracking-widest block">RAW OPENGL SHADING LANGUAGE SOURCE</span>
+                    <h2 class="text-sm sm:text-base font-extrabold text-[#f5ff00]">
+                        MERRY_BIOMINERAL_FRAGMENT_SHADER.frag
+                    </h2>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-copy-glsl" class="brutalist-btn px-3 py-1.5 text-xs bg-[#39ff14] text-black border-white">
+                        COPY GLSL TO CLIPBOARD
+                    </button>
+                    <button id="btn-download-glsl" class="brutalist-btn px-3 py-1.5 text-xs">
+                        DOWNLOAD .FRAG
+                    </button>
+                    <button id="btn-close-modal" class="brutalist-btn px-3 py-1.5 text-xs bg-[#ff007f] text-white">
+                        CLOSE [ESC]
+                    </button>
+                </div>
+            </div>
+            <!-- Code Container -->
+            <div class="flex-1 overflow-auto p-4 bg-[#04010a] font-mono text-xs leading-relaxed text-[#00f5ff] code-selectable">
+                <pre id="glsl-code-display" class="whitespace-pre-wrap break-words code-selectable"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION BANNER -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 brutalist-hud px-4 py-3 text-xs font-extrabold text-[#f5ff00] pointer-events-none opacity-0 translate-y-4 transition-all duration-200">
+        SYSTEM READY
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- VERTEX SHADER                                                         -->
+    <!-- ===================================================================== -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec2 a_position;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <!-- ===================================================================== -->
+    <!-- FRAGMENT SHADER: HYPERBOLIC PHOTOELASTIC BIOMINERALIZATION            -->
+    <!-- ===================================================================== -->
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        #ifdef GL_OES_standard_derivatives
+        #extension GL_OES_standard_derivatives : enable
+        #endif
+        precision highp float;
+
+        uniform vec2  u_resolution;
+        uniform float u_time;
+        uniform vec2  u_mouse;
+        uniform float u_kaleidoSides;
+        uniform float u_iterations;
+        uniform float u_apollonian;
+        uniform float u_gyroidDensity;
+        uniform float u_fringeFreq;
+        uniform float u_mobiusWarp;
+        uniform float u_acidOverdrive;
+        uniform float u_dispersion;
+        uniform float u_vhsGlitch;
+        uniform float u_zoom;
+        uniform float u_paletteShift;
+
+        #define PI  3.14159265359
+        #define TAU 6.28318530718
+        #define PHI 1.61803398875
+
+        // ---------------------------------------------------------------------
+        // 1. UTILITY & NON-LINEAR HYPERBOLIC HELPERS
+        // ---------------------------------------------------------------------
+        float hash12(vec2 p) {
+            vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+            p3 += dot(p3, p3.yzx + 33.33);
+            return fract((p3.x + p3.y) * p3.z);
+        }
+
+        // Smooth absolute value to prevent infinite derivative spikes at mirror seams
+        vec2 sabs2(vec2 p, float eps) {
+            return sqrt(p * p + eps);
+        }
+
+        vec3 sabs3(vec3 p, float eps) {
+            return sqrt(p * p + eps);
+        }
+
+        // 2D Rotation Matrix
+        mat2 rot2D(float a) {
+            float s = sin(a), c = cos(a);
+            return mat2(c, -s, s, c);
+        }
+
+        // Safe Hyperbolic Tangent for vec3 (prevents digital hard-clipping at high overdrive)
+        vec3 tanhVec3(vec3 x) {
+            vec3 cx = clamp(x, -10.0, 10.0);
+            vec3 e2x = exp(2.0 * cx);
+            return (e2x - 1.0) / (e2x + 1.0);
+        }
+
+        // ---------------------------------------------------------------------
+        // 2. COMPLEX-PLANE ALGEBRA & CONFORMAL MOBIUS TRANSFORMATIONS
+        // ---------------------------------------------------------------------
+        vec2 cMul(vec2 a, vec2 b) {
+            return vec2(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+        }
+
+        vec2 cDiv(vec2 a, vec2 b) {
+            float denom = max(dot(b, b), 1e-6);
+            return vec2(a.x * b.x + a.y * b.y, a.y * b.x - a.x * b.y) / denom;
+        }
+
+        // Conformal Mobius warp: f(z) = (a*z + b) / (c*z + d)
+        vec2 applyMobiusField(vec2 z, float t, vec2 pole, float warpAmt) {
+            if (warpAmt <= 0.001) return z;
+
+            // Time-evolving complex coefficients
+            vec2 a = vec2(cos(t * 0.21), sin(t * 0.17) * 0.4);
+            vec2 b = pole * 0.75 * warpAmt + vec2(sin(t * 0.31), cos(t * 0.29)) * 0.22 * warpAmt;
+            vec2 c = ( pole.yx * 0.65 + vec2(sin(t * 0.19), -cos(t * 0.23)) * 0.45 ) * warpAmt;
+            vec2 d = vec2(1.0, 0.18 * cos(t * 0.13));
+
+            vec2 mobiusZ = cDiv(cMul(a, z) + b, cMul(c, z) + d);
+
+            // Secondary log-polar spiral conformal blend when warpAmt > 1.0
+            float r = max(length(mobiusZ), 1e-4);
+            float theta = atan(mobiusZ.y, mobiusZ.x);
+            vec2 logPolar = vec2(log(r) + t * 0.15, theta * (1.0 + 0.25 * sin(t * 0.1)));
+            vec2 spiralZ = mix(mobiusZ, sin(logPolar * 1.5), clamp((warpAmt - 1.2) * 0.35, 0.0, 0.65));
+
+            return mix(z, spiralZ, clamp(warpAmt, 0.0, 1.0));
+        }
+
+        // ---------------------------------------------------------------------
+        // 3. N-FOLD DIHEDRAL KALEIDOSCOPIC REFLECTION
+        // ---------------------------------------------------------------------
+        vec2 foldKaleidoscope(vec2 p, float sides, float eps) {
+            float r = length(p);
+            float a = atan(p.y, p.x);
+            float sector = TAU / max(sides, 3.0);
+            // Modulo fold into [0, sector] then mirror across half-sector
+            a = mod(a + 0.5 * sector, sector) - 0.5 * sector;
+            a = sqrt(a * a + eps);
+            return vec2(cos(a), sin(a)) * r;
+        }
+
+        // ---------------------------------------------------------------------
+        // 4. LISA FRANK // 1980s NEW WAVE ACID COSINE PALETTE
+        // ---------------------------------------------------------------------
+        vec3 lisaFrankBirefringencePalette(float phase) {
+            float p = phase + u_paletteShift;
+            // Base multi-frequency cosine oscillation
+            vec3 a = vec3(0.55, 0.50, 0.58);
+            vec3 b = vec3(0.50, 0.48, 0.50);
+            vec3 c = vec3(1.00, 1.00, 1.00);
+            vec3 d = vec3(0.00, 0.33, 0.67);
+            vec3 col1 = a + b * cos(TAU * (c * p + d));
+
+            // Secondary harmonic tuned to Hot Magenta, Electric Cyan, Laser Yellow, Acid Lime
+            vec3 hotPink   = vec3(1.00, 0.02, 0.58);
+            vec3 elecCyan  = vec3(0.00, 0.98, 1.00);
+            vec3 laserYel  = vec3(0.98, 1.00, 0.04);
+            vec3 ultraViol = vec3(0.48, 0.00, 1.00);
+
+            float band = fract(p * 1.5);
+            vec3 neonCycle = mix(
+                mix(hotPink, elecCyan, smoothstep(0.0, 0.35, band)),
+                mix(laserYel, ultraViol, smoothstep(0.35, 0.85, band)),
+                smoothstep(0.25, 0.75, sin(p * TAU) * 0.5 + 0.5)
+            );
+
+            return mix(col1, neonCycle, 0.58);
+        }
+
+        // ---------------------------------------------------------------------
+        // 5. MAIN FRAGMENT PIPELINE
+        // ---------------------------------------------------------------------
+        void main() {
+            // Normalize coordinates to [-1, 1] with aspect ratio correction
+            vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+            vec2 p2 = uv * 2.0 - 1.0;
+            p2.x *= u_resolution.x / u_resolution.y;
+
+            float t = u_time;
+
+            // --- STEP A: VHS / ANALOG TRACKING WOBBLE ---
+            if (u_vhsGlitch > 0.001) {
+                float scanBand = floor(uv.y * 42.0 + t * 5.0);
+                float bandNoise = hash12(vec2(scanBand, floor(t * 14.0)));
+                // Horizontal tape-tear bursts
+                float tearTrigger = step(0.92 - u_vhsGlitch * 0.25, bandNoise);
+                float tearShift = (hash12(vec2(uv.y * 100.0, t)) - 0.5) * 0.16 * u_vhsGlitch * tearTrigger;
+                // Continuous VHS head-switching wave wobble
+                float waveWobble = sin(uv.y * 28.0 + t * 9.0) * 0.008 * u_vhsGlitch;
+                p2.x += tearShift + waveWobble;
+            }
+
+            // Apply Field Zoom
+            p2 *= u_zoom;
+
+            // --- STEP B: COMPLEX MOBIUS TRANSFORMATION & MACRO KALEIDOSCOPE ---
+            vec2 z = applyMobiusField(p2, t, u_mouse, u_mobiusWarp);
+            z = foldKaleidoscope(z, u_kaleidoSides, 1e-5);
+
+            // --- STEP C: 3D KIFS + APOLLONIAN + GYROID DIATOM CASCADE ---
+            // Lift 2D complex plane into 3D biomineral phase space
+            vec3 p = vec3(z, 0.35 * cos(length(z) * 2.5 - t * 0.45));
+            float dr = 1.0; // Scalar Jacobian derivative accumulator
+
+            // Multi-channel Orbit Traps & Biomineral Accumulators
+            float trapOrigin   = 1e5;
+            float trapAxes     = 1e5;
+            float trapGyroid   = 1e5;
+            float trapChladni  = 1e5;
+            float silicaPores  = 0.0;
+            float stressWave   = 0.0;
+
+            float rMin2 = clamp(u_apollonian * u_apollonian, 0.0025, 1.44);
+            float subSides = max(3.0, floor(u_kaleidoSides * 0.5 + 1.5));
+
+            for (int i = 0; i < 16; i++) {
+                float fi = float(i);
+                if (fi >= u_iterations) break;
+
+                // 1. Sub-harmonic angular folding on XY
+                if (mod(fi, 2.0) < 0.5) {
+                    p.xy = foldKaleidoscope(p.xy, subSides, 2e-5);
+                } else {
+                    p.xy = sabs2(p.xy, 1e-5);
+                }
+
+                // 2. Mandelbox Box-Folding across mirror planes
+                vec3 boxLimit = vec3(0.92, 0.92, 0.78);
+                p = clamp(p, -boxLimit, boxLimit) * 2.0 - p;
+
+                // 3. Apollonian Spherical Conformal Inversion
+                float r2 = dot(p, p);
+                float invFactor = max(1.38 / clamp(r2, rMin2, 1.05), 1.0);
+                p *= invFactor;
+                dr = dr * invFactor + 1.0;
+
+                // 4. Affine Rotational Twist & Constant Offset
+                float twistAngle = 0.28 * fi + t * 0.14 + (u_mouse.x + u_mouse.y) * 0.35;
+                p.xy *= rot2D(twistAngle);
+                p.yz *= rot2D(twistAngle * 0.618);
+                p -= vec3(0.68, 0.52, 0.34);
+
+                // 5. 3D Gyroidal Minimal Surface & Dual-Frequency Chladni Filigree
+                vec3 gp = p * u_gyroidDensity;
+                float gyroid = sin(gp.x) * cos(gp.y) + sin(gp.y) * cos(gp.z) + sin(gp.z) * cos(gp.x);
+                float chladni = cos(gp.x * PHI) * cos(gp.y / PHI) - cos(gp.x / PHI) * cos(gp.y * PHI);
+                
+                // Carve microscopic diatom silica pores into the fractal struts
+                float poreShell = abs(gyroid) - 0.22 * abs(chladni);
+                float iterWeight = pow(0.78, fi);
+
+                silicaPores += cos(poreShell * TAU + t * 0.5) * iterWeight;
+                stressWave  += (gyroid * chladni) * iterWeight;
+
+                // Update Orbit Traps
+                trapOrigin  = min(trapOrigin, length(p));
+                trapAxes    = min(trapAxes, min(abs(p.x), abs(p.y)));
+                trapGyroid  = min(trapGyroid, abs(poreShell) / max(dr * 0.02, 1.0));
+                trapChladni = min(trapChladni, abs(chladni));
+            }
+
+            // --- STEP D: ISOCHROMATIC PHOTOELASTIC STRESS METRIC ---
+            // Logarithmic Jacobian compression combined with Gyroid/Chladni orbit distances
+            float logJacobian = log(1.0 + abs(dr)) * 0.32;
+            float poreDetail  = log(1e-4 + trapGyroid * 6.0) * 0.28;
+            float axisFiligree = exp(-trapAxes * 14.0);
+
+            float photoelasticStress = (
+                logJacobian * 0.85 +
+                silicaPores * 0.38 -
+                poreDetail * 0.45 +
+                stressWave * 0.30 +
+                axisFiligree * 0.25
+            );
+
+            // --- STEP E: HARDWARE SCREEN-SPACE DERIVATIVES & MICRO-SLOPE NORMALS ---
+            float dSx = 0.0;
+            float dSy = 0.0;
+            #ifdef GL_OES_standard_derivatives
+                dSx = dFdx(photoelasticStress);
+                dSy = dFdy(photoelasticStress);
+            #else
+                dSx = (photoelasticStress - logJacobian) * 0.01;
+                dSy = (photoelasticStress - silicaPores) * 0.01;
+            #endif
+
+            vec2 stressGrad = vec2(dSx, dSy);
+            float gradMag = length(stressGrad);
+
+            // Construct analytical 3D micro-normal from screen-space partial derivatives
+            vec3 microNormal = normalize(vec3(-stressGrad * 45.0, 1.0));
+            vec3 viewDir     = vec3(0.0, 0.0, 1.0);
+
+            // --- STEP F: CHROMATIC DISPERSION & BIREFRINGENCE INTERFERENCE ---
+            float basePhase = photoelasticStress * u_fringeFreq * 0.25 - t * 0.12;
+            float dispShift = (gradMag * 18.0 + 0.018) * u_dispersion;
+
+            // Sample 3 dispersed spectral bands across the birefringence gradient
+            vec3 colR = lisaFrankBirefringencePalette(basePhase + dispShift);
+            vec3 colG = lisaFrankBirefringencePalette(basePhase);
+            vec3 colB = lisaFrankBirefringencePalette(basePhase - dispShift);
+
+            // Recombine dispersed spectrum with cross-channel interference
+            vec3 birefringentColor = vec3(
+                dot(colR, vec3(0.75, 0.20, 0.05)),
+                dot(colG, vec3(0.10, 0.80, 0.10)),
+                dot(colB, vec3(0.05, 0.20, 0.75))
+            );
+
+            // Carve ultra-crisp diatomaceous silica lattice walls
+            float silicaRim = smoothstep(0.02, 0.28, abs(sin(silicaPores * 3.5)));
+            float poreCavity = smoothstep(0.0, 0.12, trapGyroid * 12.0);
+            birefringentColor *= mix(0.22, 1.25, silicaRim * poreCavity);
+
+            // --- STEP G: SPECULAR MICRO-RIDGE LIGHTING & FRESNEL RIM ---
+            vec3 lightPos1 = normalize(vec3(cos(t * 0.7), sin(t * 0.5), 0.85));
+            vec3 lightPos2 = normalize(vec3(-sin(t * 0.4), cos(t * 0.6), 0.65));
+
+            vec3 halfVec1 = normalize(lightPos1 + viewDir);
+            vec3 halfVec2 = normalize(lightPos2 + viewDir);
+
+            float spec1 = pow(max(dot(microNormal, halfVec1), 0.0), 48.0);
+            float spec2 = pow(max(dot(microNormal, halfVec2), 0.0), 24.0);
+            float fresnel = pow(1.0 - max(dot(microNormal, viewDir), 0.0), 2.5);
+
+            // Add electric neon specular highlights along fractal filigree crests
+            birefringentColor += vec3(1.0, 0.95, 0.85) * spec1 * 0.95;
+            birefringentColor += vec3(1.0, 0.05, 0.75) * spec2 * 0.65;
+            birefringentColor += lisaFrankBirefringencePalette(basePhase + 0.42) * (fresnel * 1.35 + axisFiligree * 0.55);
+
+            // --- STEP H: ACID OVERDRIVE & TANH SOFT-CLIPPING ---
+            float luma = dot(birefringentColor, vec3(0.299, 0.587, 0.114));
+            vec3 saturated = mix(vec3(luma), birefringentColor, u_acidOverdrive);
+            // Boost deep contrast while preserving iridescent glowing crevices
+            saturated = pow(max(saturated, vec3(0.0)), vec3(0.88)) * (0.85 + 0.25 * u_acidOverdrive);
+            vec3 finalColor = tanhVec3(saturated);
+
+            // --- STEP I: OPTIONAL CRT SCANLINES & ANALOG SNOW ---
+            if (u_vhsGlitch > 0.001) {
+                float scanline = sin(gl_FragCoord.y * PI) * 0.12 * u_vhsGlitch;
+                float grain = (hash12(gl_FragCoord.xy + fract(t * 17.3) * 100.0) - 0.5) * 0.14 * u_vhsGlitch;
+                finalColor = clamp(finalColor - scanline + grain, 0.0, 1.0);
+            }
+
+            // Subtle optical vignette
+            float vig = 1.0 - smoothstep(0.65, 1.65, length(uv * 2.0 - 1.0));
+            finalColor *= mix(0.78, 1.0, vig);
+
+            gl_FragColor = vec4(finalColor, 1.0);
+        }
+    </script>
+
+    <!-- ===================================================================== -->
+    <!-- APPLICATION LOGIC, PRESETS & WEBGL CONTROLLER                         -->
+    <!-- ===================================================================== -->
+    <script>
+        // --- 1. CENTRALIZED REACTIVE STATE ---
+        const state = {
+            kaleidoSides: 7,
+            iterations: 12,
+            apollonian: 0.45,
+            gyroidDensity: 4.50,
+            fringeFreq: 5.50,
+            mobiusWarp: 1.00,
+            acidOverdrive: 2.40,
+            dispersion: 1.80,
+            paletteShift: 0.00,
+            speed: 0.60,
+            vhsGlitch: 0.15,
+            zoom: 1.35,
+            paused: false,
+            mouseX: 0.0,
+            mouseY: 0.0,
+            targetMouseX: 0.18,
+            targetMouseY: -0.12
+        };
+
+        // --- 2. CURATED PRESET DEFINITIONS ---
+        const PRESETS = {
+            lisaFrankRadiolaria: {
+                kaleidoSides: 7,
+                iterations: 12,
+                apollonian: 0.45,
+                gyroidDensity: 4.50,
+                fringeFreq: 5.50,
+                mobiusWarp: 1.00,
+                acidOverdrive: 2.40,
+                dispersion: 1.80,
+                paletteShift: 0.00,
+                speed: 0.60,
+                vhsGlitch: 0.15,
+                zoom: 1.35
+            },
+            dmtDiatomCathedral: {
+                kaleidoSides: 16,
+                iterations: 15,
+                apollonian: 0.32,
+                gyroidDensity: 7.80,
+                fringeFreq: 8.20,
+                mobiusWarp: 0.55,
+                acidOverdrive: 2.95,
+                dispersion: 2.60,
+                paletteShift: 0.28,
+                speed: 0.45,
+                vhsGlitch: 0.05,
+                zoom: 1.10
+            },
+            bismuthGyroidFoam: {
+                kaleidoSides: 5,
+                iterations: 11,
+                apollonian: 0.18,
+                gyroidDensity: 9.50,
+                fringeFreq: 11.00,
+                mobiusWarp: 1.45,
+                acidOverdrive: 2.65,
+                dispersion: 3.40,
+                paletteShift: 0.62,
+                speed: 0.50,
+                vhsGlitch: 0.08,
+                zoom: 1.65
+            },
+            hyperbolicVhsAcid: {
+                kaleidoSides: 11,
+                iterations: 13,
+                apollonian: 0.62,
+                gyroidDensity: 3.40,
+                fringeFreq: 6.80,
+                mobiusWarp: 2.35,
+                acidOverdrive: 3.50,
+                dispersion: 4.20,
+                paletteShift: 0.84,
+                speed: 0.95,
+                vhsGlitch: 0.65,
+                zoom: 1.25
+            },
+            mandelboxSilica: {
+                kaleidoSides: 9,
+                iterations: 16,
+                apollonian: 0.52,
+                gyroidDensity: 6.20,
+                fringeFreq: 4.20,
+                mobiusWarp: 0.85,
+                acidOverdrive: 2.25,
+                dispersion: 1.50,
+                paletteShift: 0.41,
+                speed: 0.40,
+                vhsGlitch: 0.12,
+                zoom: 0.90
+            }
+        };
+
+        // --- 3. TOAST NOTIFICATION HELPER ---
+        let toastTimeout = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 2400);
+        }
+
+        // --- 4. UI BINDING & CONTROLLER ---
+        const sliderMap = [
+            { id: 's-kaleido',    valId: 'v-kaleido',    key: 'kaleidoSides',  decimals: 0 },
+            { id: 's-iterations', valId: 'v-iterations', key: 'iterations',    decimals: 0 },
+            { id: 's-apollonian', valId: 'v-apollonian', key: 'apollonian',    decimals: 2 },
+            { id: 's-gyroid',     valId: 'v-gyroid',     key: 'gyroidDensity', decimals: 2 },
+            { id: 's-mobius',     valId: 'v-mobius',     key: 'mobiusWarp',    decimals: 2 },
+            { id: 's-zoom',       valId: 'v-zoom',       key: 'zoom',          decimals: 2 },
+            { id: 's-fringe',     valId: 'v-fringe',     key: 'fringeFreq',    decimals: 2 },
+            { id: 's-acid',       valId: 'v-acid',       key: 'acidOverdrive', decimals: 2 },
+            { id: 's-dispersion', valId: 'v-dispersion', key: 'dispersion',    decimals: 2 },
+            { id: 's-palette',    valId: 'v-palette',    key: 'paletteShift',  decimals: 2 },
+            { id: 's-speed',      valId: 'v-speed',      key: 'speed',         decimals: 2 },
+            { id: 's-vhs',        valId: 'v-vhs',        key: 'vhsGlitch',     decimals: 2 }
+        ];
+
+        function syncUIFromState() {
+            sliderMap.forEach(({ id, valId, key, decimals }) => {
+                const slider = document.getElementById(id);
+                const label = document.getElementById(valId);
+                if (slider && label) {
+                    slider.value = state[key];
+                    label.textContent = Number(state[key]).toFixed(decimals);
+                }
+            });
+        }
+
+        function setupUI() {
+            // Bind Sliders
+            sliderMap.forEach(({ id, valId, key, decimals }) => {
+                const slider = document.getElementById(id);
+                const label = document.getElementById(valId);
+                slider.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    state[key] = val;
+                    label.textContent = val.toFixed(decimals);
+                });
+            });
+
+            // Bind Presets
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            presetButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const presetKey = btn.getAttribute('data-preset');
+                    const presetData = PRESETS[presetKey];
+                    if (!presetData) return;
+
+                    Object.assign(state, presetData);
+                    syncUIFromState();
+
+                    presetButtons.forEach(b => b.classList.remove('active-preset'));
+                    btn.classList.add('active-preset');
+                    showToast(`LOADED PRESET // ${btn.children[0].textContent}`);
+                });
+            });
+
+            // Randomize / Mutate Button
+            document.getElementById('btn-randomize').addEventListener('click', () => {
+                state.kaleidoSides  = Math.floor(3 + Math.random() * 19);
+                state.iterations    = Math.floor(8 + Math.random() * 9);
+                state.apollonian    = +(0.12 + Math.random() * 0.75).toFixed(2);
+                state.gyroidDensity = +(1.50 + Math.random() * 9.50).toFixed(2);
+                state.fringeFreq    = +(2.00 + Math.random() * 11.00).toFixed(2);
+                state.mobiusWarp    = +(0.25 + Math.random() * 2.20).toFixed(2);
+                state.acidOverdrive = +(1.60 + Math.random() * 2.20).toFixed(2);
+                state.dispersion    = +(0.50 + Math.random() * 3.80).toFixed(2);
+                state.paletteShift  = +(Math.random()).toFixed(2);
+                state.zoom          = +(0.70 + Math.random() * 1.80).toFixed(2);
+                syncUIFromState();
+                presetButtons.forEach(b => b.classList.remove('active-preset'));
+                showToast('MATHEMATICAL GENOME MUTATED');
+            });
+
+            // Reset Mouse Pole
+            document.getElementById('btn-reset-mouse').addEventListener('click', () => {
+                state.targetMouseX = 0.0;
+                state.targetMouseY = 0.0;
+                showToast('MOBIUS POLE CENTERED');
+            });
+
+            // Pause Toggle
+            const pauseBtn = document.getElementById('btn-pause');
+            function togglePause() {
+                state.paused = !state.paused;
+                pauseBtn.textContent = state.paused ? 'RESUME [SPACE]' : 'PAUSE [SPACE]';
+                showToast(state.paused ? 'TIME EVOLUTION FROZEN' : 'TIME EVOLUTION ACTIVE');
+            }
+            pauseBtn.addEventListener('click', togglePause);
+
+            // Hide/Show HUD
+            const hudPanel = document.getElementById('hud-panel');
+            const toggleHudBtn = document.getElementById('btn-toggle-hud');
+            let hudVisible = true;
+            function toggleHud() {
+                hudVisible = !hudVisible;
+                hudPanel.style.transform = hudVisible ? 'translateX(0)' : 'translateX(-115%)';
+                toggleHudBtn.textContent = hudVisible ? 'HIDE HUD [H]' : 'SHOW HUD [H]';
+            }
+            toggleHudBtn.addEventListener('click', toggleHud);
+
+            // Raw GLSL Source Modal Controls
+            const shaderModal = document.getElementById('shader-modal');
+            const codeDisplay = document.getElementById('glsl-code-display');
+            const rawFragCode = document.getElementById('fragment-shader').textContent.trim();
+            codeDisplay.textContent = rawFragCode;
+
+            document.getElementById('btn-view-shader').addEventListener('click', () => {
+                shaderModal.classList.remove('hidden');
+                shaderModal.classList.add('flex');
+            });
+
+            document.getElementById('btn-close-modal').addEventListener('click', () => {
+                shaderModal.classList.add('hidden');
+                shaderModal.classList.remove('flex');
+            });
+
+            // Copy GLSL to Clipboard (iframe-safe execCommand)
+            document.getElementById('btn-copy-glsl').addEventListener('click', () => {
+                const tempArea = document.createElement('textarea');
+                tempArea.value = rawFragCode;
+                tempArea.style.position = 'fixed';
+                tempArea.style.left = '-9999px';
+                document.body.appendChild(tempArea);
+                tempArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('RAW GLSL COPIED TO CLIPBOARD!');
+                } catch (err) {
+                    showToast('SELECT CODE MANUALLY TO COPY');
+                }
+                document.body.removeChild(tempArea);
+            });
+
+            // Download .frag file
+            document.getElementById('btn-download-glsl').addEventListener('click', () => {
+                const blob = new Blob([rawFragCode], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'hyperbolic_photoelastic_biomineralization.frag';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('DOWNLOADED .FRAG SHADER FILE');
+            });
+
+            // Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && document.activeElement.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    togglePause();
+                } else if (e.key === 'h' || e.key === 'H') {
+                    toggleHud();
+                } else if (e.key === 'Escape') {
+                    shaderModal.classList.add('hidden');
+                    shaderModal.classList.remove('flex');
+                }
+            });
+
+            syncUIFromState();
+        }
+
+        // --- 5. WEBGL ENGINE INITIALIZATION ---
+        function initWebGL() {
+            const canvas = document.getElementById('glcanvas');
+            const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: true }) 
+                    || canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: true });
+            const statusEl = document.getElementById('gpu-status');
+            if (!gl) {
+                statusEl.textContent = 'ERROR: WEBGL NOT AVAILABLE ON THIS DEVICE';
+                return;
+            }
+
+            // Enable standard derivatives for WebGL1 (built-in on WebGL2, but extension makes #ifdef GL_OES_standard_derivatives work seamlessly)
+            const isWebGL2 = (typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext);
+            const derivExt = gl.getExtension('OES_standard_derivatives');
+            statusEl.textContent = `ENGINE: ${isWebGL2 ? 'WEBGL 2.0' : 'WEBGL 1.0'} // DERIVATIVES: ${derivExt || isWebGL2 ? 'ACTIVE' : 'FALLBACK'} // RETINA HD`;
+
+            function compileShader(type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error('GLSL Compile Error:', gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            const vsSource = document.getElementById('vertex-shader').textContent;
+            let fsSource = document.getElementById('fragment-shader').textContent;
+
+            // If WebGL2 is active without OES_standard_derivatives extension string, enable derivative macro if supported
+            const vertexShader = compileShader(gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fsSource);
+
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program Link Error:', gl.getProgramInfoLog(program));
+                return;
+            }
+
+            gl.useProgram(program);
+
+            // Fullscreen Quad Geometry
+            const vertices = new Float32Array([
+                -1.0, -1.0,
+                 1.0, -1.0,
+                -1.0,  1.0,
+                -1.0,  1.0,
+                 1.0, -1.0,
+                 1.0,  1.0
+            ]);
+
+            const buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+            const posLoc = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(posLoc);
+            gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+            // Cache Uniform Locations
+            const uniforms = {
+                resolution:    gl.getUniformLocation(program, 'u_resolution'),
+                time:          gl.getUniformLocation(program, 'u_time'),
+                mouse:         gl.getUniformLocation(program, 'u_mouse'),
+                kaleidoSides:  gl.getUniformLocation(program, 'u_kaleidoSides'),
+                iterations:    gl.getUniformLocation(program, 'u_iterations'),
+                apollonian:    gl.getUniformLocation(program, 'u_apollonian'),
+                gyroidDensity: gl.getUniformLocation(program, 'u_gyroidDensity'),
+                fringeFreq:    gl.getUniformLocation(program, 'u_fringeFreq'),
+                mobiusWarp:    gl.getUniformLocation(program, 'u_mobiusWarp'),
+                acidOverdrive: gl.getUniformLocation(program, 'u_acidOverdrive'),
+                dispersion:    gl.getUniformLocation(program, 'u_dispersion'),
+                vhsGlitch:     gl.getUniformLocation(program, 'u_vhsGlitch'),
+                zoom:          gl.getUniformLocation(program, 'u_zoom'),
+                paletteShift:  gl.getUniformLocation(program, 'u_paletteShift')
+            };
+
+            // Responsive Retina Sizing
+            function resizeCanvas() {
+                const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+                canvas.width = Math.floor(window.innerWidth * dpr);
+                canvas.height = Math.floor(window.innerHeight * dpr);
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Interactive Pointer & Touch Singularity Control
+            let isDragging = false;
+            function updatePointer(clientX, clientY) {
+                const nx = (clientX / window.innerWidth) * 2.0 - 1.0;
+                const ny = 1.0 - (clientY / window.innerHeight) * 2.0;
+                state.targetMouseX = nx;
+                state.targetMouseY = ny;
+            }
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updatePointer(e.clientX, e.clientY);
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) updatePointer(e.clientX, e.clientY);
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) {
+                    isDragging = true;
+                    updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (isDragging && e.touches.length > 0) {
+                    updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchend', () => { isDragging = false; });
+
+            // Mouse Wheel Zoom
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY * 0.0012;
+                state.zoom = Math.min(5.0, Math.max(0.25, +(state.zoom + delta).toFixed(2)));
+                syncUIFromState();
+            }, { passive: false });
+
+            // HD PNG Snapshot Exporter
+            document.getElementById('btn-snapshot').addEventListener('click', () => {
+                renderFrame();
+                const dataURL = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `photoelastic_biomineral_${Date.now()}.png`;
+                link.href = dataURL;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('SAVED HIGH-DEF PNG SNAPSHOT');
+            });
+
+            // Animation Loop
+            let accumulatedTime = 0.0;
+            let lastTimestamp = performance.now();
+
+            function renderFrame() {
+                gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+                gl.uniform1f(uniforms.time, accumulatedTime);
+                gl.uniform2f(uniforms.mouse, state.mouseX, state.mouseY);
+                gl.uniform1f(uniforms.kaleidoSides, state.kaleidoSides);
+                gl.uniform1f(uniforms.iterations, state.iterations);
+                gl.uniform1f(uniforms.apollonian, state.apollonian);
+                gl.uniform1f(uniforms.gyroidDensity, state.gyroidDensity);
+                gl.uniform1f(uniforms.fringeFreq, state.fringeFreq);
+                gl.uniform1f(uniforms.mobiusWarp, state.mobiusWarp);
+                gl.uniform1f(uniforms.acidOverdrive, state.acidOverdrive);
+                gl.uniform1f(uniforms.dispersion, state.dispersion);
+                gl.uniform1f(uniforms.vhsGlitch, state.vhsGlitch);
+                gl.uniform1f(uniforms.zoom, state.zoom);
+                gl.uniform1f(uniforms.paletteShift, state.paletteShift);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+            }
+
+            function animate(now) {
+                const dt = Math.min((now - lastTimestamp) * 0.001, 0.1);
+                lastTimestamp = now;
+
+                if (!state.paused) {
+                    accumulatedTime += dt * state.speed;
+                }
+
+                // Smoothly interpolate singularity pole
+                state.mouseX += (state.targetMouseX - state.mouseX) * 0.08;
+                state.mouseY += (state.targetMouseY - state.mouseY) * 0.08;
+
+                renderFrame();
+                requestAnimationFrame(animate);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = () => {
+            setupUI();
+            initWebGL();
+        };
+    </script>
+</body>
+</html>
