@@ -41,13 +41,15 @@
         <button data-tab="motion">MOTION</button>
         <button data-tab="cathedral">CATHEDRAL</button>
         <button data-tab="astral">ASTRAL LAB</button>
+        <button data-tab="pack2">HYPERWEAVE II</button>
+        <button data-tab="textures">TEXTURE LAB</button>
         <button data-tab="feedback">FLOW / PRINT</button>
         <button data-tab="export">EXPORT</button>
       </nav>
       <div id="tabBody">
         <section data-page="designs">
           <div class="section-title"><strong>MATHEMATICAL FAMILIES</strong><span>THE SHAPES CHANGE, NOT JUST COLORS</span></div>
-          <label>Artwork engine<select id="renderMode"><option value="field">Original Biomineral Fields</option><option value="cathedral">Flying 4D Cathedral</option><option value="hybrid">HYBRID · Cathedral + Mathematical Field</option><option value="astral">ASTRAL · Four-Engine Morph Lab</option><option value="astral-field">ASTRAL + Biomineral Fields</option><option value="astral-cathedral">ASTRAL + 4D Cathedral</option></select></label>
+          <label>Artwork engine<select id="renderMode"><option value="field">Original Biomineral Fields</option><option value="cathedral">Flying 4D Cathedral</option><option value="hybrid">HYBRID · Cathedral + Mathematical Field</option><option value="astral">ASTRAL · Four-Engine Morph Lab</option><option value="astral-field">ASTRAL + Biomineral Fields</option><option value="astral-cathedral">ASTRAL + 4D Cathedral</option><option value="pack2">PACK II · Hyperbolic Girih / Caustics / Jacquard / BZ</option><option value="pack2-field">PACK II + Biomineral Fields</option><option value="pack2-cathedral">PACK II + 4D Cathedral</option><option value="texture">TEXTURES · Voronoi / Alien Velvet / Maximalist</option><option value="texture-field">TEXTURES + Biomineral Fields</option><option value="texture-cathedral">TEXTURES + 4D Cathedral</option></select></label>
           <label>Curated starting designs<select id="presetSelect"></select></label>
           <div id="presetInfo" class="hint"></div>
           <div class="buttons"><button id="loadOpalCathedral" class="action hot wide">✧ ENTER OPAL CATHEDRAL MEMORY GARDEN ✧</button></div>
@@ -122,7 +124,7 @@
           <label>Cathedral render mix<select id="renderModeCathedral">
             <option value="field">Original biomineral fields</option>
             <option value="cathedral">4D cathedral tunnel</option>
-            <option value="hybrid">Cathedral + field hybrid</option><option value="astral">ASTRAL · Four-Engine Morph Lab</option><option value="astral-field">ASTRAL + Biomineral Fields</option><option value="astral-cathedral">ASTRAL + 4D Cathedral</option>
+            <option value="hybrid">Cathedral + field hybrid</option><option value="astral">ASTRAL · Four-Engine Morph Lab</option><option value="astral-field">ASTRAL + Biomineral Fields</option><option value="astral-cathedral">ASTRAL + 4D Cathedral</option><option value="pack2">PACK II · Hyperbolic Girih / Caustics / Jacquard / BZ</option><option value="pack2-field">PACK II + Biomineral Fields</option><option value="pack2-cathedral">PACK II + 4D Cathedral</option><option value="texture">TEXTURES · Voronoi / Alien Velvet / Maximalist</option><option value="texture-field">TEXTURES + Biomineral Fields</option><option value="texture-cathedral">TEXTURES + 4D Cathedral</option>
           </select></label>
           <div id="cathedralSliders"></div>
           <div class="buttons">
@@ -151,6 +153,38 @@
           <div class="section-title">AUXILIARY GPU STIPPLE SWARM</div>
           <button id="astralSwarmToggle" class="chip selected">PHYLLOTAXIS / THOMAS SWARM ON</button>
           <p class="hint">The 2D point-sprite swarm follows its own phyllotaxis/attractor trajectories and may be mixed with the existing 3D Hopf glyphs. Your selected MATHEMAGICAL palette colors both.</p>
+        </section>
+        <section data-page="pack2" hidden>
+          <div class="section-title"><strong>HYPERWEAVE PACK II · ENGINES 05—08</strong><span>CONTINUOUS NON-EUCLIDEAN CROSS-MORPH</span></div>
+          <p class="hint">The companion shader and JS cartridge now work together: Poincaré Girih mirrorfolds, caustic Neovius gems, Jacquard punch-card threads, and branching BZ waves. These are procedural mathematical visualizations—not exact chemical or light-transport simulations.</p>
+          <label>Engine family<select id="pack2EngineSelect">
+            <option value="0">E5 · Poincaré hyperbolic Girih & lace</option>
+            <option value="1">E6 · Catacaustic photons & Neovius crystal</option>
+            <option value="2">E7 · Jacquard brocade & Memphis glitches</option>
+            <option value="3">E8 · BZ spirals & Lichtenberg mycelium</option>
+          </select></label>
+          <div class="buttons">
+            <button id="pack2Solo" class="action hot">SOLO PACK II</button>
+            <button id="pack2Field" class="action">PACK II + FIELD</button>
+            <button id="pack2Cathedral" class="action">PACK II + CATHEDRAL</button>
+          </div>
+          <div id="pack2Sliders"></div>
+          <p class="hint">All 168 named palettes work here. Layer opacity, engraving and optical-memory print effects are independent. FAST normals helps with older mobile GPUs.</p>
+        </section>
+        <section data-page="textures" hidden>
+          <div class="section-title"><strong>TEXTURE LAB · THREE NEW MATERIAL WORLDS</strong><span>ACTUAL ANIMATED PIXEL MATHEMATICS</span></div>
+          <label>Texture family<select id="textureFamilySelect">
+            <option value="0">GLITCH VORONOI · Animated cells / moiré / CRT</option>
+            <option value="1">XENO VELVET · Anisotropic fiber / microfuzz</option>
+            <option value="2">MAXIMALIST · Triple fBm domain warp</option>
+          </select></label>
+          <div class="buttons">
+            <button id="textureSolo" class="action hot">SOLO TEXTURE</button>
+            <button id="textureField" class="action">TEXTURE + FIELD</button>
+            <button id="textureCathedral" class="action">TEXTURE + CATHEDRAL</button>
+          </div>
+          <div id="texturesSliders"></div>
+          <p class="hint">Original algorithms remain separate, not mashed into the same noise. Texture blend and palette blend are adjustable. Use different families for velvet highlights, independently drifting Voronoi cells and recursive grungy folds.</p>
         </section>
         <section data-page="feedback" hidden>
           <div class="section-title"><strong>OPTICAL MEMORY / PRINT ENGINE</strong><span>APPLIES TO ALL ART FAMILIES</span></div>
