@@ -17,6 +17,8 @@ import pack2Fragment from './shaders/hyperweave-pack2.frag?raw';
 import textureVoronoiFragment from './shaders/texture-voronoi.frag?raw';
 import textureVelvetFragment from './shaders/texture-velvet.frag?raw';
 import textureMaximalistFragment from './shaders/texture-maximalist.frag?raw';
+import otherSpaceFragment from './shaders/otherspace-atlas.frag?raw';
+import { OTHERSPACE_MODES, OTHERSPACE_PALETTES, OTHERSPACE_DEFAULT } from './otherspace-atlas.js';
 
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
 
@@ -37,6 +39,15 @@ const defaultState={
   textureFamily:0,textureDensity:5,textureMoire:50,textureGlitch:0.8,textureSpeed:1,
   textureColorPhase:0,velvetSheen:32,velvetGlow:1.2,maxScale:3,maxDistortion:2.5,
   maxColorFreq:1.5,maxIterations:mobile?4:6,textureBlend:0.8,texturePaletteMix:1,
+  otherSpaceEnabled:false,otherSpaceSolo:false,otherSpaceMode:0,otherSpaceOpacity:0.25,
+  otherSpaceProjection:0,otherSpaceZoom:1.03,otherSpaceRotation:0,otherSpaceDrift:.30,
+  otherSpaceP:7,otherSpaceQ:3,otherSpaceDepth:mobile?20:36,
+  otherSpaceDensity:5,otherSpaceShape:1.5,otherSpaceTwist:1,otherSpacePhase:0,
+  otherSpaceWidth:1,otherSpaceRelief:1,otherSpaceExposure:2,
+  otherSpaceSaturation:1.1,otherSpaceColorPhase:0,otherSpaceColorScale:1,
+  otherSpaceGrain:.12,otherSpaceGlow:.6,otherSpaceSpeed:.65,
+  otherSpaceFill:true,otherSpaceLine:true,otherSpaceDetail:true,otherSpaceHalo:true,
+  otherSpaceEmboss:true,otherSpaceMotion:true,
   hybridMix:0.55,rot4D:1.15,cathedralApollo:1.38,chladniFreq:6.50,
   volumetricGlow:1.55,schlierenFreq:6.80,flySpeed:0.85,rayQuality:mobile?0:1,
   feedback:0,curlStrength:1.0,halftoneMix:0,halftoneScale:110,
@@ -49,6 +60,24 @@ const defaultState={
   layerBg:true,layerMesh:true,layerSwarm:true,paused:false,seed:761235
 };
 const state=copy(defaultState);
+// Source uniform names stay intact: this map only adapts their controls into Hyperbolica.
+const OTHERSPACE_STATE_KEYS={
+  mode:'otherSpaceMode',projection:'otherSpaceProjection',
+  zoom:'otherSpaceZoom',rotation:'otherSpaceRotation',drift:'otherSpaceDrift',
+  p:'otherSpaceP',q:'otherSpaceQ',depth:'otherSpaceDepth',
+  density:'otherSpaceDensity',shape:'otherSpaceShape',twist:'otherSpaceTwist',
+  phase:'otherSpacePhase',width:'otherSpaceWidth',relief:'otherSpaceRelief',
+  exposure:'otherSpaceExposure',saturation:'otherSpaceSaturation',
+  colorPhase:'otherSpaceColorPhase',colorScale:'otherSpaceColorScale',
+  grain:'otherSpaceGrain',glow:'otherSpaceGlow',speed:'otherSpaceSpeed',
+  fillOn:'otherSpaceFill',lineOn:'otherSpaceLine',detailOn:'otherSpaceDetail',
+  haloOn:'otherSpaceHalo',embossOn:'otherSpaceEmboss',motionOn:'otherSpaceMotion'
+};
+const OTHERSPACE_SOURCE_NAMES={
+  otherSpaceFill:'otherSpaceFillToggle',otherSpaceLine:'otherSpaceLineToggle',
+  otherSpaceDetail:'otherSpaceDetailToggle',otherSpaceHalo:'otherSpaceHaloToggle',
+  otherSpaceEmboss:'otherSpaceEmbossToggle',otherSpaceMotion:'otherSpaceMotionToggle'
+};
 const cameraMotion={
   theta:0.3,phi:0.22,targetTheta:0.3,targetPhi:0.22,
   radius:5.1,targetRadius:5.1,
@@ -67,6 +96,7 @@ let astralReady=true;
 let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
 let pack2Ready=true,textureReady=[true,true,true];
 let pack2Validated=false,textureValidated=[false,false,false];
+let otherSpaceScene,otherSpaceMaterial,otherSpaceReady=true,otherSpaceValidated=false;
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -152,6 +182,30 @@ const sliderDefs={
     ['textureBlend','TEXTURE LAYER OPACITY',0,1,0.05],
     ['texturePaletteMix','USE 168 PALETTE BANK · 0=SOURCE',0,1,0.05]
   ],
+  otherSpace:[
+    ['otherSpaceOpacity','BACKGROUND / MATHEMATICAL OVERLAY MIX',0,1,0.01],
+    ['otherSpaceP','POLYGON ORDER / WAVE SOURCES p',3,16,1],
+    ['otherSpaceQ','VERTEX ORDER / SOURCES q',3,8,1],
+    ['otherSpaceDepth','REFLECTION / INVERSION BUDGET',6,48,1],
+    ['otherSpaceDensity','HYPERBOLIC PATTERN FREQUENCY',0.8,14,0.05],
+    ['otherSpaceShape','MOTIF MODULATION / DEFORMATION',0,4,0.01],
+    ['otherSpaceTwist','MÖBIUS TWIST / PHASON COUPLING',0,6,0.01]
+  ],
+  otherSpaceAdvanced:[
+    ['otherSpaceZoom','DISK SCALE / ZOOM',0.4,2.8,0.01],
+    ['otherSpaceRotation','DISK ROTATION',-3.142,3.142,0.01],
+    ['otherSpaceDrift','MÖBIUS CENTER DRIFT',0,1,0.01],
+    ['otherSpacePhase','PATTERN PHASE',0,1,0.005],
+    ['otherSpaceWidth','CONTOUR THICKNESS',0.2,3,0.01],
+    ['otherSpaceRelief','PSEUDO-EMBOSS RELIEF',0,2.5,0.01],
+    ['otherSpaceGlow','FINE EDGES / HALO',0,1.5,0.01],
+    ['otherSpaceSpeed','MATH TIME / MOTION SPEED',0,2,0.01],
+    ['otherSpaceExposure','SURFACE EXPOSURE',0.2,4,0.01],
+    ['otherSpaceSaturation','COLOR SATURATION',0,2,0.01],
+    ['otherSpaceColorPhase','PALETTE OFFSET',0,1,0.005],
+    ['otherSpaceColorScale','PALETTE FREQUENCY',0.15,4,0.01],
+    ['otherSpaceGrain','RISO TEXTURE / INK GRAIN',0,1,0.01]
+  ],
   feedback:[
     ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
     ['curlStrength','ADVECTIVE FLOW / CURL',0,3,0.05],
@@ -191,6 +245,8 @@ function fillSelections(){
   FIELD_FAMILIES.forEach((name,i)=>chooseOption($('fieldMode'),i,name));
   MESH_FAMILIES.forEach((name,i)=>chooseOption($('meshMode'),i,name));
   PRESETS.forEach((p,i)=>chooseOption($('presetSelect'),i,p.name));
+  OTHERSPACE_MODES.forEach((p,i)=>chooseOption($('otherSpaceModeSelect'),i,p.name));
+  $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[0].note;
   const sources=[...new Set(paletteList.map(p=>p.source))];
   sources.sort((a,b)=>a.localeCompare(b));
   for(const source of sources)chooseOption($('paletteSource'),source,source.replaceAll('_',' ').toUpperCase());
@@ -220,6 +276,13 @@ function makeSliders(){
         state[key]=Number(slider.value);
         value.textContent=String(state[key]);
         if(key==='quality')resize();
+        if(key==='otherSpaceP'||key==='otherSpaceQ'){
+          validateOtherSpaceTiling();
+          for(const name of ['otherSpaceP','otherSpaceQ']){
+            if(sliderInputs[name])sliderInputs[name].value=state[name];
+            if($('out-'+name))$('out-'+name).textContent=String(state[name]);
+          }
+        }
         if(key==='swarmCount')setSpriteCount();
     if(key==='astralSwarmCount')setAstralCount();
     if(key==='astralMorph')$('astralEngineSelect').value=String(Math.round(state.astralMorph));
@@ -261,6 +324,15 @@ function makePaletteTexture(colors){
   tex.generateMipmaps=false;tex.needsUpdate=true;
   return tex;
 }
+function updateOtherSpaceColors(){
+  if(!otherSpaceMaterial)return;
+  const colors=currentPaletteColors();
+  if(colors.length<1)return;
+  for(let i=0;i<5;i++){
+    const index=Math.round(i*(colors.length-1)/4);
+    otherSpaceMaterial.uniforms['c'+i].value.set(colors[index]);
+  }
+}
 function updatePaletteTexture(rebuildEditors=true){
   const next=makePaletteTexture(currentPaletteColors());
   if(fieldMaterial)fieldMaterial.uniforms.u_palette.value=next;
@@ -272,6 +344,7 @@ function updatePaletteTexture(rebuildEditors=true){
   if(pack2Material)pack2Material.uniforms.u_palette.value=next;
   for(const m of textureMaterials)if(m)m.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
+  updateOtherSpaceColors();
   if(texture)texture.dispose();
   texture=next;
   if(rebuildEditors)renderPaletteEditors();
@@ -319,6 +392,12 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('otherSpaceModeSelect').value=String(state.otherSpaceMode);
+  $('otherSpaceProjectionSelect').value=String(state.otherSpaceProjection);
+  $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[state.otherSpaceMode]?.note||'Mathematical background';
+  for(const [key,id] of Object.entries(OTHERSPACE_SOURCE_NAMES)){
+    $(id).classList.toggle('selected',Boolean(state[key]));
+  }
   $('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
   $('textureFamilySelect').value=String(Math.round(state.textureFamily));
   $('astralEngineSelect').value=String(Math.round(state.astralMorph));
@@ -364,13 +443,80 @@ function ensureAddOn(mode,family=state.textureFamily){
   }
   return ok;
 }
+// Optional atlas is truly opt-in: original Opal startup never compiles or draws it.
+function ensureOtherSpace(){
+  if(otherSpaceValidated)return otherSpaceReady;
+  if(!renderer||!fieldCamera)return false;
+  const errors=[],previous=console.error;
+  console.error=(...args)=>{
+    const msg=args.map(x=>String(x)).join(' ');
+    if(msg.includes('Shader Error')||msg.includes('THREE.WebGLProgram'))errors.push(msg);
+    previous.apply(console,args);
+  };
+  try{renderer.compile(otherSpaceScene,fieldCamera);}
+  catch(e){errors.push(String(e));}
+  finally{console.error=previous;}
+  otherSpaceValidated=true;otherSpaceReady=errors.length===0;
+  if(!otherSpaceReady){
+    previous.call(console,'OTHERSPACE optional GPU pass unavailable',errors.join('\n').slice(0,2500));
+    notify('OTHERSPACE SHADER UNSUPPORTED · OTHER ART STILL WORKS');
+  }
+  return otherSpaceReady;
+}
+function validateOtherSpaceTiling(){
+  if(state.otherSpaceMode!==0)return;
+  if(1/state.otherSpaceP+1/state.otherSpaceQ<0.5)return;
+  for(let q=state.otherSpaceQ;q<=8;q++){
+    if(1/state.otherSpaceP+1/q<0.5){state.otherSpaceQ=q;return;}
+  }
+  state.otherSpaceP=7;state.otherSpaceQ=3;
+}
+function loadOtherSpaceStarter(index){
+  index=Math.round(clamp(index,0,OTHERSPACE_MODES.length-1));
+  if(!ensureOtherSpace()){syncControls();return;}
+  const recipe=OTHERSPACE_MODES[index];
+  const source={...OTHERSPACE_DEFAULT,...recipe.params,...recipe.effects,mode:index};
+  for(const [uniform,key] of Object.entries(OTHERSPACE_STATE_KEYS)){
+    if(Object.hasOwn(source,uniform))state[key]=source[uniform];
+  }
+  if(mobile)state.otherSpaceDepth=Math.min(24,state.otherSpaceDepth);
+  state.otherSpaceMode=index;validateOtherSpaceTiling();
+  state.otherSpaceEnabled=true;state.layerBg=true;
+  syncControls();clearTrails();notify('OTHERSPACE · '+recipe.name.toUpperCase());
+}
+function applyOtherSpaceSourceColors(){
+  const recipe=OTHERSPACE_MODES[state.otherSpaceMode];
+  const name=OTHERSPACE_PALETTES[recipe.palette]?.[0];
+  const original=paletteList.find(p=>p.source==='otherspace'&&p.name==='OTHERSPACE · '+name);
+  if(original){
+    pickPalette(original.id,true,false);
+    notify('ORIGINAL OTHERSPACE PALETTE · '+name);
+  }
+}
+function mutateOtherSpaceOnly(){
+  if(!ensureOtherSpace())return;
+  const rand=seededRng();
+  state.otherSpaceMode=Math.floor(rand()*OTHERSPACE_MODES.length);
+  state.otherSpaceP=3+Math.floor(rand()*14);
+  state.otherSpaceQ=3+Math.floor(rand()*6);
+  state.otherSpaceDensity=Number((0.8+rand()*13.2).toFixed(2));
+  state.otherSpaceShape=Number((rand()*4).toFixed(2));
+  state.otherSpaceTwist=Number((rand()*6).toFixed(2));
+  state.otherSpacePhase=Number(rand().toFixed(3));
+  state.otherSpaceWidth=Number((0.2+rand()*2.8).toFixed(2));
+  state.otherSpaceDepth=mobile?12+Math.floor(rand()*13):18+Math.floor(rand()*31);
+  validateOtherSpaceTiling();
+  state.otherSpaceEnabled=true;state.layerBg=true;
+  syncControls();clearTrails();notify('OTHERSPACE GEOMETRY MUTATED · KEEP THE OTHER LAYERS');
+}
+
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
   if(!ensureAddOn(preset.renderMode||'field',preset.textureFamily??state.textureFamily))return;
   const base=copy(defaultState);
   const keepLayers={};
-  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm']){
+  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm',...Object.keys(state).filter(x=>x.startsWith('otherSpace'))]){
     if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
   }
   Object.assign(state,base,preset,keepLayers);
@@ -529,6 +675,19 @@ function buildEffects(){
     mat.transparent=true;
     textureScenes.push(stage);textureMaterials.push(mat);
   }
+  const atlasUniforms={
+    resolution:vec(),center:vec(),viewportOrigin:vec(),time:{value:0},atlasOpacity:{value:0},
+    c0:{value:new THREE.Color('#000000')},c1:{value:new THREE.Color('#ffffff')},
+    c2:{value:new THREE.Color('#ffffff')},c3:{value:new THREE.Color('#ffffff')},
+    c4:{value:new THREE.Color('#ffffff')}
+  };
+  for(const [key,val] of Object.entries(OTHERSPACE_DEFAULT)){
+    atlasUniforms[key]={value:typeof val==='boolean'?Number(val):val};
+  }
+  [otherSpaceScene,otherSpaceMaterial]=pass(otherSpaceFragment,atlasUniforms);
+  otherSpaceMaterial.transparent=true;
+  otherSpaceMaterial.extensions.derivatives=true;
+  updateOtherSpaceColors();
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
@@ -642,6 +801,21 @@ function configureEffects(usingPost=true){
     u.u_distortion.value=state.maxDistortion;u.u_colorFreq.value=state.maxColorFreq;
     u.u_iterations.value=state.maxIterations;
   }
+  const o=otherSpaceMaterial.uniforms;
+  o.resolution.value.set(effectW,effectH);
+  o.viewportOrigin.value.set(0,0);
+  // Original Möbius centers follow gesture location but retain the proper disk map.
+  o.center.value.set(
+    clamp(p.pointerX*0.28+p.gestureX*0.06,-0.76,0.76),
+    clamp(p.pointerY*0.28+p.gestureY*0.06,-0.76,0.76)
+  );
+  const maxCenter=o.center.value.length();
+  if(maxCenter>0.85)o.center.value.multiplyScalar(0.85/maxCenter);
+  o.time.value=t;
+  o.atlasOpacity.value=state.otherSpaceSolo?1:state.otherSpaceOpacity;
+  for(const [uniform,property] of Object.entries(OTHERSPACE_STATE_KEYS)){
+    o[uniform].value=Number(state[property]);
+  }
   const f=feedbackMaterial.uniforms;
   f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
@@ -666,21 +840,24 @@ function renderBaseScene(){
   const isPack2=mode.startsWith('pack2');
   const isTexture=mode.startsWith('texture');
   if(state.layerBg){
-    if(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral')){
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral'))){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(mode==='field'||mode==='hybrid'||mode.endsWith('-field')){
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='field'||mode==='hybrid'||mode.endsWith('-field'))){
       fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
-    if(isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
-    if(isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
-    if(isTexture){
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
+    if(isTexture && !(state.otherSpaceEnabled&&state.otherSpaceSolo)){
       const family=Math.round(clamp(state.textureFamily,0,2));
       if(textureReady[family]&&textureScenes[family])renderer.render(textureScenes[family],fieldCamera);
     }
+    if(state.otherSpaceEnabled&&otherSpaceReady){
+      renderer.render(otherSpaceScene,fieldCamera);
+    }
   }
-  if(isAstral&&astralReady&&state.layerAstralSwarm&&astralPoints){
+  if(isAstral&&!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&astralReady&&state.layerAstralSwarm&&astralPoints){
     renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
@@ -1210,6 +1387,37 @@ function installUI(){
   $('textureSolo').addEventListener('click',()=>switchNewEngine('texture'));
   $('textureField').addEventListener('click',()=>switchNewEngine('texture-field'));
   $('textureCathedral').addEventListener('click',()=>switchNewEngine('texture-cathedral'));
+  $('otherSpaceModeSelect').addEventListener('change',e=>loadOtherSpaceStarter(Number(e.target.value)));
+  $('otherSpaceProjectionSelect').addEventListener('change',e=>{
+    state.otherSpaceProjection=Number(e.target.value);
+    if(!state.otherSpaceEnabled)state.otherSpaceEnabled=ensureOtherSpace();
+    syncControls();
+  });
+  $('otherSpaceBlend').addEventListener('click',()=>{
+    if(!ensureOtherSpace())return;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=false;state.layerBg=true;
+    if(state.otherSpaceOpacity<.06)state.otherSpaceOpacity=.24;
+    syncControls();notify('OTHERSPACE MATHEMATICS OVERLAY ENABLED');
+  });
+  $('otherSpaceSolo').addEventListener('click',()=>{
+    if(!ensureOtherSpace())return;
+    state.otherSpaceEnabled=true;state.otherSpaceSolo=true;
+    state.layerBg=true;state.layerMesh=false;state.layerSwarm=false;
+    syncControls();notify('SOLO OTHERSPACE · ORIGINAL HYPERBOLIC MATHEMATICS');
+  });
+  $('otherSpaceOff').addEventListener('click',()=>{
+    state.otherSpaceEnabled=false;state.otherSpaceSolo=false;syncControls();clearTrails();
+    notify('OTHERSPACE LAYER DISABLED');
+  });
+  $('otherSpaceColors').addEventListener('click',applyOtherSpaceSourceColors);
+  $('otherSpaceMutate').addEventListener('click',mutateOtherSpaceOnly);
+  for(const [key,id] of Object.entries(OTHERSPACE_SOURCE_NAMES)){
+    $(id).addEventListener('click',()=>{
+      if(!ensureOtherSpace())return;
+      state[key]=!state[key];state.otherSpaceEnabled=true;
+      syncControls();
+    });
+  }
   $('inkMode').addEventListener('change',e=>state.paletteInkMix=Number(e.target.value));
   $('clearTrails').addEventListener('click',()=>{clearTrails();notify('CURL HISTORY CLEARED');});
   $('trailOff').addEventListener('click',()=>{state.feedback=0;syncControls();clearTrails();notify('CURL TRAILS DISABLED');});

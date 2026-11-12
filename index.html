@@ -43,6 +43,7 @@
         <button data-tab="astral">ASTRAL LAB</button>
         <button data-tab="pack2">HYPERWEAVE II</button>
         <button data-tab="textures">TEXTURE LAB</button>
+        <button data-tab="otherspace">OTHERSPACE</button>
         <button data-tab="feedback">FLOW / PRINT</button>
         <button data-tab="export">EXPORT</button>
       </nav>
@@ -169,7 +170,7 @@
             <button id="pack2Cathedral" class="action">PACK II + CATHEDRAL</button>
           </div>
           <div id="pack2Sliders"></div>
-          <p class="hint">All 168 named palettes work here. Layer opacity, engraving and optical-memory print effects are independent. FAST normals helps with older mobile GPUs.</p>
+          <p class="hint">Every palette in the shared vault works here. Layer opacity, engraving and optical-memory print effects are independent. FAST normals helps with older mobile GPUs.</p>
         </section>
         <section data-page="textures" hidden>
           <div class="section-title"><strong>TEXTURE LAB · THREE NEW MATERIAL WORLDS</strong><span>ACTUAL ANIMATED PIXEL MATHEMATICS</span></div>
@@ -185,6 +186,38 @@
           </div>
           <div id="texturesSliders"></div>
           <p class="hint">Original algorithms remain separate, not mashed into the same noise. Texture blend and palette blend are adjustable. Use different families for velvet highlights, independently drifting Voronoi cells and recursive grungy folds.</p>
+        </section>
+        <section data-page="otherspace" hidden>
+          <div class="section-title"><strong>OTHERSPACE · HYPERBOLIC BACKGROUND ATLAS</strong><span>10 ORIGINAL MATH FAMILIES</span></div>
+          <p class="hint">Gentle, lovely, mathematically genuine Poincaré/Klein-disk artwork. An optional moving substrate beneath the 3D bodies, or a delicate overlay on ANY existing mathematical field. Disabled by default. The complete standalone original is preserved for a future dedicated app.</p>
+          <label>Mathematical starter<select id="otherSpaceModeSelect"></select></label>
+          <p class="hint" id="otherSpaceMathNote">Select a hyperbolic mathematical family.</p>
+          <div class="buttons">
+            <button id="otherSpaceBlend" class="action hot">BLEND BACKGROUND</button>
+            <button id="otherSpaceSolo" class="action">SOLO ATLAS</button>
+            <button id="otherSpaceOff" class="action">OFF</button>
+          </div>
+          <div class="buttons">
+            <button id="otherSpaceColors" class="action">ORIGINAL STARTER PALETTE</button>
+            <button id="otherSpaceMutate" class="action">MUTATE ATLAS ONLY</button>
+          </div>
+          <label>Projection geometry<select id="otherSpaceProjectionSelect">
+            <option value="0">Poincaré disk · angle-preserving</option>
+            <option value="1">Klein disk · straight-geodesic projection</option>
+          </select></label>
+          <div id="otherSpaceSliders"></div>
+          <div class="toggleRow">
+            <button id="otherSpaceFillToggle" class="chip selected">COLOR FILL</button>
+            <button id="otherSpaceLineToggle" class="chip selected">CONTOURS</button>
+            <button id="otherSpaceDetailToggle" class="chip selected">ORNAMENT</button>
+            <button id="otherSpaceHaloToggle" class="chip selected">HALO</button>
+          </div>
+          <div class="toggleRow">
+            <button id="otherSpaceEmbossToggle" class="chip selected">EMBOSS</button>
+            <button id="otherSpaceMotionToggle" class="chip selected">MOTION</button>
+          </div>
+          <details><summary class="section-title">FINE GEOMETRY / OPTICS CONTROLS</summary><div id="otherSpaceAdvancedSliders"></div></details>
+          <p class="hint">The shared palette vault—including the 12 original OTHERSPACE color schemes—works through the global palette editor. The source's Möbius geometry, ten distinct equations, and real time-dependent field motion are retained. The independent original also has recipes and a gallery for later.</p>
         </section>
         <section data-page="feedback" hidden>
           <div class="section-title"><strong>OPTICAL MEMORY / PRINT ENGINE</strong><span>APPLIES TO ALL ART FAMILIES</span></div>
