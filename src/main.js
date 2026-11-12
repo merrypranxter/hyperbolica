@@ -81,6 +81,7 @@ function chooseOption(select,value,label){
   const option=document.createElement('option');option.value=String(value);option.textContent=label;select.append(option);
 }
 function fillSelections(){
+  $('paletteCountLabel').textContent=paletteList.length+' MATHEMAGICAL PALETTES';
   FIELD_FAMILIES.forEach((name,i)=>chooseOption($('fieldMode'),i,name));
   MESH_FAMILIES.forEach((name,i)=>chooseOption($('meshMode'),i,name));
   PRESETS.forEach((p,i)=>chooseOption($('presetSelect'),i,p.name));
