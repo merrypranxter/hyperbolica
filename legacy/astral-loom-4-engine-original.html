@@ -1996,4 +1996,22 @@ export class AstralLoomController {
             }
 
             if (!state.paused) {
-                accumulatedTime += dt * state.speed;
+                accumulatedTime += dt * state.speed;            }
+
+            state.mouseX += (state.targetMouseX - state.mouseX) * 0.08;
+            state.mouseY += (state.targetMouseY - state.mouseY) * 0.08;
+
+            renderScene(accumulatedTime);
+            renderVectorScope(accumulatedTime);
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = () => {
+            initWebGL();
+            setupControls();
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>
