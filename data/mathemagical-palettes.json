@@ -2368,6 +2368,19 @@
         "#ff9900",
         "#6b00ff"
       ]
+    },
+    {
+      "id": "hyperweave-pack2/spectral-ring",
+      "name": "HyperWeave Pack II · Psychedelic Spectral Ring",
+      "source": "hyperweave_pack2",
+      "colors": [
+        "#ff0085",
+        "#00f5ff",
+        "#adff00",
+        "#ffe000",
+        "#ff4000",
+        "#9900ff"
+      ]
     }
   ]
 }
