@@ -438,6 +438,35 @@ function buildEffects(){
     uChromaLock:{value:0},uAstralOpacity:{value:1},uAstralQuality:{value:1}
   });
   astralMaterial.transparent=true;
+  [pack2Scene,pack2Material]=pass(pack2Fragment,{
+    uResolution:vec(),uTime:{value:0},uMouse:vec(),uZoom:{value:1},
+    uEngineMorph:{value:0},uSymmetry:{value:7},uDepth:{value:10},
+    uDetailFreq:{value:15},uTension:{value:2.4},uPhaseShift:{value:.3},
+    uAcidOverdrive:{value:2.85},uInkWeight:{value:1.15},
+    uEngravingMix:{value:.52},uDispersion:{value:.75},
+    u_palette:{value:texture},uPalettePhase:{value:0},
+    uChromaLock:{value:.75},uPackOpacity:{value:1},uPackQuality:{value:1}
+  });
+  pack2Material.transparent=true;
+  pack2Material.extensions.derivatives=true;
+  // Separate source-faithful shader programs keep each texture's mathematics unique.
+  const textureSources=[textureVoronoiFragment,textureVelvetFragment,textureMaximalistFragment];
+  textureScenes=[];textureMaterials=[];
+  for(let family=0;family<textureSources.length;family++){
+    const uniforms={
+      u_resolution:vec(),u_time:{value:0},
+      u_palette:{value:texture},uPalettePhase:{value:0},
+      uPaletteMix:{value:1},u_layerOpacity:{value:1},
+      u_density:{value:5},u_moire:{value:50},u_glitch:{value:.8},
+      u_speed:{value:1},u_colorPhase:{value:0},
+      u_sheen:{value:32},u_glow:{value:1.2},u_phase:{value:0},
+      u_scale:{value:3},u_distortion:{value:2.5},
+      u_colorFreq:{value:1.5},u_iterations:{value:6}
+    };
+    const [stage,mat]=pass(textureSources[family],uniforms);
+    mat.transparent=true;
+    textureScenes.push(stage);textureMaterials.push(mat);
+  }
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
@@ -523,6 +552,34 @@ function configureEffects(usingPost=true){
     g.uDpr.value=renderer.getPixelRatio();g.uPalettePhase.value=state.palettePhase;
     g.uAcid.value=state.astralAcid;
   }
+  const w=pack2Material.uniforms;
+  w.uResolution.value.set(effectW,effectH);
+  w.uTime.value=t*state.pack2FlowSpeed;
+  w.uMouse.value.set(p.pointerX,p.pointerY);
+  w.uZoom.value=5.1/p.radius;
+  w.uEngineMorph.value=state.pack2Morph;
+  w.uSymmetry.value=state.symmetry;
+  w.uDepth.value=state.pack2Depth;w.uDetailFreq.value=state.pack2DetailFreq;
+  w.uTension.value=state.pack2Tension;w.uPhaseShift.value=state.pack2PhaseShift;
+  w.uAcidOverdrive.value=state.pack2Acid;w.uInkWeight.value=state.pack2InkWeight;
+  w.uEngravingMix.value=state.pack2Engraving;w.uDispersion.value=state.pack2Dispersion;
+  w.uPalettePhase.value=state.palettePhase;w.uChromaLock.value=state.pack2ChromaLock;
+  w.uPackQuality.value=state.pack2Quality;
+  w.uPackOpacity.value=state.renderMode==='pack2'?1:state.pack2Opacity;
+  for(let family=0;family<textureMaterials.length;family++){
+    const u=textureMaterials[family].uniforms;
+    u.u_resolution.value.set(effectW,effectH);
+    u.u_time.value=t;u.uPalettePhase.value=state.palettePhase;
+    u.uPaletteMix.value=state.texturePaletteMix;
+    u.u_layerOpacity.value=state.renderMode==='texture'?1:state.textureBlend;
+    u.u_density.value=state.textureDensity;
+    u.u_moire.value=state.textureMoire;u.u_glitch.value=state.textureGlitch;
+    u.u_speed.value=state.textureSpeed;u.u_colorPhase.value=state.textureColorPhase;
+    u.u_sheen.value=state.velvetSheen;u.u_glow.value=state.velvetGlow;
+    u.u_phase.value=state.textureColorPhase;u.u_scale.value=state.maxScale;
+    u.u_distortion.value=state.maxDistortion;u.u_colorFreq.value=state.maxColorFreq;
+    u.u_iterations.value=state.maxIterations;
+  }
   const f=feedbackMaterial.uniforms;
   f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
@@ -543,20 +600,25 @@ function configureEffects(usingPost=true){
 function renderBaseScene(){
   renderer.clear(true,true,true);
   const mode=state.renderMode;
-  const isAstral=mode==='astral'||mode==='astral-field'||mode==='astral-cathedral';
+  const isAstral=mode.startsWith('astral');
+  const isPack2=mode.startsWith('pack2');
+  const isTexture=mode.startsWith('texture');
   if(state.layerBg){
-    if(mode==='cathedral'||mode==='hybrid'||mode==='astral-cathedral'){
+    if(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral')){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(mode==='field'||mode==='hybrid'||mode==='astral-field'){
+    if(mode==='field'||mode==='hybrid'||mode.endsWith('-field')){
       fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
-    if(isAstral){
-      renderer.render(astralScene,fieldCamera);
+    if(isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
+    if(isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
+    if(isTexture){
+      const family=Math.round(clamp(state.textureFamily,0,2));
+      if(textureReady[family]&&textureScenes[family])renderer.render(textureScenes[family],fieldCamera);
     }
   }
-  if(isAstral&&state.layerAstralSwarm&&astralPoints){
+  if(isAstral&&astralReady&&state.layerAstralSwarm&&astralPoints){
     renderer.render(astralSwarmScene,fieldCamera);
   }
   renderer.clearDepth();
