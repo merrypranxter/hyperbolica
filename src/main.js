@@ -10,6 +10,9 @@ import glyphFragment from './shaders/glyph.frag?raw';
 import cathedralFragment from './shaders/cathedral.frag?raw';
 import feedbackFragment from './shaders/curl-feedback.frag?raw';
 import printFragment from './shaders/halftone.frag?raw';
+import astralFragment from './shaders/astral-field.frag?raw';
+import astralSwarmVertex from './shaders/astral-swarm.vert?raw';
+import astralSwarmFragment from './shaders/astral-swarm.frag?raw';
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
 
 const $ = id => document.getElementById(id);
@@ -19,6 +22,9 @@ const copy=x=>JSON.parse(JSON.stringify(x));
 const paletteList=paletteLibrary.palettes;
 const defaultState={
   fieldMode:0,meshMode:0,paletteId:'itsamoire/acid',renderMode:'field',
+  astralMorph:0,astralOctaves:mobile?4:6,astralTwist:1.45,astralDensity:10.5,
+  astralGloss:1.65,astralAcid:2.1,astralContour:0.85,astralMix:0.6,astralQuality:mobile?0:1,
+  astralSwarmStrength:0.8,astralSwarmCount:mobile?2200:8000,layerAstralSwarm:true,translucency:0,
   hybridMix:0.55,rot4D:1.15,cathedralApollo:1.38,chladniFreq:6.50,
   volumetricGlow:1.55,schlierenFreq:6.80,flySpeed:0.85,rayQuality:mobile?0:1,
   feedback:0,curlStrength:1.0,halftoneMix:0,halftoneScale:110,
@@ -34,7 +40,7 @@ const cameraMotion={
   theta:0.3,phi:0.22,targetTheta:0.3,targetPhi:0.22,
   radius:5.1,targetRadius:5.1,
   pointerX:0,pointerY:0,targetX:0,targetY:0,
-  touch:0,targetTouch:0
+  touch:0,targetTouch:0,dragVX:0,dragVY:0
 };
 const pointers=new Map();
 let lastPinch=0;
@@ -42,12 +48,14 @@ let renderer,scene,camera,fieldScene,fieldCamera,fieldMesh,mesh,swarm;
 let fieldMaterial,meshMaterial,swarmMaterial,texture;
 let cathedralScene,feedbackScene,printScene;
 let cathedralMaterial,feedbackMaterial,printMaterial;
+let astralScene,astralMaterial,astralSwarmScene,astralPoints,astralSwarmMaterial;
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
 let editedColors=null,selectedPreset=0;
 let t=0,lastStamp=performance.now(),frames=0,lastFpsStamp=lastStamp,fps=0;
 let lastToastTimer=0,recorder=null,recordTimer=0,discardRecording=false;
 const MAX_SPRITES=14000;
+const MAX_ASTRAL_SPRITES=12000;
 const statusEl=$('status');
 const sliderDefs={
   structure:[
@@ -64,7 +72,8 @@ const sliderDefs={
     ['saturation','CHROMATIC OVERDRIVE',0.2,3.8,0.05],
     ['moire','SCREEN / MOIRÉ MIX',0,4,0.05],
     ['glitch','VHS / CHROMATIC TEAR',0,1.5,0.01],
-    ['porosity','3D SHELL OPENINGS',0,1.5,0.05]
+    ['porosity','3D SHELL OPENINGS',0,1.5,0.05],
+    ['translucency','WET OPAL SILICA TRANSPARENCY',0,0.9,0.05]
   ],
   palette:[['palettePhase','PALETTE PHASE POSITION',0,1,0.01]],
   cathedral:[
@@ -76,6 +85,19 @@ const sliderDefs={
     ['schlierenFreq','ACTIVE NEMATIC SCHLIEREN',1,15,0.2],
     ['flySpeed','CATHEDRAL FORWARD / BACK FLIGHT',-2,3,0.05],
     ['rayQuality','RAY STEPS · 0=FAST, 2=FULL',0,2,1]
+  ],
+  astral:[
+    ['astralMorph','ENGINE CROSS-MORPH · E1 → E4',0,3,0.01],
+    ['astralOctaves','SHEET / BANDPASS OCTAVES',2,10,1],
+    ['astralTwist','COMPLEX-SHEET / MAGNETIC TWIST',0,5,0.05],
+    ['astralDensity','MICROPORE / LATTICE DENSITY',1,30,0.5],
+    ['astralGloss','CHROMATIC WET MICRO-GLOSS',0,3,0.05],
+    ['astralAcid','ASTRAL NEON OVERDRIVE',0.5,3.5,0.05],
+    ['astralContour','OBSIDIAN INK CONTOUR',0.1,2,0.05],
+    ['astralMix','ASTRAL OVERLAY STRENGTH',0,1,0.05],
+    ['astralQuality','ASTRAL NORMAL DETAIL · 0=FAST',0,1,1],
+    ['astralSwarmStrength','PHYLLOTAXIS SWARM STRENGTH',0,1.5,0.05],
+    ['astralSwarmCount','ACTIVE 2D GLYPHS',0,12000,200]
   ],
   feedback:[
     ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
@@ -145,6 +167,7 @@ function makeSliders(){
         value.textContent=String(state[key]);
         if(key==='quality')resize();
         if(key==='swarmCount')setSpriteCount();
+    if(key==='astralSwarmCount')setAstralCount();
     if(key==='feedback')clearTrails();
       });
     }
@@ -180,6 +203,8 @@ function updatePaletteTexture(rebuildEditors=true){
   if(meshMaterial)meshMaterial.uniforms.u_palette.value=next;
   if(swarmMaterial)swarmMaterial.uniforms.u_palette.value=next;
   if(cathedralMaterial)cathedralMaterial.uniforms.uPalette.value=next;
+  if(astralMaterial)astralMaterial.uniforms.u_palette.value=next;
+  if(astralSwarmMaterial)astralSwarmMaterial.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
   if(texture)texture.dispose();
   texture=next;
@@ -228,6 +253,9 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('astralEngineSelect').value=String(Math.round(state.astralMorph));
+  $('astralSwarmToggle').classList.toggle('selected',state.layerAstralSwarm);
+  $('astralSwarmToggle').textContent=state.layerAstralSwarm?'PHYLLOTAXIS / THOMAS SWARM ON':'PHYLLOTAXIS / THOMAS SWARM OFF';
   for(const [key,slider] of Object.entries(sliderInputs)){
     slider.value=state[key];$('out-'+key).textContent=String(state[key]);
   }
@@ -235,6 +263,7 @@ function syncControls(){
   if(mesh)mesh.visible=state.layerMesh;
   if(swarm)swarm.visible=state.layerSwarm;
   setSpriteCount();
+  setAstralCount();
 }
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
