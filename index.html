@@ -39,11 +39,14 @@
         <button data-tab="optics">OPTICS</button>
         <button data-tab="palette">PALETTES</button>
         <button data-tab="motion">MOTION</button>
+        <button data-tab="cathedral">CATHEDRAL</button>
+        <button data-tab="feedback">FLOW / PRINT</button>
         <button data-tab="export">EXPORT</button>
       </nav>
       <div id="tabBody">
         <section data-page="designs">
           <div class="section-title"><strong>MATHEMATICAL FAMILIES</strong><span>THE SHAPES CHANGE, NOT JUST COLORS</span></div>
+          <label>Artwork engine<select id="renderMode"><option value="field">Original Biomineral Fields</option><option value="cathedral">Flying 4D Cathedral</option><option value="hybrid">HYBRID · Cathedral + Mathematical Field</option></select></label>
           <label>Curated starting designs<select id="presetSelect"></select></label>
           <div id="presetInfo" class="hint"></div>
           <div class="buttons">
@@ -110,6 +113,37 @@
             <button id="freezeField" class="action">FREEZE TIME</button>
           </div>
           <p class="hint">Damped and velocity-aware. 3D orbit, moving complex-plane pole, and induced geometric torque are independent but coordinated.</p>
+        </section>
+        <section data-page="cathedral" hidden>
+          <div class="section-title"><strong>4D NEMATIC CATHEDRAL</strong><span>STANDALONE, HYBRID, OR UNDER A 3D BODY</span></div>
+          <p class="hint">Real 4D stereographic folds, a navigable raymarched tunnel, liquid-crystal disclination fields, and cross-polarized Schlieren optics. Drag to steer the flight and orbit any visible 3D bodies.</p>
+          <label>Cathedral render mix<select id="renderModeCathedral">
+            <option value="field">Original biomineral fields</option>
+            <option value="cathedral">4D cathedral tunnel</option>
+            <option value="hybrid">Cathedral + field hybrid</option>
+          </select></label>
+          <div id="cathedralSliders"></div>
+          <div class="buttons">
+            <button class="action hot" id="soloCathedral">SOLO CATHEDRAL</button>
+            <button class="action" id="cathedralSwarm">CATHEDRAL + SWARM</button>
+            <button class="action" id="cathedralEverything">ALL LAYERS</button>
+          </div>
+          <p class="hint">For older iPhone GPUs, reduce Ray Depth, then lower Render Pixel Ratio in Motion. The app never needs a paid GPU server.</p>
+        </section>
+        <section data-page="feedback" hidden>
+          <div class="section-title"><strong>OPTICAL MEMORY / PRINT ENGINE</strong><span>APPLIES TO ALL ART FAMILIES</span></div>
+          <p class="hint">Real ping-pong GPU framebuffers let prior frames physically advect through a divergence-free curl field, while 15°, 75°, 0°, and 45° dot plates produce live print interference.</p>
+          <div id="feedbackSliders"></div>
+          <label>Screen-print ink source<select id="inkMode">
+            <option value="1">Use my selected color palette</option>
+            <option value="0">Original Cyan / Magenta / Lime / Violet</option>
+          </select></label>
+          <div class="buttons">
+            <button id="clearTrails" class="action hot">CLEAR ALL TRAILS</button>
+            <button id="trailOff" class="action">TRAILS OFF</button>
+            <button id="printOff" class="action">PRINT OFF</button>
+          </div>
+          <p class="hint">Zero trail/print strength bypasses the corresponding effect. Clear memory after major jumps if you don't want previous designs ghosting through your new one.</p>
         </section>
         <section data-page="export" hidden>
           <div class="section-title">ARTWORK / DNA / ANIMATION EXPORT</div>
