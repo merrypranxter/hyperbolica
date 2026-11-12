@@ -992,6 +992,7 @@ function installUI(){
   $('mutateStructure').addEventListener('click',()=>mutate(true));
   $('surprise').addEventListener('click',()=>{mutate(false);shufflePalette();});
   $('applyPreset').addEventListener('click',()=>applyPreset(Number($('presetSelect').value)));
+  $('playOpal').addEventListener('click',()=>applyPreset(32));
   $('presetSelect').addEventListener('change',e=>{$('presetInfo').textContent=PRESETS[Number(e.target.value)].detail;});
   const wireLayer=(id,key)=>{
     $(id).addEventListener('click',()=>{state[key]=!state[key];syncControls();notify(key.toUpperCase()+': '+(state[key]?'ON':'OFF'));});
@@ -1030,7 +1031,7 @@ function installUI(){
 }
 function start(){
   try{
-    installUI();initRenderer();applyPreset(0);
+    installUI();initRenderer();applyPreset(32);
     requestAnimationFrame(animate);
   }catch(e){console.error('Hyperbolica startup failure',e);setFatal(e);}
 }
