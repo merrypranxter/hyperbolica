@@ -44,6 +44,11 @@ precision highp float;
         }
 
         void main() {
+            // Pure curl-trail mode must not change a user's selected colors.
+            if (uHalftoneMix < 0.005 && uDispersion < 0.005 && abs(uAcidOverdrive - 1.0) < 0.005) {
+                gl_FragColor = texture2D(uAccumulatedTex, vUv);
+                return;
+            }
             vec2 uv = vUv;
             vec2 metricUV = uv - 0.5;
             metricUV.x *= uResolution.x / max(uResolution.y, 1.0);
