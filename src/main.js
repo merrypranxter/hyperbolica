@@ -716,6 +716,7 @@ function applyPreset(index){
     keepLayers.otherSpaceSolo=false;
   }
   Object.assign(state,base,preset,keepLayers);
+  if(mobile&&state.acidEnabled)state.acidDepth=Math.min(24,state.acidDepth);
   // User's layer toggle settings are intentionally not reset by presets.
   delete state.name;delete state.detail;delete state.palette;
   state.paletteId=preset.palette;
@@ -1482,6 +1483,8 @@ function loadDNA(dna){
   state.quality=clamp(state.quality,.8,2.5);
   if(!paletteList.some(p=>p.id===state.paletteId))state.paletteId=defaultState.paletteId;
   editedColors=(Array.isArray(dna.editedColors)&&dna.editedColors.length===getPalette().colors.length&&dna.editedColors.every(c=>/^#[0-9a-fA-F]{6}$/.test(c)))?[...dna.editedColors]:null;
+  if(mobile&&state.acidEnabled)state.acidDepth=Math.min(24,state.acidDepth);
+  if(state.acidEnabled&&!ensureAcid()){state.acidEnabled=false;state.acidSolo=false;}
   pickPalette(state.paletteId,false);syncControls();resize();notify('ART DNA LOADED');
 }
 function availableFormat(){
@@ -1626,7 +1629,7 @@ function installUI(){
   $('acidBlend').addEventListener('click',()=>{
     if(!ensureAcid())return;
     state.acidEnabled=true;state.acidSolo=false;state.otherSpaceSolo=false;state.layerBg=true;
-    if(state.acidOpacity<.06)state.acidOpacity=.28;
+    if(state.acidOpacity<.06||state.acidOpacity>.98)state.acidOpacity=.28;
     syncControls();notify('ACID MATHEMATICS BLENDED INTO ART');
   });
   $('acidSolo').addEventListener('click',()=>{
