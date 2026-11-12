@@ -4,6 +4,7 @@ varying vec2 vParam;
 varying float vStress,vDisplacement;
 uniform float u_time,u_symmetry,u_iridescence,u_saturation,u_material,u_porosity,u_moire,u_phase;
 uniform sampler2D u_palette;
+uniform float u_translucency;
 #define TAU 6.283185307179586
 vec3 pal(float t){return texture2D(u_palette,vec2(fract(t+u_phase),0.5)).rgb;}
 void main(){
@@ -46,5 +47,8 @@ void main(){
   float luma=dot(color,vec3(0.299,0.587,0.114));
   color=mix(vec3(luma),color,u_saturation);
   color=vec3(1.0)-exp(-max(color,vec3(0.0))*(0.9+u_saturation*0.14));
-  gl_FragColor=vec4(color,1.0);
+  // Angle-dependent shell transmission: let the cathedral remain visible through translucent silica.
+  float transmission=clamp(u_translucency,0.0,0.9);
+  float alpha=clamp(1.0-transmission*(0.33+0.67*(1.0-fres)),0.12,1.0);
+  gl_FragColor=vec4(color,alpha);
 }
