@@ -488,6 +488,145 @@ function ensureAddOn(mode,family=state.textureFamily){
   return ok;
 }
 // Optional atlas is truly opt-in: original Opal startup never compiles or draws it.
+// Separate opt-in shader validation: an unsupported source cannot blank existing art.
+function ensureAcid(){
+  if(acidValidated)return acidReady;
+  if(!renderer||!fieldCamera)return false;
+  const errors=[],previous=console.error;
+  console.error=(...args)=>{
+    const message=args.map(x=>String(x)).join(' ');
+    if(message.includes('Shader Error')||message.includes('THREE.WebGLProgram'))errors.push(message);
+    previous.apply(console,args);
+  };
+  try{renderer.compile(acidScene,fieldCamera);}
+  catch(e){errors.push(String(e));}
+  finally{console.error=previous;}
+  acidValidated=true;acidReady=errors.length===0;
+  if(!acidReady){
+    previous.call(console,'Optional OTHERSPACE II GPU shader unsupported:',errors.join('\n').slice(0,2200));
+    notify('ACID ATLAS SHADER FAILED · ORIGINAL ART STILL WORKS');
+  }
+  return acidReady;
+}
+function validateAcidChainmail(){
+  if(state.acidMode!==3)return;
+  if(1/state.acidP+1/state.acidQ<.5)return;
+  for(let q=state.acidQ;q<=8;q++){
+    if(1/state.acidP+1/q<.5){state.acidQ=q;return;}
+  }
+  state.acidP=7;state.acidQ=3;
+}
+function updateAcidSliderLabels(){
+  const labels=ACID_MODES[state.acidMode]?.labels||{};
+  for(const name of ['p','q','depth','density','shape','twist','phase']){
+    const key=ACID_STATE_KEYS[name],slider=sliderInputs[key];
+    if(!slider)continue;
+    const active=name==='phase'||Object.hasOwn(labels,name);
+    const root=slider.closest('.sliderField');
+    if(root){
+      root.style.opacity=active?'1':'.43';
+      root.querySelector('.head span').textContent=labels[name]||ACID_RANGES[name][0];
+    }
+    slider.disabled=!active;
+  }
+}
+function loadAcidStarter(index,applyColors=true){
+  index=Math.round(clamp(index,0,ACID_MODES.length-1));
+  if(!ensureAcid()){syncControls();return false;}
+  const starter=ACID_MODES[index];
+  const source={...ACID_DEFAULT,...starter.params,...starter.fx,mode:index};
+  for(const [uniform,key] of Object.entries(ACID_STATE_KEYS)){
+    if(Object.hasOwn(source,uniform))state[key]=source[uniform];
+  }
+  if(mobile)state.acidDepth=Math.min(24,state.acidDepth);
+  state.acidMode=index;
+  validateAcidChainmail();
+  state.acidEnabled=true;
+  state.layerBg=true;
+  state.otherSpaceSolo=false;
+  if(applyColors)applyAcidStarterPalette();
+  syncControls();clearTrails();
+  notify('OTHERSPACE II · '+starter.name.toUpperCase());
+  return true;
+}
+function applyAcidStarterPalette(){
+  const mode=ACID_MODES[state.acidMode];
+  const label=ACID_PALETTES[mode.palette]?.[0];
+  const match=paletteList.find(p=>p.source==='otherspace-ii'&&p.name==='OTHERSPACE II · '+label);
+  if(match)pickPalette(match.id);
+}
+function mutateAcid(){
+  if(!ensureAcid())return;
+  const rand=seededRng();
+  state.acidP=3+Math.floor(rand()*14);
+  state.acidQ=3+Math.floor(rand()*6);
+  for(const name of ['density','shape','twist','phase','width','relief','drift']){
+    const spec=ACID_RANGES[name];
+    const step=spec[3],val=spec[1]+rand()*(spec[2]-spec[1]);
+    state[ACID_STATE_KEYS[name]]=Number((Math.round(val/step)*step).toFixed(3));
+  }
+  state.acidDepth=mobile?12+Math.floor(rand()*13):28+Math.floor(rand()*21);
+  validateAcidChainmail();
+  state.acidEnabled=true;
+  state.otherSpaceSolo=false;
+  state.layerBg=true;
+  syncControls();clearTrails();
+  notify('ACID ATLAS STRUCTURE MUTATED · ORIGINAL MODE KEPT');
+}
+function acidRollFx(){
+  if(!ensureAcid())return;
+  const rand=seededRng();
+  for(const key of ['kaleidoOn','prismOn','halftoneOn','glitterOn',
+    'neonOn','embossOn','scanOn','spectrumOn','hardPalette']){
+    state[ACID_STATE_KEYS[key]]=rand()<.38;
+  }
+  state.acidKal=2+Math.floor(rand()*11);
+  state.acidPrism=.4+rand()*2;
+  state.acidDots=rand();
+  state.acidEnabled=true;
+  state.otherSpaceSolo=false;
+  state.layerBg=true;
+  syncControls();notify('ACID ATLAS FX DICE ROLLED');
+}
+function randomAcidPalette(){
+  if(!ensureAcid())return;
+  const rand=seededRng();
+  const hsl=(h,s,l)=>{
+    const a=s*Math.min(l,1-l);
+    const channel=n=>{
+      const k=(n+h*12)%12,c=l-a*Math.max(-1,Math.min(k-3,9-k,1));
+      return Math.round(c*255).toString(16).padStart(2,'0');
+    };
+    return '#'+channel(0)+channel(8)+channel(4);
+  };
+  const h0=rand(),step=.13+rand()*.2;
+  const colors=[hsl(h0,.9,.08+rand()*.06)];
+  for(let i=1;i<5;i++)colors.push(hsl((h0+.35+i*step)%1,1,.5+rand()*.12));
+  const original=paletteList.find(p=>p.source==='otherspace-ii'&&p.name==='OTHERSPACE II · ACID SHERBET');
+  if(original)pickPalette(original.id);
+  editedColors=colors;updatePaletteTexture();notify('FRESH FIVE-STOP ACID PALETTE GENERATED');
+}
+function installAcidToggles(){
+  const host=$('acidToggles');
+  host.replaceChildren();
+  for(const [key,[label]] of Object.entries(ACID_CHECKS)){
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='chip';
+    button.dataset.acidToggle=key;
+    button.textContent=label.toUpperCase();
+    button.setAttribute('aria-label','Acid Atlas '+label);
+    button.addEventListener('click',()=>{
+      if(!ensureAcid())return;
+      const stateKey=ACID_STATE_KEYS[key];
+      state[stateKey]=!state[stateKey];
+      state.acidEnabled=true;state.layerBg=true;state.otherSpaceSolo=false;
+      syncControls();
+    });
+    host.append(button);
+  }
+}
+
 function ensureOtherSpace(){
   if(otherSpaceValidated)return otherSpaceReady;
   if(!renderer||!fieldCamera)return false;
