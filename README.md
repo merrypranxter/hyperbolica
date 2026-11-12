@@ -11,7 +11,7 @@ For development: `npm install && npm run dev`, then open the printed local addre
 - Parametric 3D manifold geometries with live displacement
 - GPU instanced orbit glyphs, plus solo/mixed render layers
 - Damped pointer/touch drag: camera orbit, interactive field warp and mathematical phase torque
-- **168 source-faithful MATHEMAGICAL! palettes** stored locally
+- **180 source-faithful MATHEMAGICAL! palettes** stored locally
 - Seeded mutations, selective mutations, variation gallery, adjustable palettes, PNG captures
 - Mobile quality controls, touch-friendly pinned/tabbed HUD, context-loss status
 
@@ -47,7 +47,7 @@ The default startup design is now **32 · OPAL CATHEDRAL MEMORY GARDEN**. It com
 
 New Opal controls in **Optics**: shell opacity, pearlescent transmission, optical thickness, and Fresnel edge glow. **Flow / Print** adds gesture-driven curl impulse strength. Dragging the art creates directional flow injection in the history buffer around the fingertip, while ordinary camera and field gestures still work. The hero opens in orbital drag mode, with Sculpt mode available in **Motion**.
 
-Press **ENTER OPAL CATHEDRAL MEMORY GARDEN** on the Designs tab to return to this scene from any other artwork. Its initial palette is the existing `itsamoire/opal`, but all 168 local palette IDs and per-stop editing remain available. **None of these modes uses a paid API or launches a Netlify deployment.**
+Press **ENTER OPAL CATHEDRAL MEMORY GARDEN** on the Designs tab to return to this scene from any other artwork. Its initial palette is the existing `itsamoire/opal`, but all 180 local palette IDs and per-stop editing remain available. **None of these modes uses a paid API or launches a Netlify deployment.**
 
 The translucent material is a physically inspired alpha/Fresnel/thin-film optical approximation, **not real glass transmission or ray-traced refraction**. GPU shader compilation, particularly WebGL Safari performance, must still be validated on a live device; JavaScript syntax and static code/controls tests alone do not certify it.
 
@@ -59,7 +59,7 @@ Alongside the pre-existing Opal Cathedral Memory Garden on main, the artist's co
 - **Four distinct animated mathematical shader families**, fully selectable and continuously cross-morphable: complex-sheet / Calabi–Yau-inspired folds, Turing–Physarum-style wavelet morphology, truncated alternating eta/zeta-inspired cymatic and crop-circle harmonic geometry, and Hopf/ferrofoam-inspired flux filaments. These are **procedural visual approximations**, not a true 6D geometry solver, actual reaction-diffusion PDE, or physical MHD simulation.
 - **Three new render modes**: Astral solo, Astral over Biomineral, Astral over the 4D flying Cathedral. Existing independent 3D geometry and glyph swarm remain available.
 - **Separate GPU point swarm**, up to 12,000 source-derived phyllotaxis/Thomas trajectories, with independent toggle/strength/count. Coexists with the existing 14k-capable 3D Hopf swarm.
-- **Five additional original Astral Loom color banks**, transferred from its original five RGB stop lists. MATHEMAGICAL palette count is now **168**, and the original palette dropdown and color-stop editor still control every engine and swarm.
+- **Five additional original Astral Loom color banks**, transferred from its original five RGB stop lists. MATHEMAGICAL palette count is now **180**, and the original palette dropdown and color-stop editor still control every engine and swarm.
 - **Signature startup artwork preserved from main**: Preset 32, *Opal Cathedral Memory Garden*, retains its 4D cathedral, pearlescent shell transmission controls, and directional gesture-driven curl advection. Astral is an additional choice and can also be blended with the cathedral through the new render modes.
 - **Other new starter designs**: 8 Astral source-inspired modes and *Opal Ferrofoam Cathedral*, bringing the shared bank to **57 curated presets**, including the later Pack II and Texture Lab additions.
 - **Mobile controls**: lower initial ray depth and optional cheaper Astral normal evaluation; capped framebuffer resolution, independently adjustable sprite counts and quality.
@@ -85,3 +85,8 @@ Both tabs support solo, blend-over-original-biomineral-field, and blend-over-fly
 **Compatibility:** Pack II and each Texture Lab shader are lazy-compiled on first selection; if a device cannot compile one, the base Opal/Cathedral/Astral app stays available. On older iPhones, lower Pack II normal quality and texture fractal octaves before increasing detail. All engines are procedural optics-inspired approximations, not physical caustic ray-tracers, actual hyperbolic 3D manifolds, PDE chemical simulations or fabricated scientific claims. Static source/JS/control checks have passed; real browser WebGL validation and exports still need a device test.
 
 No Netlify deployment was performed.
+
+
+## OPTIONAL OTHERSPACE HYPERBOLIC BACKGROUND ATLAS
+
+The artist-supplied self-contained OTHERSPACE source is preserved unchanged in `legacy/otherspace-hyperbolic-starter-atlas-original.html` and independently earmarked for a **later, simpler standalone project** (`docs/OTHERSPACE-future-standalone.md`). Its ten real hyperbolic mathematical families (including geodesic tilings, Busemann horocycles, hyperbolic Voronoi, nodal curves, spiral waves and inversion foam) are exposed as an **optional alpha-overlaid background** behind 3D structure or over moving fields with a dedicated OTHERSPACE tab. The standalone source is still playable independently. Its twelve original five-stop palettes are now usable by all app engines (**180 total**). Source-specific recipe controls include Poincaré vs Klein projection, p/q group orders, reflection budget, color/line/detail/halo layer isolation, motion, lighting/emboss, and gentle blend opacity. Normal startup Opal Cathedral is unchanged and the overlay defaults OFF. Heavy GPU shader is compiled only on first activation; a compilation failure leaves the other engines available. This is a source-level integration until tested in a real browser. No Netlify deployment.
