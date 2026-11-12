@@ -314,7 +314,7 @@ function mutate(onlyStructure=false){
     state.astralContour=Number((.25+rand()*1.7).toFixed(2));
     state.astralMix=Number((.30+rand()*.6).toFixed(2));
     state.astralSwarmStrength=Number((rand()*1.5).toFixed(2));
-    state.translucency=Number((rand()*.7).toFixed(2));
+    state.opalOpacity=Number((0.25+rand()*.55).toFixed(2));
     state.rot4D=Number((rand()*3).toFixed(2));
     state.cathedralApollo=Number((.45+rand()*1.9).toFixed(2));
     state.chladniFreq=Number((1.5+rand()*14).toFixed(2));
@@ -972,10 +972,26 @@ function installUI(){
     $('renderMode').value=value;
     $('renderModeCathedral').value=value;
     clearTrails();
-    notify(value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
+    notify(value.startsWith('astral')?'ASTRAL FOUR-ENGINE MODE':value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
   };
   $('renderMode').addEventListener('change',e=>chooseRenderMode(e.target.value));
   $('renderModeCathedral').addEventListener('change',e=>chooseRenderMode(e.target.value));
+  $('astralEngineSelect').addEventListener('change',e=>{
+    state.astralMorph=Number(e.target.value);
+    syncControls();
+    notify(['CALABI-YAU COMPLEX SHEETS','TURING / PHYSARUM','ZETA / CYMATICS','HOPF FERROFOAM'][Math.round(state.astralMorph)]);
+  });
+  $('astralSwarmToggle').addEventListener('click',()=>{
+    state.layerAstralSwarm=!state.layerAstralSwarm;syncControls();
+  });
+  const switchAstral=(mode)=>{
+    chooseRenderMode(mode);state.layerBg=true;
+    if(mode==='astral'){state.layerMesh=false;state.layerSwarm=false;}
+    syncControls();
+  };
+  $('astralSolo').addEventListener('click',()=>switchAstral('astral'));
+  $('astralField').addEventListener('click',()=>switchAstral('astral-field'));
+  $('astralCathedral').addEventListener('click',()=>switchAstral('astral-cathedral'));
   $('inkMode').addEventListener('change',e=>state.paletteInkMix=Number(e.target.value));
   $('clearTrails').addEventListener('click',()=>{clearTrails();notify('CURL HISTORY CLEARED');});
   $('trailOff').addEventListener('click',()=>{state.feedback=0;syncControls();clearTrails();notify('CURL TRAILS DISABLED');});
