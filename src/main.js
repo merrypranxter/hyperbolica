@@ -13,6 +13,10 @@ import printFragment from './shaders/halftone.frag?raw';
 import astralFragment from './shaders/astral-field.frag?raw';
 import astralSwarmVertex from './shaders/astral-swarm.vert?raw';
 import astralSwarmFragment from './shaders/astral-swarm.frag?raw';
+import pack2Fragment from './shaders/hyperweave-pack2.frag?raw';
+import textureVoronoiFragment from './shaders/texture-voronoi.frag?raw';
+import textureVelvetFragment from './shaders/texture-velvet.frag?raw';
+import textureMaximalistFragment from './shaders/texture-maximalist.frag?raw';
 
 import { FIELD_FAMILIES, MESH_FAMILIES, PRESETS } from './presets.js';
 
@@ -27,6 +31,12 @@ const defaultState={
   astralGloss:1.65,astralAcid:2.1,astralContour:0.85,astralMix:0.6,astralQuality:mobile?0:1,
   astralSwarmStrength:0.8,astralSwarmCount:mobile?2200:8000,layerAstralSwarm:true,translucency:0,
 
+  pack2Morph:0,pack2Depth:mobile?6:10,pack2DetailFreq:15,pack2Tension:2.4,
+  pack2PhaseShift:0.3,pack2Acid:2.85,pack2InkWeight:1.15,pack2Engraving:0.52,
+  pack2Dispersion:0.75,pack2FlowSpeed:0.8,pack2Opacity:0.8,pack2Quality:mobile?0:1,pack2ChromaLock:.75,
+  textureFamily:0,textureDensity:5,textureMoire:50,textureGlitch:0.8,textureSpeed:1,
+  textureColorPhase:0,velvetSheen:32,velvetGlow:1.2,maxScale:3,maxDistortion:2.5,
+  maxColorFreq:1.5,maxIterations:mobile?4:6,textureBlend:0.8,texturePaletteMix:1,
   hybridMix:0.55,rot4D:1.15,cathedralApollo:1.38,chladniFreq:6.50,
   volumetricGlow:1.55,schlierenFreq:6.80,flySpeed:0.85,rayQuality:mobile?0:1,
   feedback:0,curlStrength:1.0,halftoneMix:0,halftoneScale:110,
@@ -54,6 +64,8 @@ let cathedralScene,feedbackScene,printScene;
 let cathedralMaterial,feedbackMaterial,printMaterial;
 let astralScene,astralMaterial,astralSwarmScene,astralPoints,astralSwarmMaterial;
 let astralReady=true;
+let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
+let pack2Ready=true,textureReady=[true,true,true];
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -107,6 +119,37 @@ const sliderDefs={
     ['astralQuality','ASTRAL NORMAL DETAIL · 0=FAST',0,1,1],
     ['astralSwarmStrength','PHYLLOTAXIS SWARM STRENGTH',0,1.5,0.05],
     ['astralSwarmCount','ACTIVE 2D GLYPHS',0,12000,200]
+  ],
+  pack2:[
+    ['pack2Morph','PACK II ENGINE MORPH · E5 → E8',0,3,0.01],
+    ['pack2Depth','P O I N C A R É FOLD / DEPTH',2,14,1],
+    ['pack2DetailFreq','GIRIH / FACET / THREAD FREQUENCY',2,28,0.5],
+    ['pack2Tension','CATACAUSTIC / WEAVE TENSION',0.15,3.5,0.05],
+    ['pack2PhaseShift','OPTICAL PHASON SHIFT',0,1,0.01],
+    ['pack2Acid','NEON SPECTRAL OVERDRIVE',0.6,3.6,0.05],
+    ['pack2InkWeight','OBSIDIAN TRENCH / INK WIDTH',0.15,2.2,0.05],
+    ['pack2Engraving','GUILLOCHÉ / PRINT ROSETTES',0,1,0.02],
+    ['pack2Dispersion','NEON PRISM / VHS DISPERSION',0,1.5,0.02],
+    ['pack2FlowSpeed','DYNAMIC MATHEMATICS SPEED',0,2.5,0.05],
+    ['pack2Opacity','PACK II COMPOSITING OPACITY',0,1,0.05],
+    ['pack2Quality','ANALYTIC NORMALS · 0=FAST',0,1,1],
+    ['pack2ChromaLock','PACK II BLACKLIGHT LOCK',0,1,0.05]
+  ],
+  textures:[
+    ['textureFamily','TEXTURE FAMILY INDEX',0,2,1],
+    ['textureDensity','VORONOI / VELVET CELL DENSITY',2,20,0.5],
+    ['textureMoire','VORONOI INTERFERENCE FREQUENCY',10,150,1],
+    ['textureGlitch','CRT ABERRATION / BAND TEAR',0,3,0.05],
+    ['textureSpeed','EVOLUTION SPEED · MOVING PIXELS',0,3,0.05],
+    ['textureColorPhase','VORONOI COLOR ID PHASE',0,1,0.01],
+    ['velvetSheen','VELVET TANGENT MICRO-SHEEN',4,128,2],
+    ['velvetGlow','VELVET CREVICE GLOW',0,3,0.1],
+    ['maxScale','MAXIMALIST DOMAIN SCALE',0.5,10,0.1],
+    ['maxDistortion','NESTED fBm WARP',0,8,0.1],
+    ['maxColorFreq','MAXIMALIST CHROMA FREQUENCY',0.1,5,0.1],
+    ['maxIterations','NESTED fBm OCTAVES',1,10,1],
+    ['textureBlend','TEXTURE LAYER OPACITY',0,1,0.05],
+    ['texturePaletteMix','USE 168 PALETTE BANK · 0=SOURCE',0,1,0.05]
   ],
   feedback:[
     ['feedback','TEMPORAL CURL TRAILS',0,0.92,0.02],
@@ -179,6 +222,8 @@ function makeSliders(){
         if(key==='swarmCount')setSpriteCount();
     if(key==='astralSwarmCount')setAstralCount();
     if(key==='astralMorph')$('astralEngineSelect').value=String(Math.round(state.astralMorph));
+    if(key==='pack2Morph')$('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
+    if(key==='textureFamily')$('textureFamilySelect').value=String(Math.round(state.textureFamily));
     if(key==='feedback')clearTrails();
       });
     }
@@ -216,6 +261,8 @@ function updatePaletteTexture(rebuildEditors=true){
   if(cathedralMaterial)cathedralMaterial.uniforms.uPalette.value=next;
   if(astralMaterial)astralMaterial.uniforms.u_palette.value=next;
   if(astralSwarmMaterial)astralSwarmMaterial.uniforms.u_palette.value=next;
+  if(pack2Material)pack2Material.uniforms.u_palette.value=next;
+  for(const m of textureMaterials)if(m)m.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
   if(texture)texture.dispose();
   texture=next;
@@ -264,6 +311,8 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
+  $('textureFamilySelect').value=String(Math.round(state.textureFamily));
   $('astralEngineSelect').value=String(Math.round(state.astralMorph));
   $('astralSwarmToggle').classList.toggle('selected',state.layerAstralSwarm);
   $('astralSwarmToggle').textContent=state.layerAstralSwarm?'PHYLLOTAXIS / THOMAS SWARM ON':'PHYLLOTAXIS / THOMAS SWARM OFF';
