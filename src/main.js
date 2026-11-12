@@ -676,7 +676,7 @@ function buildEffects(){
     textureScenes.push(stage);textureMaterials.push(mat);
   }
   const atlasUniforms={
-    resolution:vec(),center:vec(),viewportOrigin:vec(),atlasOpacity:{value:0},
+    resolution:vec(),center:vec(),viewportOrigin:vec(),time:{value:0},atlasOpacity:{value:0},
     c0:{value:new THREE.Color('#000000')},c1:{value:new THREE.Color('#ffffff')},
     c2:{value:new THREE.Color('#ffffff')},c3:{value:new THREE.Color('#ffffff')},
     c4:{value:new THREE.Color('#ffffff')}
