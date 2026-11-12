@@ -60,6 +60,24 @@ const defaultState={
   layerBg:true,layerMesh:true,layerSwarm:true,paused:false,seed:761235
 };
 const state=copy(defaultState);
+// Source uniform names stay intact: this map only adapts their controls into Hyperbolica.
+const OTHERSPACE_STATE_KEYS={
+  mode:'otherSpaceMode',projection:'otherSpaceProjection',
+  zoom:'otherSpaceZoom',rotation:'otherSpaceRotation',drift:'otherSpaceDrift',
+  p:'otherSpaceP',q:'otherSpaceQ',depth:'otherSpaceDepth',
+  density:'otherSpaceDensity',shape:'otherSpaceShape',twist:'otherSpaceTwist',
+  phase:'otherSpacePhase',width:'otherSpaceWidth',relief:'otherSpaceRelief',
+  exposure:'otherSpaceExposure',saturation:'otherSpaceSaturation',
+  colorPhase:'otherSpaceColorPhase',colorScale:'otherSpaceColorScale',
+  grain:'otherSpaceGrain',glow:'otherSpaceGlow',speed:'otherSpaceSpeed',
+  fillOn:'otherSpaceFill',lineOn:'otherSpaceLine',detailOn:'otherSpaceDetail',
+  haloOn:'otherSpaceHalo',embossOn:'otherSpaceEmboss',motionOn:'otherSpaceMotion'
+};
+const OTHERSPACE_SOURCE_NAMES={
+  otherSpaceFill:'otherSpaceFillToggle',otherSpaceLine:'otherSpaceLineToggle',
+  otherSpaceDetail:'otherSpaceDetailToggle',otherSpaceHalo:'otherSpaceHaloToggle',
+  otherSpaceEmboss:'otherSpaceEmbossToggle',otherSpaceMotion:'otherSpaceMotionToggle'
+};
 const cameraMotion={
   theta:0.3,phi:0.22,targetTheta:0.3,targetPhi:0.22,
   radius:5.1,targetRadius:5.1,
@@ -299,6 +317,15 @@ function makePaletteTexture(colors){
   tex.generateMipmaps=false;tex.needsUpdate=true;
   return tex;
 }
+function updateOtherSpaceColors(){
+  if(!otherSpaceMaterial)return;
+  const colors=currentPaletteColors();
+  if(colors.length<1)return;
+  for(let i=0;i<5;i++){
+    const index=Math.round(i*(colors.length-1)/4);
+    otherSpaceMaterial.uniforms['c'+i].value.set(colors[index]);
+  }
+}
 function updatePaletteTexture(rebuildEditors=true){
   const next=makePaletteTexture(currentPaletteColors());
   if(fieldMaterial)fieldMaterial.uniforms.u_palette.value=next;
@@ -310,6 +337,7 @@ function updatePaletteTexture(rebuildEditors=true){
   if(pack2Material)pack2Material.uniforms.u_palette.value=next;
   for(const m of textureMaterials)if(m)m.uniforms.u_palette.value=next;
   if(printMaterial)printMaterial.uniforms.uPalette.value=next;
+  updateOtherSpaceColors();
   if(texture)texture.dispose();
   texture=next;
   if(rebuildEditors)renderPaletteEditors();
@@ -357,6 +385,12 @@ function syncControls(){
   $('renderMode').value=state.renderMode;
   $('renderModeCathedral').value=state.renderMode;
   $('inkMode').value=String(state.paletteInkMix);
+  $('otherSpaceModeSelect').value=String(state.otherSpaceMode);
+  $('otherSpaceProjectionSelect').value=String(state.otherSpaceProjection);
+  $('otherSpaceMathNote').textContent=OTHERSPACE_MODES[state.otherSpaceMode]?.note||'Mathematical background';
+  for(const [key,id] of Object.entries(OTHERSPACE_SOURCE_NAMES)){
+    $(id).classList.toggle('selected',Boolean(state[key]));
+  }
   $('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
   $('textureFamilySelect').value=String(Math.round(state.textureFamily));
   $('astralEngineSelect').value=String(Math.round(state.astralMorph));
@@ -408,7 +442,7 @@ function applyPreset(index){
   if(!ensureAddOn(preset.renderMode||'field',preset.textureFamily??state.textureFamily))return;
   const base=copy(defaultState);
   const keepLayers={};
-  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm']){
+  for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm',...Object.keys(state).filter(x=>x.startsWith('otherSpace'))]){
     if(!Object.hasOwn(preset,key))keepLayers[key]=state[key];
   }
   Object.assign(state,base,preset,keepLayers);
@@ -567,6 +601,19 @@ function buildEffects(){
     mat.transparent=true;
     textureScenes.push(stage);textureMaterials.push(mat);
   }
+  const atlasUniforms={
+    resolution:vec(),center:vec(),viewportOrigin:vec(),atlasOpacity:{value:0},
+    c0:{value:new THREE.Color('#000000')},c1:{value:new THREE.Color('#ffffff')},
+    c2:{value:new THREE.Color('#ffffff')},c3:{value:new THREE.Color('#ffffff')},
+    c4:{value:new THREE.Color('#ffffff')}
+  };
+  for(const [key,val] of Object.entries(OTHERSPACE_DEFAULT)){
+    atlasUniforms[key]={value:typeof val==='boolean'?Number(val):val};
+  }
+  [otherSpaceScene,otherSpaceMaterial]=pass(otherSpaceFragment,atlasUniforms);
+  otherSpaceMaterial.transparent=true;
+  otherSpaceMaterial.extensions.derivatives=true;
+  updateOtherSpaceColors();
   [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
     uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
     uResolution:vec(),uTime:{value:0},uMouse:vec(),
@@ -680,6 +727,21 @@ function configureEffects(usingPost=true){
     u.u_distortion.value=state.maxDistortion;u.u_colorFreq.value=state.maxColorFreq;
     u.u_iterations.value=state.maxIterations;
   }
+  const o=otherSpaceMaterial.uniforms;
+  o.resolution.value.set(effectW,effectH);
+  o.viewportOrigin.value.set(0,0);
+  // Original Möbius centers follow gesture location but retain the proper disk map.
+  o.center.value.set(
+    clamp(p.pointerX*0.28+p.gestureX*0.06,-0.76,0.76),
+    clamp(p.pointerY*0.28+p.gestureY*0.06,-0.76,0.76)
+  );
+  const maxCenter=o.center.value.length();
+  if(maxCenter>0.85)o.center.value.multiplyScalar(0.85/maxCenter);
+  o.time.value=t;
+  o.atlasOpacity.value=state.otherSpaceSolo?1:state.otherSpaceOpacity;
+  for(const [uniform,property] of Object.entries(OTHERSPACE_STATE_KEYS)){
+    o[uniform].value=Number(state[property]);
+  }
   const f=feedbackMaterial.uniforms;
   f.uResolution.value.set(effectW,effectH);
   f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
@@ -704,18 +766,21 @@ function renderBaseScene(){
   const isPack2=mode.startsWith('pack2');
   const isTexture=mode.startsWith('texture');
   if(state.layerBg){
-    if(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral')){
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='cathedral'||mode==='hybrid'||mode.endsWith('-cathedral'))){
       renderer.render(cathedralScene,fieldCamera);
     }
-    if(mode==='field'||mode==='hybrid'||mode.endsWith('-field')){
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&(mode==='field'||mode==='hybrid'||mode.endsWith('-field'))){
       fieldMaterial.uniforms.u_fieldOpacity.value=mode==='hybrid'?state.hybridMix:1.0;
       renderer.render(fieldScene,fieldCamera);
     }
-    if(isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
-    if(isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
-    if(isTexture){
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isAstral&&astralReady)renderer.render(astralScene,fieldCamera);
+    if(!(state.otherSpaceEnabled&&state.otherSpaceSolo)&&isPack2&&pack2Ready)renderer.render(pack2Scene,fieldCamera);
+    if(isTexture && !(state.otherSpaceEnabled&&state.otherSpaceSolo)){
       const family=Math.round(clamp(state.textureFamily,0,2));
       if(textureReady[family]&&textureScenes[family])renderer.render(textureScenes[family],fieldCamera);
+    }
+    if(state.otherSpaceEnabled&&otherSpaceReady){
+      renderer.render(otherSpaceScene,fieldCamera);
     }
   }
   if(isAstral&&astralReady&&state.layerAstralSwarm&&astralPoints){
