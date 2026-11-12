@@ -66,6 +66,7 @@ let astralScene,astralMaterial,astralSwarmScene,astralPoints,astralSwarmMaterial
 let astralReady=true;
 let pack2Scene,pack2Material,textureScenes=[],textureMaterials=[];
 let pack2Ready=true,textureReady=[true,true,true];
+let pack2Validated=false,textureValidated=[false,false,false];
 
 let sceneRT=null,historyReadRT=null,historyWriteRT=null;
 let postW=0,postH=0;
@@ -223,7 +224,14 @@ function makeSliders(){
     if(key==='astralSwarmCount')setAstralCount();
     if(key==='astralMorph')$('astralEngineSelect').value=String(Math.round(state.astralMorph));
     if(key==='pack2Morph')$('pack2EngineSelect').value=String(Math.round(state.pack2Morph));
-    if(key==='textureFamily')$('textureFamilySelect').value=String(Math.round(state.textureFamily));
+    if(key==='textureFamily'){
+      $('textureFamilySelect').value=String(Math.round(state.textureFamily));
+      if(state.renderMode.startsWith('texture')&&!ensureAddOn(state.renderMode,state.textureFamily)){
+        state.textureFamily=0;
+        slider.value=0;value.textContent='0';$('textureFamilySelect').value='0';
+        if(!ensureAddOn(state.renderMode,0))state.renderMode='field';
+      }
+    }
     if(key==='feedback')clearTrails();
       });
     }
@@ -325,9 +333,41 @@ function syncControls(){
   setSpriteCount();
   setAstralCount();
 }
+// Avoid compiling three additional heavyweight shader families on startup;
+ // compile only the new mode actually selected so the existing Opal Garden stays snappy.
+function ensureAddOn(mode,family=state.textureFamily){
+  const isPack=mode.startsWith('pack2'),isTexture=mode.startsWith('texture');
+  if(!isPack&&!isTexture)return true;
+  const idx=Math.round(clamp(family,0,2));
+  if(isPack){
+    if(pack2Validated)return pack2Ready;
+  }else{
+    if(textureValidated[idx])return textureReady[idx];
+  }
+  if(!renderer||!fieldCamera)return false;
+  const errors=[],previous=console.error;
+  console.error=(...args)=>{
+    const info=args.map(x=>String(x)).join(' ');
+    if(info.includes('Shader Error')||info.includes('THREE.WebGLProgram'))errors.push(info);
+    previous.apply(console,args);
+  };
+  try{
+    renderer.compile(isPack?pack2Scene:textureScenes[idx],fieldCamera);
+  }catch(e){errors.push(String(e));}
+  finally{console.error=previous;}
+  const ok=errors.length===0;
+  if(isPack){pack2Validated=true;pack2Ready=ok;}
+  else{textureValidated[idx]=true;textureReady[idx]=ok;}
+  if(!ok){
+    previous.call(console,'Optional mathematical texture shader did not compile:',errors.join('\n').slice(0,2000));
+    notify(isPack?'PACK II SHADER UNSUPPORTED ON THIS GPU':'THIS TEXTURE SHADER UNSUPPORTED ON THIS GPU');
+  }
+  return ok;
+}
 function applyPreset(index){
   const preset=PRESETS[index];if(!preset)return;
   if(!astralReady && preset.renderMode?.startsWith('astral')){notify('ASTRAL SHADER NOT SUPPORTED · OPAL GARDEN REMAINS PLAYABLE');return;}
+  if(!ensureAddOn(preset.renderMode||'field',preset.textureFamily??state.textureFamily))return;
   const base=copy(defaultState);
   const keepLayers={};
   for(const key of ['layerBg','layerMesh','layerSwarm','layerAstralSwarm']){
@@ -1093,11 +1133,12 @@ function installUI(){
   $('gestureMode').addEventListener('change',e=>state.gestureMode=e.target.value);
   const chooseRenderMode=value=>{
     if(!astralReady && value.startsWith('astral')){notify('ASTRAL GLSL NOT SUPPORTED ON THIS GPU');return;}
+    if(!ensureAddOn(value))return;
     state.renderMode=value;
     $('renderMode').value=value;
     $('renderModeCathedral').value=value;
     clearTrails();
-    notify(value.startsWith('astral')?'ASTRAL FOUR-ENGINE MODE':value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
+    notify(value.startsWith('pack2')?'HYPERWEAVE PACK II • FOUR NEW MATHEMATICS':value.startsWith('texture')?'THREE SOURCE-FAITHFUL TEXTURES':value.startsWith('astral')?'ASTRAL FOUR-ENGINE MODE':value==='cathedral'?'FLYING 4D CATHEDRAL':value==='hybrid'?'4D CATHEDRAL + BIOMINERAL HYBRID':'ORIGINAL MATHEMATICAL FIELD');
   };
   $('renderMode').addEventListener('change',e=>chooseRenderMode(e.target.value));
   $('renderModeCathedral').addEventListener('change',e=>chooseRenderMode(e.target.value));
