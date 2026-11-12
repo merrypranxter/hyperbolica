@@ -1,32 +1,34 @@
 {
   "schema": "mathemagical/palette-library/v1",
   "version": 1,
-  "provenance": [
-    {
+  "provenance": {
+    "0": {
       "repository": "merrypranxter/sandpile_art_app",
       "path": "index.html"
     },
-    {
+    "1": {
       "repository": "merrypranxter/cymatics_art_app",
       "path": "src/render/palette-library.json"
     },
-    {
+    "2": {
       "repository": "merrypranxter/strataclysm",
       "path": "src/palettes.js"
     },
-    {
+    "3": {
       "repository": "merrypranxter/chaos_calligraphy",
       "path": "src/math.js"
     },
-    {
+    "4": {
       "repository": "merrypranxter/optical_liar",
       "path": "src/app.js"
     },
-    {
+    "5": {
       "repository": "merrypranxter/frothrot",
       "path": "gemini-lab.js"
-    }
-  ],
+    },
+    "added_impossibleloom": "merrypranxter/impossibleloom/src/palettes.js",
+    "added_color_systems_and_third_eye": "merrypranxter/austereograms_art_app/src/palette-bank.js"
+  },
   "palettes": [
     {
       "id": "avalanche/acid",
@@ -1552,6 +1554,758 @@
         "#9eaeff",
         "#fafffe",
         "#68489b"
+      ]
+    },
+    {
+      "id": "seamripper/acid-candy",
+      "name": "SEAMRIPPER · Acid Candy",
+      "source": "impossibleloom",
+      "colors": [
+        "#ff22a8",
+        "#d947ff",
+        "#704eff",
+        "#2cecff",
+        "#e5ff35"
+      ]
+    },
+    {
+      "id": "seamripper/radioactive-orchid",
+      "name": "SEAMRIPPER · Radioactive Orchid",
+      "source": "impossibleloom",
+      "colors": [
+        "#150023",
+        "#b72de5",
+        "#fd47ce",
+        "#76fae1",
+        "#faed31"
+      ]
+    },
+    {
+      "id": "seamripper/chrome-rainbow",
+      "name": "SEAMRIPPER · Chrome Rainbow",
+      "source": "impossibleloom",
+      "colors": [
+        "#ed256e",
+        "#ffac42",
+        "#ebec6a",
+        "#37ffcb",
+        "#3d85ff"
+      ]
+    },
+    {
+      "id": "seamripper/bubblegum-apocalypse",
+      "name": "SEAMRIPPER · Bubblegum Apocalypse",
+      "source": "impossibleloom",
+      "colors": [
+        "#fc55aa",
+        "#f6a2db",
+        "#6ce3ff",
+        "#c7f45b",
+        "#ff7130"
+      ]
+    },
+    {
+      "id": "seamripper/poison-dart",
+      "name": "SEAMRIPPER · Poison Dart",
+      "source": "impossibleloom",
+      "colors": [
+        "#031e1d",
+        "#00e5b0",
+        "#daff42",
+        "#f92b8f",
+        "#8500fe"
+      ]
+    },
+    {
+      "id": "seamripper/deep-sea-disco",
+      "name": "SEAMRIPPER · Deep Sea Disco",
+      "source": "impossibleloom",
+      "colors": [
+        "#020e35",
+        "#005ed9",
+        "#1ee3f4",
+        "#5effae",
+        "#f523cc"
+      ]
+    },
+    {
+      "id": "seamripper/uv-velvet",
+      "name": "SEAMRIPPER · UV Velvet",
+      "source": "impossibleloom",
+      "colors": [
+        "#100030",
+        "#52239c",
+        "#9a49ff",
+        "#ef3eff",
+        "#ffb8fd"
+      ]
+    },
+    {
+      "id": "seamripper/bruised-peach",
+      "name": "SEAMRIPPER · Bruised Peach",
+      "source": "impossibleloom",
+      "colors": [
+        "#2b153b",
+        "#a7449e",
+        "#f06d91",
+        "#ffa87f",
+        "#ffe4ad"
+      ]
+    },
+    {
+      "id": "seamripper/electric-sunset",
+      "name": "SEAMRIPPER · Electric Sunset",
+      "source": "impossibleloom",
+      "colors": [
+        "#130031",
+        "#f62284",
+        "#fc632f",
+        "#ffcb36",
+        "#90edb0"
+      ]
+    },
+    {
+      "id": "seamripper/psychedelic-primary",
+      "name": "SEAMRIPPER · Psychedelic Primary",
+      "source": "impossibleloom",
+      "colors": [
+        "#ff223a",
+        "#f7e628",
+        "#02c3ef",
+        "#6132ec",
+        "#fe42bc"
+      ]
+    },
+    {
+      "id": "seamripper/toxic-citrus",
+      "name": "SEAMRIPPER · Toxic Citrus",
+      "source": "impossibleloom",
+      "colors": [
+        "#33370a",
+        "#f5fb44",
+        "#84fc1c",
+        "#05c8c4",
+        "#ff5c00"
+      ]
+    },
+    {
+      "id": "seamripper/rose-quartz-riot",
+      "name": "SEAMRIPPER · Rose Quartz Riot",
+      "source": "impossibleloom",
+      "colors": [
+        "#3a163d",
+        "#ba4788",
+        "#ff8db4",
+        "#ffcfdf",
+        "#93efff"
+      ]
+    },
+    {
+      "id": "seamripper/underworld-neon",
+      "name": "SEAMRIPPER · Underworld Neon",
+      "source": "impossibleloom",
+      "colors": [
+        "#04061b",
+        "#4142c5",
+        "#b217ff",
+        "#00f4d6",
+        "#ff39ae"
+      ]
+    },
+    {
+      "id": "seamripper/opal-fire",
+      "name": "SEAMRIPPER · Opal Fire",
+      "source": "impossibleloom",
+      "colors": [
+        "#243b78",
+        "#78c8e8",
+        "#d5f1ff",
+        "#f6acd2",
+        "#fa8b59"
+      ]
+    },
+    {
+      "id": "seamripper/sulfur-cyanide",
+      "name": "SEAMRIPPER · Sulfur & Cyanide",
+      "source": "impossibleloom",
+      "colors": [
+        "#171306",
+        "#727128",
+        "#fff255",
+        "#30ffd5",
+        "#0060ed"
+      ]
+    },
+    {
+      "id": "seamripper/blacklight-aquarium",
+      "name": "SEAMRIPPER · Blacklight Aquarium",
+      "source": "impossibleloom",
+      "colors": [
+        "#080025",
+        "#a003ff",
+        "#fa27e0",
+        "#19befe",
+        "#89fa2d"
+      ]
+    },
+    {
+      "id": "seamripper/solar-flare",
+      "name": "SEAMRIPPER · Solar Flare",
+      "source": "impossibleloom",
+      "colors": [
+        "#330013",
+        "#a10027",
+        "#fb371d",
+        "#f8a126",
+        "#fbef4b"
+      ]
+    },
+    {
+      "id": "seamripper/candy-static",
+      "name": "SEAMRIPPER · Candy Static",
+      "source": "impossibleloom",
+      "colors": [
+        "#fffcdd",
+        "#fca9c9",
+        "#fc32e3",
+        "#9b69ff",
+        "#45e9ff"
+      ]
+    },
+    {
+      "id": "seamripper/rainbow-hardware",
+      "name": "SEAMRIPPER · Rainbow Hardware",
+      "source": "impossibleloom",
+      "colors": [
+        "#f52c50",
+        "#fd8d21",
+        "#f5f732",
+        "#24fca4",
+        "#238eff"
+      ]
+    },
+    {
+      "id": "seamripper/noir-phosphor",
+      "name": "SEAMRIPPER · Noir Phosphor",
+      "source": "impossibleloom",
+      "colors": [
+        "#01040d",
+        "#092956",
+        "#00add2",
+        "#80f3ff",
+        "#fffaf5"
+      ]
+    },
+    {
+      "id": "seamripper/molten-mineral",
+      "name": "SEAMRIPPER · Molten Mineral",
+      "source": "impossibleloom",
+      "colors": [
+        "#200f39",
+        "#8f3b91",
+        "#e54976",
+        "#ff984a",
+        "#ffda79"
+      ]
+    },
+    {
+      "id": "seamripper/lime-panic",
+      "name": "SEAMRIPPER · Lime Panic",
+      "source": "impossibleloom",
+      "colors": [
+        "#090a18",
+        "#e000a7",
+        "#a1ff14",
+        "#01f4ed",
+        "#fff7a0"
+      ]
+    },
+    {
+      "id": "seamripper/disco-brocade",
+      "name": "SEAMRIPPER · Disco Brocade",
+      "source": "impossibleloom",
+      "colors": [
+        "#280d2c",
+        "#85167f",
+        "#f24495",
+        "#eab75c",
+        "#73f8e9"
+      ]
+    },
+    {
+      "id": "seamripper/holographic-jacquard",
+      "name": "SEAMRIPPER · Holographic Jacquard",
+      "source": "impossibleloom",
+      "colors": [
+        "#2a3bd1",
+        "#7f6afa",
+        "#f5c2fa",
+        "#80fcff",
+        "#c3ff60"
+      ]
+    },
+    {
+      "id": "seamripper/antique-acid",
+      "name": "SEAMRIPPER · Antique Acid",
+      "source": "impossibleloom",
+      "colors": [
+        "#231327",
+        "#5b2b79",
+        "#ad3b65",
+        "#f5c05e",
+        "#baf95a"
+      ]
+    },
+    {
+      "id": "seamripper/cobalt-malfunction",
+      "name": "SEAMRIPPER · Cobalt Malfunction",
+      "source": "impossibleloom",
+      "colors": [
+        "#050928",
+        "#1040ff",
+        "#32bbff",
+        "#f8ff37",
+        "#ff3496"
+      ]
+    },
+    {
+      "id": "seamripper/kaleido-coral",
+      "name": "SEAMRIPPER · Kaleido Coral",
+      "source": "impossibleloom",
+      "colors": [
+        "#371157",
+        "#a936b7",
+        "#ff5381",
+        "#ffab6d",
+        "#fff3aa"
+      ]
+    },
+    {
+      "id": "seamripper/pomegranate-cyanide",
+      "name": "SEAMRIPPER · Pomegranate Cyanide",
+      "source": "impossibleloom",
+      "colors": [
+        "#200727",
+        "#ac005b",
+        "#f52967",
+        "#17ecd7",
+        "#b5ef5a"
+      ]
+    },
+    {
+      "id": "color-systems/math-fib_primary_5",
+      "name": "Fibonacci 5-color (golden angle)",
+      "source": "color_systems",
+      "colors": [
+        "#e8403d",
+        "#27a352",
+        "#8b3fd9",
+        "#d4a020",
+        "#1b8fa8"
+      ]
+    },
+    {
+      "id": "color-systems/math-fib_neon_8",
+      "name": "Fibonacci 8-color neon (golden angle)",
+      "source": "color_systems",
+      "colors": [
+        "#ff5e1a",
+        "#1affa1",
+        "#e41aff",
+        "#d7ff1a",
+        "#1a94ff",
+        "#ff1a51",
+        "#1aff25",
+        "#681aff"
+      ]
+    },
+    {
+      "id": "color-systems/math-fib_ratio_progression",
+      "name": "Fibonacci Ratio Progression",
+      "source": "color_systems",
+      "colors": [
+        "#f31b1b",
+        "#1bf3f3",
+        "#1b1bf3",
+        "#1b72f3",
+        "#1b51f3",
+        "#1b5ef3"
+      ]
+    },
+    {
+      "id": "color-systems/math-golden_triad",
+      "name": "Golden Triad",
+      "source": "color_systems",
+      "colors": [
+        "#e85955",
+        "#289a5e",
+        "#8a42d9"
+      ]
+    },
+    {
+      "id": "color-systems/math-golden_pentatonic",
+      "name": "Golden Pentatonic",
+      "source": "color_systems",
+      "colors": [
+        "#e85555",
+        "#2ea86a",
+        "#8040d9",
+        "#cca826",
+        "#1c96b5"
+      ]
+    },
+    {
+      "id": "color-systems/math-golden_gradient_warm",
+      "name": "Golden Gradient Warm",
+      "source": "color_systems",
+      "colors": [
+        "#ff8c1a",
+        "#23f5c9",
+        "#eb2ddb",
+        "#a1e137",
+        "#4173d8",
+        "#ce4b50",
+        "#55c470",
+        "#905eba"
+      ]
+    },
+    {
+      "id": "color-systems/math-golden_dark_10",
+      "name": "Golden Dark 10",
+      "source": "color_systems",
+      "colors": [
+        "#7e1b1b",
+        "#1b7e38",
+        "#551b7e",
+        "#7e721b",
+        "#1b6e7e",
+        "#7e1b51",
+        "#347e1b",
+        "#1f1b7e",
+        "#7e3c1b",
+        "#1b7e59"
+      ]
+    },
+    {
+      "id": "color-systems/math-fibonacci_ratios_indigo",
+      "name": "Fibonacci Ratios — Indigo Base",
+      "source": "color_systems",
+      "colors": [
+        "#20e9e9",
+        "#20e9e9",
+        "#e92020",
+        "#2020e9",
+        "#71e920",
+        "#e920a3",
+        "#20e0e9",
+        "#e9b820"
+      ]
+    },
+    {
+      "id": "color-systems/math-prime_gaps_warm_cumulative",
+      "name": "Prime Gaps — Warm Cumulative",
+      "source": "color_systems",
+      "colors": [
+        "#e8ba30",
+        "#e8ba30",
+        "#8ce830",
+        "#30e8e8",
+        "#8c30e8",
+        "#8ce830",
+        "#30e8e8",
+        "#e83030"
+      ]
+    },
+    {
+      "id": "color-systems/math-collatz_27_vivid",
+      "name": "Collatz 27 — Vivid",
+      "source": "color_systems",
+      "colors": [
+        "#daf425",
+        "#259df4",
+        "#61f425",
+        "#f425d1",
+        "#25f49d",
+        "#b7f425",
+        "#2536f4",
+        "#2ef425",
+        "#f42536",
+        "#25f4eb"
+      ]
+    },
+    {
+      "id": "color-systems/math-lucas_spread_twilight",
+      "name": "Lucas — Twilight Spread",
+      "source": "color_systems",
+      "colors": [
+        "#6020e6",
+        "#c420e6",
+        "#e62039",
+        "#e6b420",
+        "#20e65d",
+        "#e620ab",
+        "#2065e6",
+        "#20e6a3"
+      ]
+    },
+    {
+      "id": "color-systems/math-padovan_cool_spiral",
+      "name": "Padovan — Cool Spiral",
+      "source": "color_systems",
+      "colors": [
+        "#25a4e4",
+        "#255ee4",
+        "#3225e4",
+        "#be25e4",
+        "#e4257e",
+        "#e49e25",
+        "#25e438",
+        "#2532e4",
+        "#e48525",
+        "#254be4"
+      ]
+    },
+    {
+      "id": "color-systems/math-tribonacci_fast_sweep",
+      "name": "Tribonacci — Fast Sweep",
+      "source": "color_systems",
+      "colors": [
+        "#ee3939",
+        "#ee6439",
+        "#eea039",
+        "#d0ee39",
+        "#39ee8a",
+        "#a239ee",
+        "#39eeee",
+        "#eeee39"
+      ]
+    },
+    {
+      "id": "color-systems/math-perrin_subtle_primes",
+      "name": "Perrin — Subtle Primes",
+      "source": "color_systems",
+      "colors": [
+        "#20e620",
+        "#2090e6",
+        "#7820e6",
+        "#e6203c",
+        "#e67820",
+        "#20e620",
+        "#7820e6",
+        "#e6d820",
+        "#e62090",
+        "#e62020"
+      ]
+    },
+    {
+      "id": "color-systems/math-prime_direct_spectral",
+      "name": "Prime Direct — Spectral",
+      "source": "color_systems",
+      "colors": [
+        "#f09a19",
+        "#f0db19",
+        "#85f019",
+        "#19f02e",
+        "#19b0f0",
+        "#192ef0",
+        "#f019db",
+        "#f0195a"
+      ]
+    },
+    {
+      "id": "color-systems/math-prime_gap_6",
+      "name": "Prime Gap 6-color (scale=30)",
+      "source": "color_systems",
+      "colors": [
+        "#e8453d",
+        "#d9c227",
+        "#3dbf4a",
+        "#3d5ae8",
+        "#c43dbf",
+        "#e8453d"
+      ]
+    },
+    {
+      "id": "color-systems/math-prime_gap_8_high_scale",
+      "name": "Prime Gap 8-color (scale=50)",
+      "source": "color_systems",
+      "colors": [
+        "#f2690d",
+        "#f2690d",
+        "#bdf20d",
+        "#0df2db",
+        "#8f0df2",
+        "#24f20d",
+        "#0d70f2",
+        "#f2db0d"
+      ]
+    },
+    {
+      "id": "color-systems/math-prime_density_dark",
+      "name": "Prime Density Dark Palette",
+      "source": "color_systems",
+      "colors": [
+        "#1b6e98",
+        "#1b6e98",
+        "#1b4498",
+        "#441b98",
+        "#981b98",
+        "#98441b",
+        "#98981b",
+        "#1b9844",
+        "#1b9898",
+        "#441b98",
+        "#98441b",
+        "#98981b"
+      ]
+    },
+    {
+      "id": "color-systems/math-prime_gap_warm_10",
+      "name": "Prime Gap Warm 10-color (scale=40)",
+      "source": "color_systems",
+      "colors": [
+        "#e6e64c",
+        "#e6e64c",
+        "#7fe64c",
+        "#4ce6e6",
+        "#804ce6",
+        "#e6e64c",
+        "#4ce680",
+        "#e64ce6",
+        "#e6804c",
+        "#4ce6e6"
+      ]
+    },
+    {
+      "id": "color-systems/math-max_vibration_red_cyan",
+      "name": "Red-Cyan Maximum Vibration",
+      "source": "color_systems",
+      "colors": [
+        "#f54020",
+        "#0bbfd9"
+      ]
+    },
+    {
+      "id": "color-systems/math-max_vibration_violet_lime",
+      "name": "Violet-Lime Maximum Vibration",
+      "source": "color_systems",
+      "colors": [
+        "#7a22e8",
+        "#9fe818"
+      ]
+    },
+    {
+      "id": "color-systems/math-harmonic_blue_orange",
+      "name": "Blue-Orange Harmonic Resonance",
+      "source": "color_systems",
+      "colors": [
+        "#2872a8",
+        "#e89940"
+      ]
+    },
+    {
+      "id": "color-systems/math-harmonic_teal_rose",
+      "name": "Teal-Rose Harmonic Resonance",
+      "source": "color_systems",
+      "colors": [
+        "#1a9985",
+        "#cc7080"
+      ]
+    },
+    {
+      "id": "color-systems/math-subtle_navy_cream",
+      "name": "Navy-Cream Subtle Interference",
+      "source": "color_systems",
+      "colors": [
+        "#253366",
+        "#f0e8cc"
+      ]
+    },
+    {
+      "id": "color-systems/math-subtle_muted_triadic",
+      "name": "Muted Triadic Subtle Interference",
+      "source": "color_systems",
+      "colors": [
+        "#72a880",
+        "#a87ea8"
+      ]
+    },
+    {
+      "id": "third-eye/nuclear-bubblegum",
+      "name": "THIRD EYE · Nuclear Bubblegum",
+      "source": "third_eye",
+      "colors": [
+        "#ff12b8",
+        "#00f5ec",
+        "#f4ff19",
+        "#963aff",
+        "#ff6315",
+        "#12ff81"
+      ]
+    },
+    {
+      "id": "third-eye/radioactive-reef",
+      "name": "THIRD EYE · Radioactive Reef",
+      "source": "third_eye",
+      "colors": [
+        "#00ffe3",
+        "#07acff",
+        "#c22fff",
+        "#f8ff00",
+        "#ff278b",
+        "#19ff79"
+      ]
+    },
+    {
+      "id": "third-eye/chrome-afterparty",
+      "name": "THIRD EYE · Chrome Afterparty",
+      "source": "third_eye",
+      "colors": [
+        "#f9faff",
+        "#8cffff",
+        "#ff9cf5",
+        "#d7ff5c",
+        "#a7aaff",
+        "#fd7fe8"
+      ]
+    },
+    {
+      "id": "third-eye/ectoplasmic-fire",
+      "name": "THIRD EYE · Ectoplasmic Fire",
+      "source": "third_eye",
+      "colors": [
+        "#0f1340",
+        "#ff3200",
+        "#ffef00",
+        "#adff1a",
+        "#ff00cd",
+        "#07fff8"
+      ]
+    },
+    {
+      "id": "third-eye/digital-mold",
+      "name": "THIRD EYE · Digital Mold",
+      "source": "third_eye",
+      "colors": [
+        "#a2ff00",
+        "#00fbc9",
+        "#2f8bff",
+        "#9718e7",
+        "#ff1fac",
+        "#fead12"
+      ]
+    },
+    {
+      "id": "third-eye/dayglo-oxide",
+      "name": "THIRD EYE · Dayglo Oxide",
+      "source": "third_eye",
+      "colors": [
+        "#ff4219",
+        "#f8e022",
+        "#aeff00",
+        "#00eeff",
+        "#5714ff",
+        "#ff00b0"
       ]
     }
   ]
