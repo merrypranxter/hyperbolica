@@ -178,6 +178,8 @@ function updatePaletteTexture(rebuildEditors=true){
   if(fieldMaterial)fieldMaterial.uniforms.u_palette.value=next;
   if(meshMaterial)meshMaterial.uniforms.u_palette.value=next;
   if(swarmMaterial)swarmMaterial.uniforms.u_palette.value=next;
+  if(cathedralMaterial)cathedralMaterial.uniforms.uPalette.value=next;
+  if(printMaterial)printMaterial.uniforms.uPalette.value=next;
   if(texture)texture.dispose();
   texture=next;
   if(rebuildEditors)renderPaletteEditors();
@@ -278,6 +280,124 @@ function mutate(onlyStructure=false){
   syncControls();
   notify(onlyStructure?'TOPOLOGY + FIELD GENOME MUTATED':'ALL MATHEMATICS MUTATED');
 }
+
+function makeScreenMaterial(fragmentShader, uniforms){
+  return new THREE.ShaderMaterial({
+    vertexShader:screenVertex,
+    fragmentShader,
+    depthTest:false,depthWrite:false,
+    uniforms
+  });
+}
+function buildEffects(){
+  const vec=()=>({value:new THREE.Vector2()});
+  const pass=(fragmentShader, uniforms)=>{
+    const mat=makeScreenMaterial(fragmentShader,uniforms);
+    const stage=new THREE.Scene();
+    const plane=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat);
+    plane.frustumCulled=false;
+    stage.add(plane);
+    return [stage,mat];
+  };
+  [cathedralScene,cathedralMaterial]=pass(cathedralFragment,{
+    uResolution:vec(),uTime:{value:0},uMouse:vec(),uZoom:{value:1},
+    uSymmetry:{value:7},u4DRotation:{value:1.15},uApollonian:{value:1.38},
+    uChladniFreq:{value:6.5},uVolumetricGlow:{value:1.55},
+    uSchlierenFreq:{value:6.8},uFlySpeed:{value:.85},
+    uPalette:{value:texture},uPalettePhase:{value:0},
+    uRayQuality:{value:1},uChromaLock:{value:0}
+  });
+  [feedbackScene,feedbackMaterial]=pass(feedbackFragment,{
+    uCurrentSceneTex:{value:null},uHistoryTex:{value:null},
+    uResolution:vec(),uTime:{value:0},uMouse:vec(),
+    uFeedback:{value:0},uSchlierenFreq:{value:6.8},uCurlStrength:{value:1}
+  });
+  [printScene,printMaterial]=pass(printFragment,{
+    uAccumulatedTex:{value:null},uResolution:vec(),uTime:{value:0},
+    uHalftoneMix:{value:0},uHalftoneScale:{value:110},
+    uAcidOverdrive:{value:1},uDispersion:{value:0},
+    uPalette:{value:texture},uPalettePhase:{value:0},
+    uPaletteInkMix:{value:1},uChromaLock:{value:0}
+  });
+}
+function disposeRenderTargets(){
+  for(const rt of [sceneRT,historyReadRT,historyWriteRT]){
+    if(rt)rt.dispose();
+  }
+  sceneRT=historyReadRT=historyWriteRT=null;
+  postW=postH=0;
+}
+function ensureRenderTargets(){
+  const cw=renderer.domElement.width,ch=renderer.domElement.height;
+  // Cap all THREE render target allocations for Safari/GPU memory pressure.
+  const maxPixels=mobile?780000:2000000;
+  const shrink=Math.min(1,Math.sqrt(maxPixels/Math.max(1,cw*ch)));
+  const w=Math.max(1,Math.round(cw*shrink)),h=Math.max(1,Math.round(ch*shrink));
+  if(sceneRT&&postW===w&&postH===h)return;
+  disposeRenderTargets();
+  const opts={format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:false,stencilBuffer:false,
+    magFilter:THREE.LinearFilter,minFilter:THREE.LinearFilter,generateMipmaps:false};
+  sceneRT=new THREE.WebGLRenderTarget(w,h,{...opts,depthBuffer:true});
+  historyReadRT=new THREE.WebGLRenderTarget(w,h,opts);
+  historyWriteRT=new THREE.WebGLRenderTarget(w,h,opts);
+  postW=w;postH=h;
+  clearTrails();
+}
+function clearTrails(){
+  if(!renderer||!historyReadRT||!historyWriteRT)return;
+  const existingTarget=renderer.getRenderTarget();
+  const priorColor=renderer.getClearColor(new THREE.Color()).clone();
+  const priorAlpha=renderer.getClearAlpha();
+  renderer.setClearColor(0x000000,1);
+  for(const target of [historyReadRT,historyWriteRT]){
+    renderer.setRenderTarget(target);
+    renderer.clear(true,true,true);
+  }
+  renderer.setRenderTarget(existingTarget);
+  renderer.setClearColor(priorColor,priorAlpha);
+}
+function configureEffects(){
+  if(!cathedralMaterial)return;
+  const p=cameraMotion;
+  const c=cathedralMaterial.uniforms;
+  c.uResolution.value.set(postW||renderer.domElement.width,postH||renderer.domElement.height);
+  c.uTime.value=t;c.uMouse.value.set(p.pointerX,p.pointerY);
+  c.uZoom.value=5.1/p.radius;
+  c.uSymmetry.value=state.symmetry;c.u4DRotation.value=state.rot4D;
+  c.uApollonian.value=state.cathedralApollo;c.uChladniFreq.value=state.chladniFreq;
+  c.uVolumetricGlow.value=state.volumetricGlow;c.uSchlierenFreq.value=state.schlierenFreq;
+  c.uFlySpeed.value=state.flySpeed;c.uPalettePhase.value=state.palettePhase;
+  c.uRayQuality.value=state.rayQuality;c.uChromaLock.value=state.chromaLock;
+  const f=feedbackMaterial.uniforms;
+  f.uResolution.value.set(postW||renderer.domElement.width,postH||renderer.domElement.height);
+  f.uTime.value=t;f.uMouse.value.set(p.pointerX,p.pointerY);
+  f.uFeedback.value=state.feedback;f.uCurlStrength.value=state.curlStrength;
+  f.uSchlierenFreq.value=state.schlierenFreq;
+  const h=printMaterial.uniforms;
+  h.uResolution.value.set(postW||renderer.domElement.width,postH||renderer.domElement.height);
+  h.uTime.value=t;h.uHalftoneMix.value=state.halftoneMix;
+  h.uHalftoneScale.value=state.halftoneScale;
+  h.uAcidOverdrive.value=state.acidOverdrive;
+  h.uDispersion.value=state.dispersion;
+  h.uPaletteInkMix.value=state.paletteInkMix;
+  h.uPalettePhase.value=state.palettePhase;
+  h.uChromaLock.value=state.chromaLock;
+}
+function renderBaseScene(){
+  renderer.clear(true,true,true);
+  if(state.layerBg){
+    if(state.renderMode!=='field'){
+      renderer.render(cathedralScene,fieldCamera);
+    }
+    if(state.renderMode!=='cathedral'){
+      fieldMaterial.uniforms.u_fieldOpacity.value=state.renderMode==='hybrid'?state.hybridMix:1.0;
+      renderer.render(fieldScene,fieldCamera);
+    }
+  }
+  renderer.clearDepth();
+  if(state.layerMesh||state.layerSwarm)renderer.render(scene,camera);
+}
+
 function makeGeometry(us,vs){
   const pos=new Float32Array((us+1)*(vs+1)*3);
   const uv=new Float32Array((us+1)*(vs+1)*2);
@@ -338,10 +458,11 @@ function initRenderer(){
   });
   renderer.domElement.addEventListener('webglcontextrestored',()=>location.reload());
   texture=makePaletteTexture(getPalette().colors);
+  buildEffects();
   fieldScene=new THREE.Scene();fieldCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   fieldMaterial=new THREE.ShaderMaterial({
     vertexShader:screenVertex,fragmentShader:fieldFragment,
-    depthTest:false,depthWrite:false,extensions:{derivatives:true},
+    transparent:true,depthTest:false,depthWrite:false,extensions:{derivatives:true},
     uniforms:{
       u_resolution:{value:new THREE.Vector2(800,800)},u_palette:{value:texture},
       u_pointer:{value:new THREE.Vector2()},
@@ -349,7 +470,7 @@ function initRenderer(){
       u_iterations:{value:12},u_inversion:{value:.45},u_warp:{value:1},
       u_morph:{value:1},u_iridescence:{value:5},u_saturation:{value:2},
       u_moire:{value:1},u_glitch:{value:0},u_zoom:{value:1},u_seed:{value:1},
-      u_phase:{value:0},u_touch:{value:0}
+      u_phase:{value:0},u_touch:{value:0},u_fieldOpacity:{value:1}
     }
   });
   fieldMesh=new THREE.Mesh(new THREE.PlaneGeometry(2,2),fieldMaterial);
@@ -484,10 +605,32 @@ function useUniforms(){
 function render(){
   if(!renderer)return;
   useUniforms();
+  const needsPost=state.feedback>0.005||state.halftoneMix>0.005||state.dispersion>0.005||Math.abs(state.acidOverdrive-1)>0.005;
+  if(!needsPost){
+    postW=postW||0;
+    configureEffects();
+    renderer.setRenderTarget(null);
+    renderBaseScene();
+    return;
+  }
+  ensureRenderTargets();
+  configureEffects();
+  // PASS ONE: actual 4D tunnel or biomineral field and 3D objects -> offscreen scene target
+  renderer.setRenderTarget(sceneRT);
+  renderBaseScene();
+  // PASS TWO: temporal optical advection from previous frame -> write target
+  const f=feedbackMaterial.uniforms;
+  f.uCurrentSceneTex.value=sceneRT.texture;
+  f.uHistoryTex.value=historyReadRT.texture;
+  renderer.setRenderTarget(historyWriteRT);
   renderer.clear(true,true,true);
-  if(state.layerBg)renderer.render(fieldScene,fieldCamera);
-  renderer.clearDepth();
-  if(state.layerMesh||state.layerSwarm)renderer.render(scene,camera);
+  renderer.render(feedbackScene,fieldCamera);
+  // PASS THREE: print CMYK-V rosette (or transparent-to-source) -> display
+  printMaterial.uniforms.uAccumulatedTex.value=historyWriteRT.texture;
+  renderer.setRenderTarget(null);
+  renderer.clear(true,true,true);
+  renderer.render(printScene,fieldCamera);
+  [historyReadRT,historyWriteRT]=[historyWriteRT,historyReadRT];
 }
 function animate(now){
   const dt=clamp((now-lastStamp)/1000,0,.06);lastStamp=now;
