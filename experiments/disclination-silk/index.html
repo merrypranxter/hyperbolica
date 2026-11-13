@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090d12"><link rel="icon" href="data:,">
+  <title>Disclination Silk · ARGON / HYPERBOLICA</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <section class="stage" aria-label="Evolving liquid crystal and fiber specimen">
+      <canvas id="art" aria-label="Liquid-crystal order with growing retained glass fibers. Drag to disturb the material."></canvas>
+      <header><a href="../../index.html">HYPERBOLICA</a><span>ARGON / EXPERIMENT 002</span></header>
+      <div class="caption"><span class="live-dot"></span><span id="status" role="status">Preparing the nematic…</span></div>
+      <div class="specimen"><span>NEMATIC ORDER / ELASTIC FIBER MEMORY</span><span id="age">0.0 τ</span></div>
+    </section>
+    <aside>
+      <div class="intro"><p class="eyebrow">DEFECTS WEAVE. FIBERS REMEMBER.</p><h1>Disclination<br> <em>Silk</em></h1><p>Liquid crystal grows a glass nervous system. Each thread bends the field that will guide the next.</p></div>
+      <div class="actions"><button id="pause" aria-pressed="false">Pause</button><button id="mutate">Mutate</button><button id="snapshot">Save PNG</button></div>
+      <div class="seed-row"><label for="seed">SPECIMEN</label><input id="seed" type="number" value="241907" min="0" max="4294967295"><button id="reseed">Regrow</button></div>
+      <div class="section-title">LIVING MATERIAL <span>01—06</span></div>
+      <div id="sliders"></div>
+      <div class="section-title">OBSERVATION <span>07—08</span></div>
+      <div id="observation"></div>
+      <div class="select-row"><label for="brush">Touch / drag</label><select id="brush"><option value="stir">Turn the director</option><option value="melt">Melt local order</option><option value="feed">Feed fiber growth</option></select></div>
+      <div class="select-row"><label for="palette">Color system</label><select id="palette"><option value="source">Source · disclination silk</option></select></div>
+      <div class="select-row"><label for="view">Observe</label><select id="view"><option value="0">Polarized glass silk</option><option value="1">Director / defects</option><option value="2">Elastic stress</option></select></div>
+      <div class="select-row"><label for="quality">Detail quality</label><select id="quality"><option value="72">Mobile · 72²</option><option value="104" selected>Balanced · 104²</option><option value="144">Fine · 144²</option></select></div>
+      <p class="hint">Drag edits material, including while paused. Quality changes restart it. Speed uses fixed simulation steps. Fibers have a bounded memory budget.</p>
+      <details><summary>What is actually evolving?</summary><p>A two-component Q-tensor relaxes, advects and rotates under a reduced active-flow model. Half-charge defects are detected from its winding, rather than assigned animated positions.</p><p>Fiber tips follow the evolving director. Retained nodes move with the flow and relax as spring chains. Measured spring extension produces stress that feeds back into alignment and optical retardance.</p><p>This is a 2D substrate-friction art model with stylized ribbon lighting. It does not solve full liquid-crystal hydrodynamics, 3D yarn contact or spectral light transport.</p></details>
+      <nav class="experiment-links" aria-label="Other experiments"><a href="../spinodal-reliquary/index.html">← 001 · Spinodal Reliquary</a><a id="guide" href="./README.md">Model &amp; controls</a></nav>
+      <footer><span id="metrics">INITIALIZING</span><span>NO EXTERNAL SERVICES</span></footer>
+    </aside>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
