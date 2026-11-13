@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090d12">
+  <link rel="icon" href="data:,">
+  <title>Spinodal Reliquary · ARGON / HYPERBOLICA</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <section class="stage" aria-label="Living mineral experiment">
+      <canvas id="art" aria-label="Evolving phase-separated mineral. Drag to feed or dissolve material."></canvas>
+      <header><a href="../../index.html">HYPERBOLICA</a><span>ARGON / EXPERIMENT 001</span></header>
+      <div class="caption"><span class="live-dot"></span><span id="status" role="status">Preparing the mixture…</span></div>
+      <div class="specimen"><span>CONSERVED MIXTURE / MINERAL ARREST</span><span id="age">0.0 τ</span></div>
+    </section>
+    <aside>
+      <div class="intro"><p class="eyebrow">A MATERIAL WITH A MEMORY</p><h1>Spinodal<br><em>Reliquary</em></h1><p>Two phases pull apart. Their boundaries turn to glass. The glass remembers what the liquid forgets.</p></div>
+      <div class="actions"><button id="pause">Pause</button><button id="mutate">Mutate</button><button id="snapshot">Save PNG</button></div>
+      <div class="seed-row"><label for="seed">SPECIMEN</label><input id="seed" type="number" value="761235" min="0" max="4294967295"><button id="reseed">Regrow</button></div>
+      <div class="section-title">MATERIAL DYNAMICS <span>01—06</span></div>
+      <div id="sliders"></div>
+      <div class="select-row"><label for="brush">Touch / drag</label><select id="brush"><option value="feed">Feed nutrient</option><option value="dissolve">Dissolve mineral</option><option value="quench">Disturb mixture</option></select></div>
+      <div class="select-row"><label for="palette">Color system</label><select id="palette"><option value="source">Source · spectral silica</option></select></div>
+      <div class="select-row"><label for="view">Observe</label><select id="view"><option value="0">Wet mineral relief</option><option value="1">Phase / nutrient map</option><option value="2">Deposition memory</option></select></div>
+      <div class="select-row"><label for="quality">Detail quality</label><select id="quality"><option value="112">Mobile · 112²</option><option value="176" selected>Balanced · 176²</option><option value="256">Fine · 256²</option></select></div>
+      <p class="hint">Quality changes restart the specimen. Speed changes the number of fixed simulation steps, never the stability step.</p>
+      <details><summary>What is actually evolving?</summary><p>A conservative Cahn–Hilliard mixture coarsens into connected domains. Nutrient deposits mineral at their interfaces. Mineral slows both phase motion and nutrient transport. Accumulated deposition survives dissolution and sets the optical film thickness.</p><p>This is a dimensionless 2D model, rendered as a perforated 2.5D relief. Its wet lighting and three-wavelength interference are artistic approximations. No fluid mechanics or full spectral transport is claimed.</p><p>The mixture is warm-started before mineralization. Dark openings correspond to the other phase; this is evolving implicit connectivity, without mesh remeshing.</p></details>
+      <footer><span id="metrics">INITIALIZING</span><span>NO EXTERNAL SERVICES</span></footer>
+    </aside>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

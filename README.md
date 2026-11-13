@@ -101,3 +101,13 @@ The artist-supplied self-contained OTHERSPACE source is preserved unchanged in `
 - All **14 original Acid Atlas palettes** are added to the shared vault: **194 current palettes**. The ten new original source recipes appear as global presets **57–66**: **67 total curated presets**. The original Opal Cathedral startup preset and 57 previous designs remain unchanged.
 - Source original: `legacy/otherspace-ii-hyperbolic-acid-atlas-original.html`. Extracted source data: `src/otherspace-acid.js`. Adapted original shader: `src/shaders/otherspace-acid.frag`. GPU compilation is lazy, defaults OFF, and an unsupported shader has a fallback. Both the old OTHERSPACE and new Acid Atlas can be controlled independently.
 - No Netlify deployment triggered. Actual live-browser shader compilation, mobile compatibility, and video export quality still need testing; source static checks alone cannot verify those.
+
+
+## ARGON experimental art — two complete, separate studies
+
+Recovered two independent Codex experiments from branches that originated **before** the OTHERSPACE II merge. Their new experiment files were replayed on current main without bringing older versions of the core shaders, presets, palette bank or index page forward.
+
+- **[Spinodal Reliquary](experiments/spinodal-reliquary/)** — genuinely persistent phase separation, nutrient-limited silica-like precipitation, evolving mobility and deposition history, with both WebGL and reduced Canvas renderers.
+- **[Disclination Silk](experiments/disclination-silk/)** — nematic Q-tensor defects guiding retained spring fibers; measured mechanical stress changes future orientation, with optical ribbons and a Canvas fallback.
+
+Local routes: `/experiments/spinodal-reliquary/` and `/experiments/disclination-silk/` (run `npm run dev` or a static local HTTP server). These are separate experiments, not additional modes in the existing 67-design Hyperbolica dropdown. The full 194-palette vault is still shared, and **Opal Cathedral remains the normal app startup**. No Netlify deployment is triggered by source commits. Numerical checks have been reproduced independently; Codex reported earlier Chromium/SwiftShader validation on its feature branch, while iPhone Safari rendering of the reconciled build remains to be tested. See `docs/ARGON-audit-and-engines.md`.
